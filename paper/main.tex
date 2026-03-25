@@ -1,1 +1,70 @@
-main.tex content
+\documentclass[conference]{IEEEtran}
+
+% --- Grundkonfiguration ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+
+% --- Wissenschaftliche Pakete ---
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage[demo]{graphicx} 
+\usepackage{url}
+\usepackage{booktabs} 
+\usepackage{pgfplotstable} 
+\pgfplotsset{compat=1.18}
+
+% --- Pfaddefinitionen ---
+\graphicspath{{../assets/}}
+
+\begin{document}
+
+\title{Trade-offs der Virtualisierung auf x86-Systemen: Eine quantitative Analyse von Performance-Overheads und Side-Channel-Risiken}
+
+\author{\IEEEauthorblockN{Maximilian Wagner}
+\IEEEauthorblockA{\textit{Studiengang IT-Sicherheit} \\
+\textit{Fachbereich Informatik und Medien} \\
+\textit{Technische Hochschule Brandenburg}\\
+maximilian.wagner@th-brandenburg.de}
+}
+
+\maketitle
+
+\begin{abstract}
+Dieses Paper untersucht den Zielkonflikt zwischen Hardware-Isolation und Systemleistung in Proxmox-Umgebungen auf Basis quantitativer Messungen.
+\end{abstract}
+
+\section{Einleitung}
+Virtualisierung ist ein Kernaspekt der modernen Cloud-Sicherheit \cite{intelvtx}. Besonders die hardwaregestützte Virtualisierung bietet Angriffsflächen für Seitenkanal-Attacken \cite{kvmsecurity}.
+
+\section{Methodik und Benchmarking}
+Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illustriert den Testaufbau.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.4\textwidth]{picture.jpg}
+    \caption{Schematischer Aufbau der Testumgebung.}
+    \label{fig:setup}
+\end{figure}
+
+\section{Ergebnisse}
+Die Rohdaten der Messreihen sind in Tabelle \ref{tab:results} aufgeführt.
+
+\begin{table}[htbp]
+\caption{Benchmark-Ergebnisse (Mittelwerte aus 10 Durchläufen)}
+\centering
+\pgfplotstabletypeset[
+    col sep=semicolon, 
+    string type,
+    columns/CPU_Events_per_sec/.style={column name={CPU (Events/s)}},
+    columns/IOPS_Random_Write/.style={column name={I/O (IOPS)}},
+    every head row/.style={before row=\toprule,after row=\midrule},
+    every last row/.style={after row=\bottomrule},
+]{../project/experiments/summary.csv} 
+\label{tab:results}
+\end{table}
+
+\bibliographystyle{IEEEtran}
+\bibliography{../project/expose/references_expose}
+
+\end{document}

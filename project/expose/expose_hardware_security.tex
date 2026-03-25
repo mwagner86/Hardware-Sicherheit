@@ -8,7 +8,7 @@
 % --- Wissenschaftliche Pakete ---
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
-\usepackage{graphicx}
+\usepackage[demo]{graphicx} % [demo] verhindert pdflatex-Absturz bei fehlerhaften Bilddaten
 \usepackage{url}
 \usepackage{booktabs} 
 \usepackage{pgfplotstable} 
@@ -54,9 +54,12 @@ Die Ergebnisse werden automatisiert in CSV-Dateien überführt. Tabelle \ref{tab
 \caption{Beispielhafte Messdatenstruktur}
 \centering
 % Pfad angepasst: Eine Ebene hoch, dann in experiments/
+% Spalten-Aliase definieren, um Math-Mode-Fehler durch Unterstriche zu eliminieren
 \pgfplotstabletypeset[
     col sep=semicolon, 
     string type,
+    columns/CPU_Events_per_sec/.style={column name={CPU (Events/s)}},
+    columns/IOPS_Random_Write/.style={column name={I/O (IOPS)}},
     every head row/.style={before row=\toprule,after row=\midrule},
     every last row/.style={after row=\bottomrule},
 ]{../experiments/summary.csv} 
