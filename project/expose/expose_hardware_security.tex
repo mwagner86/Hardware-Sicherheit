@@ -1,0 +1,69 @@
+\documentclass[conference]{IEEEtran}
+
+% --- Grundkonfiguration ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+
+% --- Wissenschaftliche Pakete ---
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{booktabs} 
+\usepackage{pgfplotstable} 
+\pgfplotsset{compat=1.18}
+
+% --- Pfaddefinitionen (Anpassung an project/expose/) ---
+% Geht zwei Ebenen hoch zu ~/ITS_THB/Hardware-Sicherheit/assets/
+\graphicspath{{../../assets/}}
+
+\begin{document}
+
+\title{Exposé: Analyse von Hardware-Virtualisierung unter Proxmox VE}
+
+\author{\IEEEauthorblockN{Maximilian Wagner}
+\IEEEauthorblockA{\textit{Studiengang IT-Sicherheit} \\
+\textit{Technische Hochschule Brandenburg}\\
+maximilian.wagner@th-brandenburg.de}
+}
+
+\maketitle
+
+\begin{abstract}
+Dieses Dokument skizziert die methodische Untersuchung von Virtualisierungs-Overheads und Hardware-Isolationsmechanismen.
+\end{abstract}
+
+\section{Einleitung}
+Im Rahmen dieses Projekts wird die Effizienz der Intel VT-x Erweiterungen evaluiert \cite{intelvtx}. Der Fokus liegt auf der Quantifizierung von VM-Exit-Latenzen.
+
+\section{Experimenteller Aufbau}
+Das Test-Setup basiert auf einer Debian-Gastinstanz innerhalb eines Proxmox-Hypervisors. Abbildung \ref{fig:setup} verdeutlicht die Architektur.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{picture.jpg}
+    \caption{Architekturdiagramm der Testumgebung.}
+    \label{fig:setup}
+\end{figure}
+
+\section{Benchmark-Datenstruktur}
+Die Ergebnisse werden automatisiert in CSV-Dateien überführt. Tabelle \ref{tab:results} zeigt das erwartete Datenformat.
+
+\begin{table}[htbp]
+\caption{Beispielhafte Messdatenstruktur}
+\centering
+% Pfad angepasst: Eine Ebene hoch, dann in experiments/
+\pgfplotstabletypeset[
+    col sep=semicolon, 
+    string type,
+    every head row/.style={before row=\toprule,after row=\midrule},
+    every last row/.style={after row=\bottomrule},
+]{../experiments/summary.csv} 
+\label{tab:results}
+\end{table}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references_expose} % Name der lokalen Bib-Datei
+
+\end{document}
