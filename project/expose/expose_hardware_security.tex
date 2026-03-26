@@ -5,18 +5,24 @@
 \usepackage[T1]{fontenc}
 \usepackage[ngerman]{babel}
 
+% --- Mikrotypografie & Silbentrennung ---
+\usepackage{microtype}
+\hyphenation{
+    Hard-ware-iso-la-tions-me-cha-nis-men
+    Vir-tua-li-sie-rungs-over-heads
+    Per-for-mance-over-heads
+    Sei-ten-ka-nal-ri-si-ken
+    Si-cher-heits-im-pli-ka-tio-nen
+    Gast-in-stanz
+}
+
 % --- Wissenschaftliche Pakete ---
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
-\usepackage[demo]{graphicx} % [demo] verhindert pdflatex-Absturz bei fehlerhaften Bilddaten
 \usepackage{url}
 \usepackage{booktabs} 
 \usepackage{pgfplotstable} 
 \pgfplotsset{compat=1.18}
-
-% --- Pfaddefinitionen (Anpassung an project/expose/) ---
-% Geht zwei Ebenen hoch zu ~/ITS_THB/Hardware-Sicherheit/assets/
-\graphicspath{{../../assets/}}
 
 \begin{document}
 
@@ -31,34 +37,28 @@ maximilian.wagner@th-brandenburg.de}
 \maketitle
 
 \begin{abstract}
-Dieses Dokument skizziert die methodische Untersuchung von Virtualisierungs-Overheads und Hardware-Isolationsmechanismen.
+Dieses Dokument skizziert die methodische Untersuchung von Virtualisierungs-Overheads und Hardware-Isolationsmechanismen auf x86-Systemen.
 \end{abstract}
 
-\section{Einleitung}
-Im Rahmen dieses Projekts wird die Effizienz der Intel VT-x Erweiterungen evaluiert \cite{intelvtx}. Der Fokus liegt auf der Quantifizierung von VM-Exit-Latenzen.
+\section{Motivation und Problemstellung}
+Im Rahmen dieses Projekts wird die Effizienz der Intel VT-x Erweiterungen evaluiert \cite{intelvtx}. Der Fokus liegt auf der Quantifizierung von VM-Exit-Latenzen und der Analyse potenzieller Seitenkanal-Risiken in KVM-basierten Umgebungen \cite{kvmsecurity}. Der Zielkonflikt zwischen Hardware-Isolation und Systemleistung erfordert eine detaillierte messtechnische Erfassung.
 
-\section{Experimenteller Aufbau}
-Das Test-Setup basiert auf einer Debian-Gastinstanz innerhalb eines Proxmox-Hypervisors. Abbildung \ref{fig:setup} verdeutlicht die Architektur.
+\section{Theoretische Grundlagen der Virtualisierung}
+Voll- und Paravirtualisierung bedingen durch Emulation respektive Hypercalls messbare Latenzen. Die hardwaregestützte Virtualisierung (Intel VT-x) adressiert diesen Overhead durch dedizierte CPU-Modi (VMX root/non-root) zur nativen Ausführung unprivilegierter Instruktionen. OS-Level Virtualisierung (Container) bietet höchste Ausführungseffizienz, weist durch den geteilten Host-Kernel jedoch die schwächste kryptografische und logische Isolation auf.
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.45\textwidth]{picture.jpg}
-    \caption{Architekturdiagramm der Testumgebung.}
-    \label{fig:setup}
-\end{figure}
+\section{Experimenteller Aufbau und Methodik}
+Das Test-Setup basiert auf Debian-Gastinstanzen innerhalb eines Proxmox-Hypervisors. Zur Sicherstellung reproduzierbarer Bedingungen werden die Systeme als minimale Headless-Installationen provisioniert. Die Installation der Benchmarking-Tools sowie die Datenerhebung erfolgen vollständig automatisiert über Bash-Skripte.
 
 \section{Benchmark-Datenstruktur}
-Die Ergebnisse werden automatisiert in CSV-Dateien überführt. Tabelle \ref{tab:results} zeigt das erwartete Datenformat.
+Tabelle \ref{tab:results} illustriert das CSV-Datenformat zur automatisierten Auswertung der Messreihen.
 
 \begin{table}[htbp]
-\caption{Beispielhafte Messdatenstruktur}
+\caption{Messdatenstruktur der Evaluierung}
 \centering
-% Pfad angepasst: Eine Ebene hoch, dann in experiments/
-% Spalten-Aliase definieren, um Math-Mode-Fehler durch Unterstriche zu eliminieren
 \pgfplotstabletypeset[
     col sep=semicolon, 
     string type,
-    columns/CPU_Events_per_sec/.style={column name={CPU (Events/s)}},
+    columns/CPU_Events_per_sec/.style={column name={CPU (Ev/s)}},
     columns/IOPS_Random_Write/.style={column name={I/O (IOPS)}},
     every head row/.style={before row=\toprule,after row=\midrule},
     every last row/.style={after row=\bottomrule},
@@ -66,7 +66,26 @@ Die Ergebnisse werden automatisiert in CSV-Dateien überführt. Tabelle \ref{tab
 \label{tab:results}
 \end{table}
 
+\section{Kritische Sicherheitsanalyse und Isolationsmechanismen}
+Die logische Isolation in KVM-Architekturen ist nicht absolut. Evaluiert werden:
+\begin{itemize}
+    \item \textbf{VM-Escape:} Ausbruch aus dem VMX non-root mode durch Schwachstellen in der Device-Emulation (z.\,B. QEMU).
+    \item \textbf{Hypervisor-Kompromittierung:} Privilege Escalation auf Ring -1 gefährdet alle koexistierenden Gastinstanzen.
+    \item \textbf{Side-Channels:} Geteilte Mikroarchitektur-Zustände (Caches) ermöglichen Cross-VM Angriffe zur Exfiltration von Schlüsselmaterial.
+\end{itemize}
+
+\section{Vorläufige Gliederung des Papers}
+Die finale Ausarbeitung umfasst:
+\begin{enumerate}
+    \item \textbf{Einleitung:} Relevanz und Zielsetzung.
+    \item \textbf{Grundlagen:} Virtualisierungstaxonomie und Intel VT-x.
+    \item \textbf{Methodik:} Proxmox-Testumgebung und Benchmarking.
+    \item \textbf{Ergebnisse:} Auswertung der Performance-Overheads.
+    \item \textbf{Sicherheitsanalyse:} Isolationsmechanismen und Side-Channels.
+    \item \textbf{Fazit:} Synthese der Erkenntnisse.
+\end{enumerate}
+
 \bibliographystyle{IEEEtran}
-\bibliography{references_expose} % Name der lokalen Bib-Datei
+\bibliography{references_expose} 
 
 \end{document}
