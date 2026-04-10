@@ -59,14 +59,15 @@ Abbildung \ref{fig:expected_degradation} visualisiert die erwartete I/O-Performa
     x tick label style={font=\small},
     legend style={at={(0.5,-0.15)}, anchor=north, legend columns=-1, font=\footnotesize},
 ]
-% Baseline
-\addplot coordinates {(QEMU, 1200) (KVM, 45000) (LXC, 52000)};
-% Angriff
-\addplot coordinates {(QEMU, 1100) (KVM, 31500) (LXC, 20800)};
+
+% Dynamischer Import der Daten aus der CSV-Datei des Experiments
+\addplot table [x=Virtualisierung, y=Baseline, col sep=semicolon] {../experiments/summary.csv};
+\addplot table [x=Virtualisierung, y=NoisyNeighbor, col sep=semicolon] {../experiments/summary.csv};
+
 \legend{Baseline, Noisy Neighbor}
 \end{axis}
 \end{tikzpicture}
-\caption{Hypothetische I/O-Degradation (4K Random Read). Die Platzhalter-Werte illustrieren die erwartete Isolationsschwäche von LXC gegenüber KVM.}
+\caption{Hypothetische I/O-Degradation (4K Random Read). Die Erwartungswerte wurden über \texttt{generate\_dummy\_data.sh} in die \texttt{summary.csv} eingespeist und automatisiert visualisiert.}
 \label{fig:expected_degradation}
 \end{figure}
 
