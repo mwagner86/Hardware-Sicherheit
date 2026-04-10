@@ -1,4 +1,3 @@
-% expose_hardware_security.tex
 \documentclass[conference]{IEEEtran}
 \usepackage[utf8]{inputenc}
 \usepackage[ngerman]{babel}
@@ -21,23 +20,22 @@ maximilian.wagner@th-brandenburg.de}
 \maketitle
 
 \begin{abstract}
-Dieses Exposé beschreibt die Projektmethodik zur Analyse von Hardware-Ressourcen-Konkurrenz in virtualisierten Umgebungen. Der Fokus liegt auf der Quantifizierbarkeit von Leistungseinbrüchen über Isolationsgrenzen hinweg (Noisy-Neighbor-Problem), abgesichert durch eine methodische Fallback-Strategie auf Basis-Benchmarks. Dies adressiert die Anforderungen an die praktische Umsetzung und wissenschaftliche Aufarbeitung im Modul Hardware-Sicherheit.
+Dieses Exposé beschreibt die Projektmethodik zur Analyse von Hardware-Ressourcen-Konkurrenz in virtualisierten Umgebungen. Der Fokus liegt auf der Quantifizierbarkeit von Leistungseinbrüchen über Isolationsgrenzen hinweg (Noisy-Neighbor-Problem), abgesichert durch eine methodische Fallback-Strategie auf Basis-Benchmarks.
 \end{abstract}
 
-\section{Problemstellung und Relevanz}
-Cloud-Infrastrukturen basieren auf der logischen Isolation von Mandanten durch Virtualisierungsschichten. Obwohl speicher- und prozessseitige Barrieren etabliert sind, teilen sich virtuelle Instanzen physikalische Ressourcen wie den Last Level Cache (LLC), Hauptspeicherbandbreiten und I/O-Subsysteme. Dies ermöglicht es Angreifern, durch deterministische Überlastung dieser Ressourcen (Noisy-Neighbor-Interferenz) die Performance koexistierender Gastsysteme zu beeinträchtigen \cite{koh2007analysis}. Die Untersuchung dieser mikroarchitektonischen Schwachstellen bewertet die realen Sicherheitsgarantien moderner Hypervisoren.
+\section{Worum geht es? (Thematische Einführung)}
+Cloud-Infrastrukturen basieren auf der logischen Isolation von Mandanten durch Virtualisierungsschichten. Obwohl speicher- und prozessseitige Barrieren etabliert sind, teilen sich virtuelle Instanzen physikalische Ressourcen wie den Last Level Cache (LLC), Hauptspeicherbandbreiten und I/O-Subsysteme. Dies ermöglicht es Angreifern, durch deterministische Überlastung dieser geteilten Ressourcen (Noisy-Neighbor-Interferenz) die Performance koexistierender Gastsysteme signifikant zu beeinträchtigen \cite{koh2007analysis}.
 
-\section{Geplantes Vorgehen (Methodik)}
-Das Projekt wird auf einer Intel Raptor Lake Architektur unter Proxmox VE durchgeführt. 
+\section{Warum ist das Thema relevant?}
+Die Untersuchung dieser mikroarchitektonischen Schwachstellen ist zwingend erforderlich, um die realen Sicherheitsgarantien moderner Hypervisoren objektiv zu bewerten. Das National Institute of Standards and Technology (NIST) fordert in der SP 800-125A strikte Isolationsmechanismen auf Hypervisor-Ebene, weist jedoch explizit auf die systemischen Grenzen geteilter Hardware hin \cite{nist2014hypervisor}. Das Projekt evaluiert, inwieweit diese theoretischen Grenzen in der Praxis ausnutzbar sind.
 
-\subsection{Proof of Concept (PoC)}
-In der Initialphase wird ein aktiver PoC implementiert: Zwei Instanzen (LXC/KVM) werden über CPU-Pinning identischen physischen Performance-Cores zugewiesen. Ein Angreifer-System erzeugt mittels \texttt{stress-ng} gezielte Cache-Eviction und I/O-Sättigung. Das Opfer-System misst parallel Instruktionsdurchlaufzeiten und Speicherlatenzen (\texttt{sysbench}, \texttt{fio}). Das Delta der Messwerte quantifiziert den Isolationsbruch.
+\section{Was soll in der praktischen Arbeit umgesetzt werden?}
+Das Projekt wird auf einer Intel Raptor Lake Architektur unter Proxmox VE durchgeführt. Ziel ist der Aufbau einer automatisierten Testumgebung zur Messung von Ressourcen-Interferenzen. Es wird ein aktiver Proof of Concept (PoC) für einen Noisy-Neighbor-Angriff implementiert: Ein Angreifer-System erzeugt mittels \texttt{stress-ng} gezielte Cache-Eviction und I/O-Sättigung. Parallel dazu misst ein Opfer-System Instruktionsdurchlaufzeiten und Speicherlatenzen mithilfe von \texttt{sysbench} und \texttt{fio}.
 
-\subsection{Methodischer Fallback}
-Sofern Hardware-Mitigierungen oder Scheduler-Mechanismen die Interferenz neutralisieren, greift der Fallback auf die ursprüngliche Aufgabenstellung: Ein vergleichender Leistungs-Benchmark zwischen Emulation (QEMU), Para-Virtualisierung und Hardware-Virtualisierung unter strikter Deaktivierung von Frequenzskalierung und C-States auf dem Host.
+\section{Wie ist die geplante Vorgehensweise?}
+Die Methodik ist zweistufig aufgebaut: Initial werden zwei Instanzen (LXC/KVM) über striktes CPU-Pinning identischen physischen Performance-Cores zugewiesen. Anschließend wird das Delta der Messwerte unter Noisy-Neighbor-Last erhoben, um den Isolationsbruch zu quantifizieren.
 
-\section{Erwartete Ergebnisse (Hypothese)}
-Abbildung \ref{fig:expected_degradation} visualisiert die erwartete I/O-Performance-Degradation. Es wird hypothetisch davon ausgegangen, dass LXC aufgrund der OS-Level-Virtualisierung die höchste Anfälligkeit zeigt, während der Overhead der QEMU-Emulation die mikroarchitektonische Interferenz weitgehend maskiert.
+Sofern Hardware-Mitigierungen die Interferenz auf ein nicht verwertbares Maß neutralisieren, greift ein methodischer Fallback: Ein systematischer Leistungs-Benchmark zwischen reiner Emulation (QEMU), Para-Virtualisierung (LXC) und Hardware-Virtualisierung (KVM) unter strikter Deaktivierung von Frequenzskalierung und C-States auf dem Host.
 
 \begin{figure}[htbp]
 \centering
@@ -46,7 +44,7 @@ Abbildung \ref{fig:expected_degradation} visualisiert die erwartete I/O-Performa
     ybar,
     bar width=12pt,
     width=\linewidth,
-    height=6cm,
+    height=5.5cm,
     enlarge x limits=0.25,
     ylabel={I/O-Operationen pro Sekunde},
     ymin=0,
@@ -59,20 +57,23 @@ Abbildung \ref{fig:expected_degradation} visualisiert die erwartete I/O-Performa
     x tick label style={font=\small},
     legend style={at={(0.5,-0.15)}, anchor=north, legend columns=-1, font=\footnotesize},
 ]
-
-% Dynamischer Import der Daten aus der CSV-Datei des Experiments
 \addplot table [x=Virtualisierung, y=Baseline, col sep=semicolon] {../experiments/summary.csv};
 \addplot table [x=Virtualisierung, y=NoisyNeighbor, col sep=semicolon] {../experiments/summary.csv};
-
 \legend{Baseline, Noisy Neighbor}
 \end{axis}
 \end{tikzpicture}
-\caption{Hypothetische I/O-Degradation (4K Random Read). Die Erwartungswerte wurden über \texttt{generate\_dummy\_data.sh} in die \texttt{summary.csv} eingespeist und automatisiert visualisiert.}
+\caption{Hypothetische I/O-Degradation (4K Random Read). Die Erwartungswerte wurden über \nolinkurl{generate_dummy_data.sh} in \nolinkurl{summary.csv} eingespeist und automatisiert visualisiert. Sie illustrieren die erwartete, zu quantifizierende Isolationsschwäche von LXC gegenüber KVM.}
 \label{fig:expected_degradation}
 \end{figure}
 
-\section{Verwandte Arbeiten}
-Der Rahmen stützt sich auf die Identifikation mikroarchitektonischer Flaschenhälse. Koh et al. \cite{koh2007analysis} quantifizierten die Performance-Interferenz in virtualisierten Umgebungen. Ge et al. \cite{ge2018survey} liefern eine Systematisierung mikroarchitektonischer Timing-Angriffe, welche zur Einordnung der Ergebnisse auf aktueller Hardware zwingend erforderlich ist.
+\section{Was ist Ihr grober Zeitplan?}
+Die Projektbearbeitung ist auf einen vollständigen Abschluss bis Ende Juni terminiert:
+\begin{itemize}
+    \item \textbf{Woche 3--5 (April):} Setup der Host-Umgebung (Konfiguration von C-States und CPU-Governor) sowie Implementierung und Durchführung des Noisy-Neighbor-PoCs.
+    \item \textbf{Woche 6--8 (Mai):} Evaluierung der PoC-Ergebnisse und Entscheidungsfindung. Bei Erfolg: Ausbau der Testumgebung auf verschiedene VM-Typen. Bei Misserfolg: Aktivierung des Fallbacks. Beginn der Automatisierung der Benchmarks (\texttt{bash}).
+    \item \textbf{Woche 9--11 (Anfang bis Mitte Juni):} Datenaggregation der automatisierten Messreihen, Abschluss der Literaturrecherche und Erstellung eines Konzepts für die Live-Demonstration.
+    \item \textbf{Woche 12--14 (Ende Juni):} Erstellung der finalen wissenschaftlichen Publikation im IEEE-Format und Vorbereitung der praktischen Demonstration. Projektabschluss.
+\end{itemize}
 
 \bibliographystyle{IEEEtran}
 \bibliography{references_expose}
