@@ -14,7 +14,7 @@
 \IEEEauthorblockA{\textit{Fachbereich Informatik und Medien} \\
 \textit{Technische Hochschule Brandenburg}\\
 Brandenburg an der Havel, Deutschland \\
-maximilian.wagner@th-brandenburg.de}
+maximilian@th-brandenburg.de}
 }
 
 \maketitle
@@ -24,7 +24,7 @@ Dieses Exposé beschreibt die Projektmethodik zur Analyse von Hardware-Ressource
 \end{abstract}
 
 \section{Worum geht es? (Thematische Einführung)}
-Cloud-Infrastrukturen basieren auf der logischen Isolation von Mandanten durch Virtualisierungsschichten. Obwohl speicher- und prozessseitige Barrieren etabliert sind, teilen sich virtuelle Instanzen physikalische Ressourcen wie den Last Level Cache (LLC), Hauptspeicherbandbreiten und I/O-Subsysteme. Dies ermöglicht es Angreifern, durch deterministische Überlastung dieser geteilten Ressourcen (Noisy-Neighbor-Interferenz) die Performance koexistierender Gastsysteme signifikant zu beeinträchtigen \cite{koh2007analysis}.
+Cloud-Infrastrukturen basieren auf der logischen Isolation von Mandanten durch Virtualisierungsschichten. Obwohl speicher- und prozessseitige Barrieren etabliert sind, teilen sich virtuelle Instanzen physikalische Ressourcen wie den Last Level Cache (LLC), Hauptspeicherbandbreiten und I/O-Subsysteme. Dies ermöglicht es Angreifern, durch deterministische Überlastung dieser Ressourcen (Noisy-Neighbor-Interferenz) die Performance koexistierender Gastsysteme signifikant zu beeinträchtigen \cite{koh2007analysis}. Eine systematische Einordnung dieser mikroarchitektonischen Angriffsvektoren ist entscheidend für das Verständnis moderner Hardware-Schwachstellen \cite{ge2018survey}.
 
 \section{Warum ist das Thema relevant?}
 Die Untersuchung dieser mikroarchitektonischen Schwachstellen ist zwingend erforderlich, um die realen Sicherheitsgarantien moderner Hypervisoren objektiv zu bewerten. Das National Institute of Standards and Technology (NIST) fordert in der SP 800-125A strikte Isolationsmechanismen auf Hypervisor-Ebene, weist jedoch explizit auf die systemischen Grenzen geteilter Hardware hin \cite{nist2014hypervisor}. Das Projekt evaluiert, inwieweit diese theoretischen Grenzen in der Praxis ausnutzbar sind.
@@ -62,17 +62,17 @@ Sofern Hardware-Mitigierungen die Interferenz auf ein nicht verwertbares Maß ne
 \legend{Baseline, Noisy Neighbor}
 \end{axis}
 \end{tikzpicture}
-\caption{Hypothetische I/O-Degradation (4K Random Read). Die Erwartungswerte wurden über \nolinkurl{generate_dummy_data.sh} in \nolinkurl{summary.csv} eingespeist und automatisiert visualisiert. Sie illustrieren die erwartete, zu quantifizierende Isolationsschwäche von LXC gegenüber KVM.}
+\caption{Hypothetische I/O-Degradation (4K Random Read). Die Erwartungswerte wurden über \texttt{generate\_dummy\_data.sh} in die \texttt{summary.csv} eingespeist und automatisiert visualisiert. Sie illustrieren die zu quantifizierende Isolationsschwäche von LXC gegenüber KVM.}
 \label{fig:expected_degradation}
 \end{figure}
 
 \section{Was ist Ihr grober Zeitplan?}
-Die Projektbearbeitung ist auf einen vollständigen Abschluss bis Ende Juni terminiert:
+Die Projektbearbeitung erfolgt phasenbasiert mit dem Ziel eines vollständigen Abschlusses bis Ende Juni:
 \begin{itemize}
-    \item \textbf{Woche 3--5 (April):} Setup der Host-Umgebung (Konfiguration von C-States und CPU-Governor) sowie Implementierung und Durchführung des Noisy-Neighbor-PoCs.
-    \item \textbf{Woche 6--8 (Mai):} Evaluierung der PoC-Ergebnisse und Entscheidungsfindung. Bei Erfolg: Ausbau der Testumgebung auf verschiedene VM-Typen. Bei Misserfolg: Aktivierung des Fallbacks. Beginn der Automatisierung der Benchmarks (\texttt{bash}).
-    \item \textbf{Woche 9--11 (Anfang bis Mitte Juni):} Datenaggregation der automatisierten Messreihen, Abschluss der Literaturrecherche und Erstellung eines Konzepts für die Live-Demonstration.
-    \item \textbf{Woche 12--14 (Ende Juni):} Erstellung der finalen wissenschaftlichen Publikation im IEEE-Format und Vorbereitung der praktischen Demonstration. Projektabschluss.
+    \item \textbf{April:} Setup der Host-Umgebung (Konfiguration von C-States und CPU-Governor) sowie Implementierung und Durchführung des Noisy-Neighbor-PoCs.
+    \item \textbf{Mai:} Evaluierung der PoC-Ergebnisse. Bei Erfolg: Ausbau der Testumgebung auf verschiedene VM-Typen. Bei Misserfolg: Aktivierung des Fallbacks und Einleitung der Ursachenanalyse. Beginn der Skript-Automatisierung für die Benchmarks.
+    \item \textbf{Anfang bis Mitte Juni:} Durchführung der automatisierten Messreihen, Datenaggregation und Finalisierung der Literaturrecherche. Erstellung des Konzepts für die Live-Demonstration.
+    \item \textbf{Ende Juni:} Finalisierung der wissenschaftlichen Hausarbeit im IEEE-Format, Erstellung der Präsentationsfolien und Projektabschluss.
 \end{itemize}
 
 \bibliographystyle{IEEEtran}
