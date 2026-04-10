@@ -1,91 +1,40 @@
 \documentclass[conference]{IEEEtran}
-
-% --- Grundkonfiguration ---
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
 \usepackage[ngerman]{babel}
-
-% --- Mikrotypografie & Silbentrennung ---
-\usepackage{microtype}
-\hyphenation{
-    Hard-ware-iso-la-tions-me-cha-nis-men
-    Vir-tua-li-sie-rungs-over-heads
-    Per-for-mance-over-heads
-    Sei-ten-ka-nal-ri-si-ken
-    Si-cher-heits-im-pli-ka-tio-nen
-    Gast-in-stanz
-}
-
-% --- Wissenschaftliche Pakete ---
 \usepackage{cite}
-\usepackage{amsmath,amssymb,amsfonts}
-\usepackage{url}
-\usepackage{booktabs} 
-\usepackage{pgfplotstable} 
-\pgfplotsset{compat=1.18}
+\usepackage{hyperref}
 
 \begin{document}
 
-\title{Exposé: Analyse von Hardware-Virtualisierung unter Proxmox VE}
+\title{Exposé: Untersuchung mikroarchitektonischer Ressourcen-Interferenzen (Noisy-Neighbor) in virtualisierten Umgebungen}
 
-\author{\IEEEauthorblockN{Maximilian Wagner}
-\IEEEauthorblockA{\textit{Studiengang IT-Sicherheit} \\
+\author{\IEEEauthorblockN{Max Wagner}
+\IEEEauthorblockA{\textit{Fachbereich Informatik und Medien} \\
 \textit{Technische Hochschule Brandenburg}\\
-maximilian.wagner@th-brandenburg.de}
+Brandenburg an der Havel, Deutschland \\
+email@student.th-brandenburg.de}
 }
 
 \maketitle
 
 \begin{abstract}
-Dieses Dokument skizziert die methodische Untersuchung von Virtualisierungs-Overheads und Hardware-Isolationsmechanismen auf x86-Systemen.
+Dieses Exposé beschreibt die Projektmethodik zur Analyse von Hardware-Ressourcen-Konkurrenz in virtualisierten Umgebungen. Der Fokus liegt auf der Quantifizierbarkeit von Leistungseinbrüchen über Isolationsgrenzen hinweg (Noisy-Neighbor-Problem), abgesichert durch eine methodische Fallback-Strategie auf Basis-Benchmarks.
 \end{abstract}
 
-\section{Motivation und Problemstellung}
-Im Rahmen dieses Projekts wird die Effizienz der Intel VT-x Erweiterungen evaluiert \cite{intelvtx}. Der Fokus liegt auf der Quantifizierung von VM-Exit-Latenzen und der Analyse potenzieller Seitenkanal-Risiken in KVM-basierten Umgebungen \cite{kvmsecurity}. Der Zielkonflikt zwischen Hardware-Isolation und Systemleistung erfordert eine detaillierte messtechnische Erfassung.
+\section{Problemstellung und Relevanz}
+Cloud-Infrastrukturen (Infrastructure as a Service) basieren auf der logischen Isolation von Mandanten (Multi-Tenancy) durch Virtualisierungsschichten. Obwohl speicher- und prozessseitige Barrieren etabliert sind, teilen sich virtuelle Instanzen physikalische Ressourcen wie den Last Level Cache (LLC), Hauptspeicherbandbreiten und I/O-Subsysteme. Dies ermöglicht es Angreifern, durch deterministische Überlastung dieser geteilten Ressourcen (Noisy-Neighbor-Interferenz) die Verfügbarkeit und Performance koexistierender Gastsysteme signifikant zu beeinträchtigen \cite{koh2007analysis}. Die systematische Untersuchung dieser mikroarchitektonischen Schwachstellen ist zur wissenschaftlichen Bewertung der realen Sicherheitsgarantien und Ressourcenisolation moderner Hypervisoren zwingend erforderlich.
 
-\section{Theoretische Grundlagen der Virtualisierung}
-Voll- und Paravirtualisierung bedingen durch Emulation respektive Hypercalls messbare Latenzen. Die hardwaregestützte Virtualisierung (Intel VT-x) adressiert diesen Overhead durch dedizierte CPU-Modi (VMX root/non-root) zur nativen Ausführung unprivilegierter Instruktionen. OS-Level Virtualisierung (Container) bietet höchste Ausführungseffizienz, weist durch den geteilten Host-Kernel jedoch die schwächste kryptografische und logische Isolation auf.
+\section{Geplantes Vorgehen (Methodik)}
+Das Projekt folgt einer "PoC-First"-Strategie und wird auf einer asymmetrischen Intel Raptor Lake Architektur unter Proxmox VE durchgeführt. 
 
-\section{Experimenteller Aufbau und Methodik}
-Das Test-Setup basiert auf Debian-Gastinstanzen innerhalb eines Proxmox-Hypervisors. Zur Sicherstellung reproduzierbarer Bedingungen werden die Systeme als minimale Headless-Installationen provisioniert. Die Installation der Benchmarking-Tools sowie die Datenerhebung erfolgen vollständig automatisiert über Bash-Skripte.
+In der Initialphase wird ein aktiver Proof of Concept (PoC) implementiert: Zwei logisch isolierte Instanzen (LXC/KVM) werden über striktes CPU-Pinning identischen physischen Performance-Cores (P-Cores) zugewiesen, um Latenzschwankungen durch hybrides Scheduler-Verhalten auszuschließen. Ein Angreifer-System erzeugt mittels \texttt{stress-ng} gezielte Cache-Eviction und I/O-Sättigung. Zeitgleich misst das Opfer-System Instruktionsdurchlaufzeiten und Speicherlatenzen über standardisierte Werkzeuge (\texttt{sysbench}, \texttt{fio}). Das relative Delta der Messwerte quantifiziert den Grad des Isolationsbruchs.
 
-\section{Benchmark-Datenstruktur}
-Tabelle \ref{tab:results} illustriert das CSV-Datenformat zur automatisierten Auswertung der Messreihen.
+\textbf{Methodischer Fallback:} Sofern mikroarchitektonische Hardware-Mitigierungen (z.\,B. Intel RDT) oder ausgleichendes Scheduler-Verhalten (CFS) die Interferenz auf ein nicht verwertbares Maß reduzieren, greift die Fallback-Strategie der ursprünglichen Aufgabenstellung. Hierzu wird eine unbelastete Baseline – unter strikter Deaktivierung von dynamischer Frequenzskalierung und tiefen C-States auf dem Hypervisor – erstellt. Auf dieser Basis erfolgt ein iterativer, vergleichender Leistungs-Benchmark zwischen Software-Emulation (QEMU), Para-Virtualisierung und Hardware-Virtualisierung bei I/O- und CPU-intensiven Berechnungen.
 
-\begin{table}[htbp]
-\caption{Messdatenstruktur der Evaluierung}
-\centering
-\pgfplotstabletypeset[
-    col sep=semicolon, 
-    string type,
-    columns/CPU_Events_per_sec/.style={column name={CPU (Ev/s)}},
-    columns/IOPS_Random_Write/.style={column name={I/O (IOPS)}},
-    every head row/.style={before row=\toprule,after row=\midrule},
-    every last row/.style={after row=\bottomrule},
-]{../experiments/summary.csv} 
-\label{tab:results}
-\end{table}
-
-\section{Kritische Sicherheitsanalyse und Isolationsmechanismen}
-Die logische Isolation in KVM-Architekturen ist nicht absolut. Evaluiert werden:
-\begin{itemize}
-    \item \textbf{VM-Escape:} Ausbruch aus dem VMX non-root mode durch Schwachstellen in der Device-Emulation (z.\,B. QEMU).
-    \item \textbf{Hypervisor-Kompromittierung:} Privilege Escalation auf Ring -1 gefährdet alle koexistierenden Gastinstanzen.
-    \item \textbf{Side-Channels:} Geteilte Mikroarchitektur-Zustände (Caches) ermöglichen Cross-VM Angriffe zur Exfiltration von Schlüsselmaterial.
-\end{itemize}
-
-\section{Vorläufige Gliederung des Papers}
-Die finale Ausarbeitung umfasst:
-\begin{enumerate}
-    \item \textbf{Einleitung:} Relevanz und Zielsetzung.
-    \item \textbf{Grundlagen:} Virtualisierungstaxonomie und Intel VT-x.
-    \item \textbf{Methodik:} Proxmox-Testumgebung und Benchmarking.
-    \item \textbf{Ergebnisse:} Auswertung der Performance-Overheads.
-    \item \textbf{Sicherheitsanalyse:} Isolationsmechanismen und Side-Channels.
-    \item \textbf{Fazit:} Synthese der Erkenntnisse.
-\end{enumerate}
+\section{Verwandte Arbeiten}
+Der wissenschaftliche Rahmen stützt sich auf die Identifikation mikroarchitektonischer Flaschenhälse. Koh et al. \cite{koh2007analysis} quantifizierten frühzeitig die Performance-Degradation in geteilten Umgebungen. Ge et al. \cite{ge2018survey} liefern eine aktuelle Systematisierung mikroarchitektonischer Timing-Angriffe und Gegenmaßnahmen, welche zwingend erforderlich ist, um die Ergebnisse auf der vorliegenden Intel-Gen12-Architektur kritisch einzuordnen.
 
 \bibliographystyle{IEEEtran}
-\bibliography{references_expose} 
+\bibliography{references_expose}
 
 \end{document}
