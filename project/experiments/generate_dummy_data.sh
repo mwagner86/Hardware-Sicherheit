@@ -1,17 +1,16 @@
 #!/bin/bash
-# Generiert Testdaten für das LaTeX-Exposé
-# Pfad: project/experiments/summary.csv
+# Generiert hypothetische Testdaten für das LaTeX-Exposé
+# Pfad: project/experiments/generate_dummy_data.sh
 
 OUTPUT_FILE="summary.csv"
 
-# Header schreiben
-echo "Lauf;CPU_Events_per_sec;IOPS_Random_Write" > "$OUTPUT_FILE"
+# Header: Wir nutzen ein Pivot-Format, das sich in PGFPlots (LaTeX) 
+# direkt als gruppiertes Balkendiagramm plotten lässt.
+echo "Virtualisierung;Baseline;NoisyNeighbor" > "$OUTPUT_FILE"
 
-# 5 Zeilen mit realistischen KVM-Werten füllen
-echo "1;4850.12;12400" >> "$OUTPUT_FILE"
-echo "2;4848.55;12350" >> "$OUTPUT_FILE"
-echo "3;4852.10;12410" >> "$OUTPUT_FILE"
-echo "4;4849.90;12380" >> "$OUTPUT_FILE"
-echo "5;4851.05;12405" >> "$OUTPUT_FILE"
+# Zeilen mit den Erwartungswerten (Hypothese)
+echo "QEMU;1200;1100" >> "$OUTPUT_FILE"
+echo "KVM;45000;31500" >> "$OUTPUT_FILE"
+echo "LXC;52000;20800" >> "$OUTPUT_FILE"
 
-echo "Testdaten erfolgreich in $OUTPUT_FILE erstellt."
+echo "Hypothetische Benchmark-Daten erfolgreich in $OUTPUT_FILE generiert."

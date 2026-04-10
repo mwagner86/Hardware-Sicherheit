@@ -1,38 +1,77 @@
+% expose_hardware_security.tex
 \documentclass[conference]{IEEEtran}
 \usepackage[utf8]{inputenc}
 \usepackage[ngerman]{babel}
 \usepackage{cite}
 \usepackage{hyperref}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 
 \begin{document}
 
 \title{Exposé: Untersuchung mikroarchitektonischer Ressourcen-Interferenzen (Noisy-Neighbor) in virtualisierten Umgebungen}
 
-\author{\IEEEauthorblockN{Max Wagner}
+\author{\IEEEauthorblockN{Maximilian Wagner}
 \IEEEauthorblockA{\textit{Fachbereich Informatik und Medien} \\
 \textit{Technische Hochschule Brandenburg}\\
 Brandenburg an der Havel, Deutschland \\
-email@student.th-brandenburg.de}
+maximilian.wagner@th-brandenburg.de}
 }
 
 \maketitle
 
 \begin{abstract}
-Dieses Exposé beschreibt die Projektmethodik zur Analyse von Hardware-Ressourcen-Konkurrenz in virtualisierten Umgebungen. Der Fokus liegt auf der Quantifizierbarkeit von Leistungseinbrüchen über Isolationsgrenzen hinweg (Noisy-Neighbor-Problem), abgesichert durch eine methodische Fallback-Strategie auf Basis-Benchmarks.
+Dieses Exposé beschreibt die Projektmethodik zur Analyse von Hardware-Ressourcen-Konkurrenz in virtualisierten Umgebungen. Der Fokus liegt auf der Quantifizierbarkeit von Leistungseinbrüchen über Isolationsgrenzen hinweg (Noisy-Neighbor-Problem), abgesichert durch eine methodische Fallback-Strategie auf Basis-Benchmarks. Dies adressiert die Anforderungen an die praktische Umsetzung und wissenschaftliche Aufarbeitung im Modul Hardware-Sicherheit.
 \end{abstract}
 
 \section{Problemstellung und Relevanz}
-Cloud-Infrastrukturen (Infrastructure as a Service) basieren auf der logischen Isolation von Mandanten (Multi-Tenancy) durch Virtualisierungsschichten. Obwohl speicher- und prozessseitige Barrieren etabliert sind, teilen sich virtuelle Instanzen physikalische Ressourcen wie den Last Level Cache (LLC), Hauptspeicherbandbreiten und I/O-Subsysteme. Dies ermöglicht es Angreifern, durch deterministische Überlastung dieser geteilten Ressourcen (Noisy-Neighbor-Interferenz) die Verfügbarkeit und Performance koexistierender Gastsysteme signifikant zu beeinträchtigen \cite{koh2007analysis}. Die systematische Untersuchung dieser mikroarchitektonischen Schwachstellen ist zur wissenschaftlichen Bewertung der realen Sicherheitsgarantien und Ressourcenisolation moderner Hypervisoren zwingend erforderlich.
+Cloud-Infrastrukturen basieren auf der logischen Isolation von Mandanten durch Virtualisierungsschichten. Obwohl speicher- und prozessseitige Barrieren etabliert sind, teilen sich virtuelle Instanzen physikalische Ressourcen wie den Last Level Cache (LLC), Hauptspeicherbandbreiten und I/O-Subsysteme. Dies ermöglicht es Angreifern, durch deterministische Überlastung dieser Ressourcen (Noisy-Neighbor-Interferenz) die Performance koexistierender Gastsysteme zu beeinträchtigen \cite{koh2007analysis}. Die Untersuchung dieser mikroarchitektonischen Schwachstellen bewertet die realen Sicherheitsgarantien moderner Hypervisoren.
 
 \section{Geplantes Vorgehen (Methodik)}
-Das Projekt folgt einer "PoC-First"-Strategie und wird auf einer asymmetrischen Intel Raptor Lake Architektur unter Proxmox VE durchgeführt. 
+Das Projekt wird auf einer Intel Raptor Lake Architektur unter Proxmox VE durchgeführt. 
 
-In der Initialphase wird ein aktiver Proof of Concept (PoC) implementiert: Zwei logisch isolierte Instanzen (LXC/KVM) werden über striktes CPU-Pinning identischen physischen Performance-Cores (P-Cores) zugewiesen, um Latenzschwankungen durch hybrides Scheduler-Verhalten auszuschließen. Ein Angreifer-System erzeugt mittels \texttt{stress-ng} gezielte Cache-Eviction und I/O-Sättigung. Zeitgleich misst das Opfer-System Instruktionsdurchlaufzeiten und Speicherlatenzen über standardisierte Werkzeuge (\texttt{sysbench}, \texttt{fio}). Das relative Delta der Messwerte quantifiziert den Grad des Isolationsbruchs.
+\subsection{Proof of Concept (PoC)}
+In der Initialphase wird ein aktiver PoC implementiert: Zwei Instanzen (LXC/KVM) werden über CPU-Pinning identischen physischen Performance-Cores zugewiesen. Ein Angreifer-System erzeugt mittels \texttt{stress-ng} gezielte Cache-Eviction und I/O-Sättigung. Das Opfer-System misst parallel Instruktionsdurchlaufzeiten und Speicherlatenzen (\texttt{sysbench}, \texttt{fio}). Das Delta der Messwerte quantifiziert den Isolationsbruch.
 
-\textbf{Methodischer Fallback:} Sofern mikroarchitektonische Hardware-Mitigierungen (z.\,B. Intel RDT) oder ausgleichendes Scheduler-Verhalten (CFS) die Interferenz auf ein nicht verwertbares Maß reduzieren, greift die Fallback-Strategie der ursprünglichen Aufgabenstellung. Hierzu wird eine unbelastete Baseline – unter strikter Deaktivierung von dynamischer Frequenzskalierung und tiefen C-States auf dem Hypervisor – erstellt. Auf dieser Basis erfolgt ein iterativer, vergleichender Leistungs-Benchmark zwischen Software-Emulation (QEMU), Para-Virtualisierung und Hardware-Virtualisierung bei I/O- und CPU-intensiven Berechnungen.
+\subsection{Methodischer Fallback}
+Sofern Hardware-Mitigierungen oder Scheduler-Mechanismen die Interferenz neutralisieren, greift der Fallback auf die ursprüngliche Aufgabenstellung: Ein vergleichender Leistungs-Benchmark zwischen Emulation (QEMU), Para-Virtualisierung und Hardware-Virtualisierung unter strikter Deaktivierung von Frequenzskalierung und C-States auf dem Host.
+
+\section{Erwartete Ergebnisse (Hypothese)}
+Abbildung \ref{fig:expected_degradation} visualisiert die erwartete I/O-Performance-Degradation. Es wird hypothetisch davon ausgegangen, dass LXC aufgrund der OS-Level-Virtualisierung die höchste Anfälligkeit zeigt, während der Overhead der QEMU-Emulation die mikroarchitektonische Interferenz weitgehend maskiert.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    bar width=12pt,
+    width=\linewidth,
+    height=6cm,
+    enlarge x limits=0.25,
+    ylabel={I/O-Operationen pro Sekunde},
+    ymin=0,
+    ymax=65000,
+    symbolic x coords={QEMU, KVM, LXC},
+    xtick=data,
+    nodes near coords,
+    nodes near coords align={vertical},
+    every node near coord/.append style={font=\footnotesize},
+    x tick label style={font=\small},
+    legend style={at={(0.5,-0.15)}, anchor=north, legend columns=-1, font=\footnotesize},
+]
+% Baseline
+\addplot coordinates {(QEMU, 1200) (KVM, 45000) (LXC, 52000)};
+% Angriff
+\addplot coordinates {(QEMU, 1100) (KVM, 31500) (LXC, 20800)};
+\legend{Baseline, Noisy Neighbor}
+\end{axis}
+\end{tikzpicture}
+\caption{Hypothetische I/O-Degradation (4K Random Read). Die Platzhalter-Werte illustrieren die erwartete Isolationsschwäche von LXC gegenüber KVM.}
+\label{fig:expected_degradation}
+\end{figure}
 
 \section{Verwandte Arbeiten}
-Der wissenschaftliche Rahmen stützt sich auf die Identifikation mikroarchitektonischer Flaschenhälse. Koh et al. \cite{koh2007analysis} quantifizierten frühzeitig die Performance-Degradation in geteilten Umgebungen. Ge et al. \cite{ge2018survey} liefern eine aktuelle Systematisierung mikroarchitektonischer Timing-Angriffe und Gegenmaßnahmen, welche zwingend erforderlich ist, um die Ergebnisse auf der vorliegenden Intel-Gen12-Architektur kritisch einzuordnen.
+Der Rahmen stützt sich auf die Identifikation mikroarchitektonischer Flaschenhälse. Koh et al. \cite{koh2007analysis} quantifizierten die Performance-Interferenz in virtualisierten Umgebungen. Ge et al. \cite{ge2018survey} liefern eine Systematisierung mikroarchitektonischer Timing-Angriffe, welche zur Einordnung der Ergebnisse auf aktueller Hardware zwingend erforderlich ist.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references_expose}
