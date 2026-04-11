@@ -1,5 +1,25 @@
 # Literaturzugang & Bezugsquellen
 
+Dieses Dokument dokumentiert die exakten Zugangsmöglichkeiten zu der im Projekt verwendeten Primärliteratur. Der Zugriff auf verlagsgebundene Volltexte erfordert eine aktive VPN-Verbindung in das Netz der Hochschule.
+
+## 1. An analysis of performance interference effects in virtual environments
+* **Autoren:** Koh, Y., et al. (2007)
+* **Publikationsort:** IEEE ISPASS
+* **Direktlink:** [https://ieeexplore.ieee.org/document/4211036](https://ieeexplore.ieee.org/document/4211036)
+* **Zugang:** Volltextzugriff lizenziert über Uni-VPN (IEEE Xplore).
+
+## 2. A survey of microarchitectural timing attacks and countermeasures on contemporary hardware
+* **Autoren:** Ge, Q., et al. (2018)
+* **Publikationsort:** Journal of Cryptographic Engineering, Springer
+* **Direktlink:** [https://link.springer.com/article/10.1007/s13389-016-0141-6](https://link.springer.com/article/10.1007/s13389-016-0141-6)
+* **Zugang:** Volltextzugriff lizenziert über Uni-VPN (SpringerLink).
+
+## 3. Security Recommendations for Server-based Hypervisor Platforms
+* **Autoren:** Chandramouli, R. (NIST)
+* **Publikationsart:** NIST Special Publication 800-125A
+* **Direktlink:** [https://csrc.nist.gov/pubs/sp/800/125/a/r1/final](https://csrc.nist.gov/pubs/sp/800/125/a/r1/final)
+* **Zugang:** Open Access (NIST Computer Security Resource Center).# Literaturzugang & Bezugsquellen
+
 Dieses Dokument dokumentiert die Zugangsmöglichkeiten zu der im Projekt verwendeten Primärliteratur. Der Zugriff auf verlagsgebundene Volltexte (IEEE, Springer) erfordert eine aktive VPN-Verbindung in das Netz der Hochschule zur Nutzung der entsprechenden Campuslizenzen.
 
 ## 1. An analysis of performance interference effects in virtual environments
