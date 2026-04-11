@@ -27,7 +27,7 @@ Dieses Exposé beschreibt die Projektmethodik zur Analyse von Hardware-Ressource
 Cloud-Infrastrukturen basieren auf der logischen Isolation von Mandanten durch Virtualisierungsschichten. Obwohl speicher- und prozessseitige Barrieren etabliert sind, teilen sich virtuelle Instanzen physikalische Ressourcen wie den Last Level Cache (LLC), Hauptspeicherbandbreiten und I/O-Subsysteme. Dies ermöglicht es Angreifern, durch deterministische Überlastung dieser Ressourcen (Noisy-Neighbor-Interferenz) die Performance koexistierender Gastsysteme signifikant zu beeinträchtigen \cite{koh2007analysis}. Eine systematische Einordnung dieser mikroarchitektonischen Angriffsvektoren ist entscheidend für das Verständnis moderner Hardware-Schwachstellen \cite{ge2018survey}.
 
 \section{Warum ist das Thema relevant?}
-Die Untersuchung dieser mikroarchitektonischen Schwachstellen ist zwingend erforderlich, um die realen Sicherheitsgarantien moderner Hypervisoren objektiv zu bewerten. Das National Institute of Standards and Technology (NIST) fordert in der SP 800-125A strikte Isolationsmechanismen auf Hypervisor-Ebene, weist jedoch explizit auf die systemischen Grenzen geteilter Hardware hin \cite{nist2014hypervisor}. Das Projekt evaluiert, inwieweit diese theoretischen Grenzen in der Praxis ausnutzbar sind.
+Eine systematische Untersuchung dieser mikroarchitektonischen Schwachstellen bildet eine wichtige Grundlage, um die Sicherheitsgarantien moderner Hypervisoren objektiv beurteilen zu können. Das National Institute of Standards and Technology (NIST) fordert in der SP 800-125A strikte Isolationsmechanismen auf Hypervisor-Ebene, weist jedoch explizit auf die systemischen Grenzen geteilter Hardware hin \cite{nist2014hypervisor}. Das Projekt evaluiert, inwieweit diese theoretischen Grenzen in der Praxis ausnutzbar sind. Sollte eine Ausnutzung durch aktuelle Hardware-Mitigierungen unterbunden werden, liefert die im Fallback vorgesehene systematische Leistungsbewertung dennoch maßgebliche Erkenntnisse über den inhärenten Isolations-Overhead und die architektonische Effizienz der unterschiedlichen Virtualisierungskonzepte.
 
 \section{Was soll in der praktischen Arbeit umgesetzt werden?}
 Das Projekt wird auf einer Intel Raptor Lake Architektur unter Proxmox VE durchgeführt. Ziel ist der Aufbau einer automatisierten Testumgebung zur Messung von Ressourcen-Interferenzen. Es wird ein aktiver Proof of Concept (PoC) für einen Noisy-Neighbor-Angriff implementiert: Ein Angreifer-System erzeugt mittels \texttt{stress-ng} gezielte Cache-Eviction und I/O-Sättigung. Parallel dazu misst ein Opfer-System Instruktionsdurchlaufzeiten und Speicherlatenzen mithilfe von \texttt{sysbench} und \texttt{fio}.
@@ -65,6 +65,12 @@ Sofern Hardware-Mitigierungen die Interferenz auf ein nicht verwertbares Maß ne
 \caption{Hypothetische I/O-Degradation (4K Random Read). Die Erwartungswerte wurden über \texttt{generate\_dummy\_data.sh} in die \texttt{summary.csv} eingespeist und automatisiert visualisiert. Sie illustrieren die zu quantifizierende Isolationsschwäche von LXC gegenüber KVM.}
 \label{fig:expected_degradation}
 \end{figure}
+
+Zur Gewährleistung der wissenschaftlichen Transparenz und Reproduzierbarkeit wird die gesamte Code-Basis sowie die Dokumentation unter Versionskontrolle gestellt und online bereitgestellt.
+\begin{center}
+    \textbf{Öffentliches GitHub-Repository:}\\
+    \url{https://github.com/mwagner86/Hardware-Sicherheit}
+\end{center}
 
 \section{Was ist Ihr grober Zeitplan?}
 Die Projektbearbeitung erfolgt phasenbasiert mit dem Ziel eines vollständigen Abschlusses bis Ende Juni:
