@@ -1,9 +1,9 @@
-.PHONY: all paper expose clean fullclean
+.PHONY: all paper expose draft clean fullclean
 
 LATEXMK = latexmk
 LATEXMK_FLAGS = -pdf -interaction=nonstopmode -file-line-error -synctex=1
 
-all: paper expose
+all: paper expose draft
 
 paper:
 	@echo "Building Paper..."
@@ -12,6 +12,10 @@ paper:
 expose:
 	@echo "Building Expose..."
 	cd project/expose && $(LATEXMK) $(LATEXMK_FLAGS) expose_hardware_security.tex
+
+draft:
+	@echo "Building Literatur Draft..."
+	cd paper && $(LATEXMK) $(LATEXMK_FLAGS) literatur_recherche_draft.tex
 
 clean:
 	@echo "Cleaning auxiliary files..."

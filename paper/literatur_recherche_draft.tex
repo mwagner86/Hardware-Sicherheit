@@ -1,0 +1,44 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{cite}
+\usepackage{hyperref}
+
+\begin{document}
+
+\title{Zwischenabgabe: Ergebnisse der Literatur-Recherche zur mikroarchitektonischen Performance-Isolation}
+
+\author{\IEEEauthorblockN{Maximilian Wagner}
+\IEEEauthorblockA{\textit{Fachbereich Informatik und Medien} \\
+\textit{Technische Hochschule Brandenburg}\\
+Brandenburg an der Havel, Deutschland \\
+maximilian.wagner@th-brandenburg.de}
+}
+
+\maketitle
+
+\begin{abstract}
+Dieses Dokument systematisiert den aktuellen Stand der Forschung bezüglich Hardware-Ressourcen-Konkurrenz in virtualisierten Umgebungen. Es fokussiert sich auf mikroarchitektonische Flaschenhälse, daraus resultierende Angriffsvektoren (Noisy-Neighbor) sowie regulatorische Isolationsvorgaben und bewertet deren Übertragbarkeit auf moderne Hardware-Architekturen.
+\end{abstract}
+
+\section{Stand der Forschung}
+Die logische Isolation von Gastsystemen bildet das Fundament moderner Cloud-Infrastrukturen. Die physische Ressourcen-Teilung auf mikroarchitektonischer Ebene führt jedoch zu systemischen Schwachstellen, die nachfolgend anhand einschlägiger Literatur strukturiert werden.
+
+\subsection{Performance-Interferenzen und Ressourcen-Konkurrenz}
+Koh et al. \cite{koh2007analysis} wiesen nach, dass traditionelle Virtualisierungstechnologien zwar eine funktionale Fehler- und Sicherheitsisolation gewährleisten, jedoch keine strikte Performance-Isolation bieten. Die Studie identifiziert Cache-Interferenzen durch die Verdrängung von Cache-Lines im Shared Cache (Last Level Cache) sowie I/O-Interferenzen als primäre Flaschenhälse. Ein zentrales architektonisches Problem stellt die Hypervisor-bedingte Abstraktion dar: Die Ursachen der Interferenz bleiben für das Gast-Betriebssystem intransparent, wodurch VM-interne Optimierungsstrategien neutralisiert werden.
+
+\subsection{Mikroarchitektonische Angriffsvektoren}
+Die Systematisierung dieser Interferenzen als gezielte Angriffsvektoren wird von Ge et al. \cite{ge2018survey} dargelegt. Die Untersuchung belegt, dass die gemeinsame Nutzung des Last Level Caches und des Memory Controllers deterministische Timing-Angriffe über logische Isolationsgrenzen hinweg ermöglicht. Techniken wie PRIME+PROBE nutzen Latenzunterschiede aus, um das Verhalten koexistierender VMs zu rekonstruieren. Darüber hinaus wird das gezielte, aggressive Belegen von Shared-Ressourcen (Cache Cleansing, Bus-Sättigung) explizit als mikroarchitektonischer Denial-of-Service-Angriff (DoS) klassifiziert. Die Autoren konstatieren, dass softwareseitige Mitigierungsstrategien, wie das Cache-Flushing bei Kontextwechseln, mit prohibitiven Performance-Einbußen einhergehen.
+
+\subsection{Regulatorische Vorgaben und Architekturstandards}
+Das National Institute of Standards and Technology (NIST) adressiert diese Hardware-Risiken in der Special Publication 800-125A \cite{nist2014hypervisor}. Die Richtlinie klassifiziert die unkontrollierte Erschöpfung von Wirtsressourcen durch kompromittierte VMs als kritisches Plattform-Risiko. Als Gegenmaßnahme fordert der Standard hardwaregestützte Virtualisierungsmechanismen (IOMMU, DMA-Remapping). Zur direkten Mitigierung von Noisy-Neighbor-Szenarien auf Plattformebene wird die administrative Durchsetzung strikter Bandbreitenschranken (Limits und Reservations) für CPU-Zyklen und I/O-Ressourcen zwingend vorgeschrieben.
+
+\section{Kritische Synthese und Forschungslücke}
+Die referenzierte Literatur belegt die theoretische Ausnutzbarkeit mikroarchitektonischer Shared-Ressourcen. Für die Untersuchung auf einer modernen Intel Raptor Lake Architektur ergeben sich jedoch Einschränkungen bezüglich der empirischen Übertragbarkeit. Die Erkenntnisse von Koh et al. \cite{koh2007analysis} und Ge et al. \cite{ge2018survey} basieren auf älteren CPU-Generationen und berücksichtigen weder aktuelle Hardware-Mitigierungen (z.\,B. Intel Resource Director Technology) noch das asymmetrische Thread-Scheduling hybrider Architekturen. 
+
+Hieraus leitet sich die Notwendigkeit einer empirischen Überprüfung ab: Es muss falsifiziert werden, ob die in der Literatur beschriebenen historischen Interferenz-Vektoren auf aktuellen, hardware-unterstützten Hypervisor-Plattformen unter produktiven Bedingungen (KVM vs. LXC) noch zu quantifizierbaren Isolationsbrüchen führen.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
