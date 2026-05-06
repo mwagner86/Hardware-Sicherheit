@@ -1,0 +1,320 @@
+\documentclass[conference]{IEEEtran}
+
+% --- Grundkonfiguration ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+
+% --- Wissenschaftliche Pakete ---
+\usepackage{cite}
+\usepackage{url}
+\usepackage{booktabs}
+
+\begin{document}
+
+\title{Erste Version der Einleitung:\\
+Trade-offs der Virtualisierung auf x86-Systemen:\\
+Eine quantitative Analyse von Performance-Overheads\\
+und Side-Channel-Risiken}
+
+\author{%
+  \IEEEauthorblockN{Maximilian Wagner}
+  \IEEEauthorblockA{%
+    \textit{Studiengang IT-Sicherheit} \\
+    \textit{Fachbereich Informatik und Medien} \\
+    \textit{Technische Hochschule Brandenburg} \\
+    maximilian.wagner@th-brandenburg.de
+  }
+}
+
+\maketitle
+
+\begin{abstract}
+Dieses Dokument enthält die erste KI-assistiert erstellte Version der
+Einleitung der wissenschaftlichen Hausarbeit zum Thema
+mikroarchitektonischer Ressourcen-Interferenzen in virtualisierten
+Umgebungen. Im Anhang sind der verwendete System-Kontext sowie der
+eingesetzte Prompt zur Nachvollziehbarkeit des Erstellungsprozesses
+dokumentiert.
+\end{abstract}
+
+% =============================================================================
+\section{Einleitung}
+% =============================================================================
+
+\paragraph{Thematische Einführung}
+Virtualisierung bezeichnet die softwaregestützte Abstraktion physischer
+Rechenhardware in eine oder mehrere logisch isolierte
+Ausführungsumgebungen, sogenannte Gastsysteme. Der Hypervisor vermittelt
+dabei zwischen den Gastsystemen und der physischen Hardware und
+gewährleistet, dass Gastsysteme weder den Adressraum noch die
+Ausführungskontrolle benachbarter Instanzen direkt adressieren können.
+Diese logische Isolation ist das tragende Sicherheitsprinzip der
+Multi-Tenancy-Architektur. Auf mikroarchitektonischer Ebene ist diese
+Isolation jedoch unvollständig: Ressourcen wie der Last Level Cache
+(LLC), die Hauptspeicherbandbreite und I/O-Subsysteme werden zwischen
+allen auf denselben physischen Kernen eingeplanten Gastsystemen physisch
+geteilt. Der Hypervisor abstrahiert diese Ressourcen nicht weg, sondern
+macht deren gemeinsame Nutzung für das Gast-Betriebssystem transparent
+--- und entzieht ihr damit gleichzeitig jede Kontrollmöglichkeit
+\cite{koh2007analysis}.
+
+\paragraph{Relevanz und Gefährdungspotenzial}
+Die unkontrollierte Teilung mikroarchitektonischer Ressourcen begründet
+eine systemische Schwachstellenklasse, die in modernen
+Cloud-Infrastrukturen mit wirtschaftlich signifikantem Schadenpotenzial
+verbunden ist. Koh et al.\ zeigen, dass Virtualisierungstechnologien
+zwar funktionale Fehler- und Sicherheitsisolation bereitstellen, eine
+strikte Performance-Isolation jedoch strukturell nicht leisten können
+\cite{koh2007analysis}. Die daraus resultierende Ressourcen-Konkurrenz
+manifestiert sich in zwei Angriffsformen: Erstens ermöglicht die
+unkontrollierte Verdrängung von Cache-Lines durch einen aggressiven
+Workload --- den sogenannten Noisy-Neighbor --- eine ungezielte
+Degradation der Latenz und des Durchsatzes koexistierender Gastsysteme
+und damit einen mikroarchitektonischen Denial-of-Service. Zweitens
+erlauben deterministische Zugriffsmuster auf den Shared LLC über
+Techniken wie PRIME+PROBE die Rekonstruktion von Laufzeitverhalten
+über logische Isolationsgrenzen hinweg, was als Seitenkanal-Angriff
+klassifiziert wird \cite{ge2018survey}. Das National Institute of
+Standards and Technology (NIST) klassifiziert die unkontrollierte
+Ressourcenerschöpfung auf Hypervisor-Ebene als kritisches
+Plattform-Risiko und fordert hardwaregestützte Isolationsmechanismen
+als Gegenmaßnahme \cite{nist2014hypervisor}.
+
+\paragraph{Zielsetzung und Problemstellung}
+Die referenzierte Literatur belegt die prinzipielle Ausnutzbarkeit
+geteilter mikroarchitektonischer Ressourcen auf Basis älterer
+CPU-Generationen. Für aktuelle Hardware-Architekturen besteht eine
+empirische Forschungslücke: Weder die hybriden Kern-Topologien
+(P-Cores/E-Cores) noch die hardwaregestützten Isolationsmechanismen
+moderner Intel-Prozessoren --- insbesondere die Intel Resource Director
+Technology (RDT) mit Cache Allocation Technology (CAT) --- wurden in
+diesem Kontext systematisch untersucht
+\cite{koh2007analysis,ge2018survey}. Diese Arbeit verfolgt das Ziel,
+folgende Hypothese empirisch zu falsifizieren: \textit{Historische
+Interferenz-Vektoren, die auf der gemeinsamen Nutzung des Last Level
+Caches beruhen, führen auf einer Intel Raptor Lake Architektur unter
+produktiven Hypervisor-Bedingungen (Proxmox VE) nicht mehr zu statistisch
+quantifizierbaren Isolationsbrüchen.} Die Forschungsfrage lautet
+entsprechend: Sind LLC-basierte Noisy-Neighbor-Interferenzen auf
+aktueller Hardware mit modernen Mitigierungen empirisch nachweisbar?
+
+\paragraph{Lösungsansatz}
+Die Forschungsfrage wird durch einen empirischen Messansatz unter
+deterministisch kontrollierten Bedingungen adressiert. Anstelle einer
+rein theoretischen Analyse werden Interferenzeffekte direkt am
+Zielsystem provoziert und quantifiziert. Um Messrauschen durch
+nicht-deterministische Hardware-Verhalten auszuschließen, werden auf dem
+Host-System tiefe C-States sowie dynamische Frequenzskalierung (Intel
+Turbo Boost, CPU-Governor) deaktiviert. Die Messungen erfassen Durchsatz
+und Latenz des Opfer-Systems sowohl unter isolierter Baseline-Last als
+auch unter gleichzeitiger Störlast durch ein Angreifer-System. Das Delta
+beider Messreihen quantifiziert den Isolationsbruch.
+
+\paragraph{Praktische Demonstration}
+Im Rahmen des Proof of Concept (PoC) werden zwei Debian-Gastsysteme
+--- ein Angreifer und ein Opfer --- über striktes CPU-Pinning
+(CPU Affinity) auf identische physische P-Cores des Proxmox-Hosts
+fixiert, um die erzwungene LLC-Konutzung sicherzustellen. Das
+Angreifer-System sättigt den LLC gezielt durch
+\texttt{stress-ng {-}{-}cache 2 {-}{-}cache-level 3}. Das
+Opfer-System erfasst parallel mittels \texttt{sysbench} und \texttt{fio}
+den I/O-Durchsatz (MB/s) sowie die 95.~Perzentil-Latenz (ms) als
+primäre Interferenzmetriken. Sollten aktuelle Hardware-Mitigierungen
+--- insbesondere Intel RDT/CAT --- die Interferenz auf ein statistisch
+nicht signifikantes Maß reduzieren und die Hypothese damit nicht
+falsifizierbar machen, wird eine methodische Fallback-Strategie
+aktiviert: Ein systematischer Leistungsvergleich von reiner Emulation
+(QEMU), Para-Virtualisierung (LXC) und hardwareunterstützter
+Virtualisierung (KVM) unter identischer Last und strikter
+Host-Kontrolle. Der Fallback liefert in diesem Fall unabhängige,
+empirisch verwertbare Aussagen über den inhärenten Performance-Overhead
+der jeweiligen Virtualisierungsparadigmen.
+
+\paragraph{Aufbau der Arbeit}
+Abschnitt~II systematisiert den Stand der Forschung zu
+mikroarchitektonischen Interferenz-Vektoren, Virtualisierungsparadigmen
+und hardware-seitigen Mitigierungsstrategien. Abschnitt~III beschreibt
+den Versuchsaufbau, die Host-Konfiguration sowie die eingesetzten
+Messwerkzeuge und -methoden. Abschnitt~IV präsentiert und bewertet die
+Ergebnisse des PoC respektive des Fallback-Benchmarks. Abschnitt~V
+diskutiert die Befunde im Kontext der Ausgangshypothese und der
+referierten Literatur. Abschnitt~VI fasst die zentralen Erkenntnisse
+zusammen und benennt weiterführende Forschungsfragen.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+% =============================================================================
+% Ab hier: Anhang in Einzelspalte
+% =============================================================================
+\clearpage
+\onecolumn
+
+\section*{Anhang: Erstellungs-Dokumentation}
+
+\noindent
+Dieser Anhang dokumentiert den KI-gestützten Erstellungsprozess gemäß
+den Anforderungen der Lehrveranstaltung. Das verwendete KI-Werkzeug
+ist Claude Sonnet~4.6 (Anthropic, Stand: Mai 2026).
+
+% --- Kontext -------------------------------------------------------------------
+\subsection*{A. Verwendeter System-Kontext}
+
+\noindent
+Der folgende System-Kontext wurde dem KI-Werkzeug als persistente
+Instruktionsgrundlage übergeben. Er legt Projektziel, Hardware-Szenario,
+Methodik und Fallback-Strategie fest.
+
+\bigskip
+\noindent\textbf{A.1\quad Projektziel und Rahmenbedingungen}
+
+\begin{itemize}
+  \item \textbf{Format:} IEEE Conference Format
+        (\texttt{\textbackslash documentclass[conference]\{IEEEtran\}})
+  \item \textbf{Sprache:} Deutsch (wissenschaftlicher Standard)
+  \item \textbf{Kernaufgabe:} Untersuchung der Isolation in
+        Virtualisierungslösungen mit Fokus auf Hardware-Sicherheit
+\end{itemize}
+
+\bigskip
+\noindent\textbf{A.2\quad Erweiterte Aufgabenstellung (Fokus: Noisy-Neighbor)}
+
+Das Projekt erweitert die ursprüngliche Basisaufgabe (Vergleich von
+Virtualisierungsparadigmen) um eine spezifische Untersuchung
+mikroarchitektonischer Ressourcen-Interferenzen. Ziel ist die Falsifikation
+der Hypothese, dass historische Angriffsvektoren auf moderner Hardware
+(Intel Raptor Lake) durch aktuelle Isolationsmechanismen
+(Intel RDT/CAT) vollständig neutralisiert werden.
+
+\bigskip
+\noindent\textbf{A.3\quad Hardware-Szenario und Host-Konfiguration}
+
+\begin{itemize}
+  \item \textbf{Host:} Proxmox VE auf Intel Raptor Lake
+        (hybride P-Core/E-Core Architektur)
+  \item \textbf{Shared Resource:} Last Level Cache (LLC),
+        physisch geteilt von P-Cores
+  \item \textbf{Host-Determinismus (zwingend):}
+    \begin{itemize}
+      \item Deep C-States deaktivieren (Kernel-Parameter):\\
+            \texttt{intel\_idle.max\_cstate=1
+            processor.max\_cstate=1 idle=poll}
+      \item Intel Turbo Boost deaktivieren:\\
+            \texttt{echo 1 >\
+            /sys/devices/system/cpu/intel\_pstate/no\_turbo}
+      \item CPU-Governor auf \texttt{performance} fixieren
+    \end{itemize}
+\end{itemize}
+
+\bigskip
+\noindent\textbf{A.4\quad Methodik und Proof of Concept (PoC)}
+
+\begin{itemize}
+  \item \textbf{Setup:} Zwei identische Debian-Instanzen
+        (Attacker \& Victim)
+  \item \textbf{Isolations-Bruch:} CPU-Pinning beider Instanzen auf
+        denselben physischen P-Core (CPU Affinity in Proxmox)
+  \item \textbf{Metriken:} Durchsatz (MB/s) und 95.~Perzentil-Latenz (ms)
+        via \texttt{sysbench} und \texttt{fio} auf dem Victim-System;
+        Attacker läuft \texttt{stress-ng {-}{-}cache 2
+        {-}{-}cache-level 3}
+\end{itemize}
+
+\bigskip
+\noindent\textbf{A.5\quad Fallback-Strategie}
+
+Greift, wenn keine messbaren Interferenzen auftreten:
+
+\begin{itemize}
+  \item \textbf{Thema:} Vergleich von Emulation (QEMU),
+        Para-Virtualisierung (LXC) und hardwareunterstützter
+        Virtualisierung (KVM)
+  \item \textbf{Fokus:} Leistungsfähigkeit bei Rechen- und
+        I/O-Operationen unter strikter Host-Kontrolle
+\end{itemize}
+
+% --- Prompt -------------------------------------------------------------------
+\bigskip
+\subsection*{B. Verwendeter Prompt}
+
+\noindent
+Der folgende Prompt wurde zur Generierung der Einleitung eingesetzt.
+Das KI-Werkzeug erhielt diesen Prompt zusammen mit dem unter A.
+dokumentierten System-Kontext sowie den Quelldateien
+\texttt{expose\_hardware\_security.tex},
+\texttt{literatur\_recherche\_draft.tex} und \texttt{references.bib}.
+
+\bigskip
+\begin{quote}
+\noindent\textbf{Rollenprofil:} Wissenschaftlicher Autor im Fachbereich
+IT-Sicherheit und Hardware-Architektur.
+
+\medskip
+\noindent\textbf{Aufgabe:} Erstellung eines inhaltlichen Entwurfs der
+Einleitung (Ausgabe als Markdown-Dokument \texttt{Einleitung.md}) für
+eine wissenschaftliche Hausarbeit im IEEE-Format. Die inhaltliche
+Struktur muss strikt und sequenziell den folgenden sechs Leitfragen
+folgen.
+
+\medskip
+\noindent\textbf{Eingabedaten (zwingend zu berücksichtigen):}
+\begin{itemize}
+  \item System-Kontext: \texttt{ki\_agent\_context\_projekt.md}
+  \item Projektskizze:
+        \texttt{project/expose/expose\_hardware\_security.tex}
+  \item Stand der Forschung:
+        \texttt{paper/literatur\_recherche\_draft.tex}
+  \item Literaturdatenbank: \texttt{paper/references.bib}
+\end{itemize}
+
+\medskip
+\noindent\textbf{Inhaltliche Strukturierung (Absatzweise abzuarbeiten):}
+\begin{enumerate}
+  \item \textbf{Worum geht es? (Thematische Einführung):} Sachliche
+        Einführung in Virtualisierung, logische Isolation und die
+        physische Teilung mikroarchitektonischer Ressourcen
+        (insbesondere Caches).
+  \item \textbf{Warum ist das Thema relevant? (Gefährdungspotenzial \&
+        Aktualität):} Einordnung der Relevanz für moderne
+        Cloud-Infrastrukturen. Der Noisy-Neighbor-Effekt als
+        systemische Schwachstelle (Leistungsdegradation,
+        Timing-Angriffe, Denial-of-Service auf Hardware-Ebene).
+  \item \textbf{Was ist das Ziel dieser Hausarbeit? (Zielsetzung \&
+        Problemstellung):} Falsifikation der Hypothese, dass
+        historische Interferenz-Vektoren auf aktuellen,
+        hardware-mitigierten Architekturen (Intel Raptor Lake) unter
+        produktiven Hypervisor-Bedingungen (Proxmox VE) weiterhin
+        quantifizierbare Isolationsbrüche verursachen.
+  \item \textbf{Was ist der Lösungsansatz?:} Empirische
+        Quantifizierung der Performance-Isolation unter kontrollierter
+        Störlast.
+  \item \textbf{Was wird im praktischen Teil demonstriert?:}
+        Proof of Concept: CPU-Pinning auf physische P-Cores,
+        LLC-Sättigung via \texttt{stress-ng}, Baseline- und
+        Degradationsmessung via \texttt{sysbench} und \texttt{fio}.
+        Zwingende Integration der Fallback-Strategie (Leistungsvergleich
+        QEMU\,/\,LXC\,/\,KVM), falls Intel RDT den Isolationsbruch
+        neutralisiert.
+  \item \textbf{Wie ist die Gliederung der Arbeit?:} Rein deskriptiver
+        Ausblick auf die nachfolgenden Kapitel (Stand der Forschung,
+        Methodik, Evaluation, Fazit).
+\end{enumerate}
+
+\medskip
+\noindent\textbf{Stilistische und formale Vorgaben:}
+\begin{itemize}
+  \item Sprache: Wissenschaftliches, objektives Deutsch
+  \item Terminologie: Korrekte Fachsprache (IT-Security\,/\,Hardware-%
+        Architektur), keine unnötigen Vereinfachungen
+  \item Wissenschaftlicher Standard: Differenzierung zwischen Fakt
+        (Architekturgegebenheiten) und Hypothese
+  \item Formatierung: Ausgabe als validierbarer Markdown-Codeblock,
+        keine Meta-Kommentare
+  \item Referenzierung: Platzhalter im \texttt{\textbackslash
+        cite\{\}}-Format, korrespondierend zu den Einträgen
+        in der \texttt{references.bib}
+\end{itemize}
+\end{quote}
+
+\end{document}

@@ -1,9 +1,9 @@
-.PHONY: all paper expose draft clean fullclean
+.PHONY: all paper expose draft einleitung clean fullclean
 
 LATEXMK = latexmk
 LATEXMK_FLAGS = -pdf -interaction=nonstopmode -file-line-error -synctex=1
 
-all: paper expose draft
+all: paper expose draft einleitung
 
 paper:
 	@echo "Building Paper..."
@@ -16,6 +16,10 @@ expose:
 draft:
 	@echo "Building Literatur Draft..."
 	cd paper && $(LATEXMK) $(LATEXMK_FLAGS) literatur_recherche_draft.tex
+
+einleitung:
+	@echo "Building Einleitung (Erste Version)..."
+	cd paper && $(LATEXMK) $(LATEXMK_FLAGS) einleitung_erste_version.tex
 
 clean:
 	@echo "Cleaning auxiliary files..."
