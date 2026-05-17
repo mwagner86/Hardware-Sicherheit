@@ -1,0 +1,123 @@
+\documentclass[conference]{IEEEtran}
+
+% --- Grundkonfiguration ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+
+% --- Wissenschaftliche Pakete ---
+\usepackage{cite}
+\usepackage{url}
+\usepackage{booktabs}
+
+\begin{document}
+
+\title{Untersuchung mikroarchitektonischer Ressourcen-Interferenzen (Noisy-Neighbor) in virtualisierten Umgebungen}
+
+\author{%
+  \IEEEauthorblockN{Maximilian Wagner}
+  \IEEEauthorblockA{%
+    \textit{Studiengang IT-Sicherheit} \\
+    \textit{Fachbereich Informatik und Medien} \\
+    \textit{Technische Hochschule Brandenburg} \\
+    maximilian.wagner@th-brandenburg.de
+  }
+}
+
+\maketitle
+
+\begin{abstract}
+Dieses Dokument enthält die überarbeitete Version der Einleitung der
+wissenschaftlichen Hausarbeit zum Thema mikroarchitektonischer
+Ressourcen-Interferenzen in virtualisierten Umgebungen. Die Überarbeitung
+basiert auf einer systematischen wissenschaftlichen Analyse der ersten
+Rohfassung.
+\end{abstract}
+
+% =============================================================================
+\section{Einleitung}
+% =============================================================================
+
+Virtualisierung bezeichnet die softwaregestützte Abstraktion physischer
+Rechenhardware in logisch isolierte Ausführungsumgebungen, sogenannte
+Gastsysteme. Ein Hypervisor vermittelt dabei zwischen den Gastsystemen
+und der physischen Hardware, um zu gewährleisten, dass Instanzen weder
+den Adressraum noch die Ausführungskontrolle benachbarter Systeme direkt
+adressieren können. Diese logische Isolation bildet das tragende
+Sicherheitsprinzip von Multi-Tenant-Architekturen in modernen
+Cloud-Infrastrukturen. Auf mikroarchitektonischer Ebene bleibt diese
+Isolation jedoch unvollständig: Physische Komponenten wie der Last Level
+Cache (LLC), die Hauptspeicherbandbreite und I/O-Subsysteme werden von
+koexistierenden Systemen geteilt. Da der Hypervisor diese
+Hardwarekomponenten oft transparent an die Gastsysteme weiterreicht,
+entstehen unkontrollierte Interferenzkanäle \cite{koh2007analysis}.
+
+Diese unkontrollierte Ressourcenteilung begründet eine systemische
+Schwachstellenklasse mit erheblichem Gefährdungspotenzial. Während
+Virtualisierungslösungen eine funktionale Fehler- und Sicherheitsisolation
+bereitstellen, kann eine strikte Performance-Isolation strukturell oft nicht
+garantiert werden \cite{koh2007analysis}. Die resultierende
+Ressourcen-Konkurrenz manifestiert sich insbesondere im sogenannten
+Noisy-Neighbor-Effekt: Ein aggressiver Workload innerhalb einer Instanz
+verdrängt gezielt Cache-Zeilen koexistierender Systeme. Dies führt zu einer
+unautorisierten Degradation von Durchsatz und Latenz benachbarter Mandanten,
+was einem mikroarchitektonischen Denial-of-Service-Angriff gleichkommt
+\cite{ge2018survey}. Regulatorische Standards wie die Richtlinien des
+National Institute of Standards and Technology (NIST) klassifizieren diese
+unkontrollierte Ressourcenerschöpfung auf Plattformebene daher als kritisches
+Risiko und fordern den Einsatz hardwaregestützter Isolations- und
+Kontrollmechanismen \cite{nist2014hypervisor}.
+
+Während die grundlegende Anfälligkeit geteilter Ressourcen in der Literatur
+dokumentiert ist, besteht bei aktuellen Hardware-Architekturen ein Defizit
+an systematischen Untersuchungen. Moderne Prozessorgenerationen
+implementieren komplexe, hybride Kern-Topologien (Performance- und
+Efficient-Cores) sowie hardwaregestützte Abwehrfunktionen wie die Intel
+Resource Director Technology (RDT) inklusive Cache Allocation Technology
+(CAT). Inwiefern diese Schutzmechanismen unter produktiven Bedingungen eine
+hinreichende Isolation gewährleisten, ist bisher unzureichend dokumentiert.
+Die vorliegende Arbeit adressiert diese Lücke und prüft die Hypothese, ob
+historische, LLC-basierte Interferenz-Vektoren auf einer aktuellen Intel
+Raptor Lake Architektur unter Verwendung eines produktiven Hypervisors
+(Proxmox VE) zu statistisch quantifizierbaren Isolationsbrüchen führen.
+
+Der zur Überprüfung gewählte Messansatz basiert auf einem kontrollierten
+Verfahren auf Host-Ebene. Um Verfälschungen der Ergebnisse durch dynamische
+Hardware-Optimierungen auszuschließen, werden auf dem Host-System
+Energiesparmodi (C-States) sowie die dynamische Frequenzskalierung (Intel
+Turbo Boost, CPU-Governor) vollständig deaktiviert. Auf diesem bereinigten
+Fundament baut die Untersuchung auf: Die methodische Basis bildet die
+Evaluierung und der direkte Leistungsvergleich der fundamentalen
+Virtualisierungsparadigmen – der reinen Emulation, der Para-Virtualisierung
+und der hardwareunterstützten Virtualisierung – hinsichtlich ihrer Rechen-
+und I/O-Kapazitäten.
+
+Auf diesem Fundament wird der spezifische Noisy-Neighbor-Proof-of-Concept
+(PoC) aufgesetzt. Hierbei werden zwei Debian-Instanzen (Angreifer und
+Opfer) mittels CPU-Affinity auf identische physische Performance-Kerne
+gebunden, um eine Cache-Konkurrenz zu erzwingen. Während das
+Angreifer-System über synthetische Lasten eine Sättigung des LLC provoziert,
+erfasst das Opfer-System mittels standardisierter Benchmarking-Werkzeuge die
+Veränderungen von Durchsatz und Latenz. Sollten die hardwareseitigen
+Schutzmechanismen des Prozessors (Intel RDT/CAT) die Interferenzen
+vollständig neutralisieren und die Hypothese somit falsifiziert werden, greift
+eine strukturierte Fallback-Strategie: In diesem Szenario wird die Arbeit auf
+den umfassenden Leistungsvergleich der drei Virtualisierungsparadigmen (QEMU,
+LXC und KVM) unter standardisierten Rechen- und I/O-Lasten fokussiert, um die
+grundlegenden Isolationseigenschaften und Performance-Overheads systematisch
+zu quantifizieren.
+
+Die weitere Arbeit gliedert sich wie folgt: Abschnitt II bereitet den aktuellen
+Stand der Forschung zu mikroarchitektonischen Interferenz-Vektoren und
+Virtualisierungskonzepten auf. Abschnitt III dokumentiert detailliert den
+Versuchsaufbau sowie die Host- und Gast-Konfigurationen. Die Präsentation und
+kritische Evaluation der Messergebnisse des PoC sowie der Vergleiche erfolgt
+in Abschnitt IV. In Abschnitt V werden die Implikationen der Ergebnisse im
+Kontext der Ausgangshypothese diskutiert, bevor Abschnitt VI die Arbeit mit
+einer Zusammenfassung und einem Ausblick auf zukünftige Forschungsfragen
+abschließt.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

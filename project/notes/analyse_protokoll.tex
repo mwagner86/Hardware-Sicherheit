@@ -1,0 +1,179 @@
+\documentclass[
+  11pt,
+  a4paper,
+  parskip=half         % KOMA-native Absatzabstand (kein parskip-Paket nötig)
+]{scrartcl}
+
+% Encoding & Language
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+
+% Fonts: Libertinus-Familie (Serif/Sans/Mono aufeinander abgestimmt)
+\usepackage{libertinus}
+\usepackage[scaled=0.85]{inconsolata}
+
+% Layout
+\usepackage[margin=2.5cm, top=2.8cm, bottom=2.8cm, headheight=22pt]{geometry}
+\usepackage{microtype}
+
+% Color
+\usepackage[dvipsnames]{xcolor}
+\definecolor{accent}{HTML}{1C3A5E}
+\definecolor{muted}{HTML}{5A5A5A}
+
+% Section headings: KOMA-native (kein titlesec-Konflikt)
+\setkomafont{section}{\sffamily\large\bfseries\color{accent}}
+\RedeclareSectionCommand[beforeskip=1.6em, afterskip=0.5em]{section}
+
+% Linie unter section-Überschriften via sectionlinesformat
+\makeatletter
+\renewcommand{\sectionlinesformat}[4]{%
+  \Ifstr{#1}{section}{%
+    \@hangfrom{\hskip #2#3}{#4}%
+    \par\nobreak\vspace{3pt}%
+    {\color{accent!35}\rule{\textwidth}{0.55pt}}%
+    \vspace{1pt}%
+  }{%
+    \@hangfrom{\hskip #2#3}{#4}%
+  }%
+}
+\makeatother
+
+% Header / Footer: KOMA-native (kein fancyhdr-Konflikt)
+\usepackage{scrlayer-scrpage}
+\clearpairofpagestyles
+\ihead{\small\sffamily\textcolor{muted}{Wissenschaftliches Analyseprotokoll}}
+\ohead{\small\sffamily\textcolor{muted}{\today}}
+\cfoot{\small\sffamily\textcolor{muted}{\pagemark}}
+\KOMAoptions{headsepline=0.4pt}
+\addtokomafont{headsepline}{\color{accent!30}}
+
+% Lists
+\usepackage{enumitem}
+\setlist[itemize]{itemsep=0.3em, parsep=0pt, topsep=0.4em, leftmargin=1.4em}
+\setlist[itemize,2]{itemsep=0.2em, topsep=0.2em, leftmargin=1.2em}
+
+\setlength{\emergencystretch}{1em}
+
+% ---------------------------------------------------------------
+\begin{document}
+
+% Manueller Titel
+\begin{center}
+  {\sffamily\LARGE\bfseries\color{accent}
+    Wissenschaftliches Analyseprotokoll}\\[0.5em]
+  {\sffamily\large\color{muted}
+    Evaluation des Einleitungs-Entwurfs (Erste Version)}\\[1.2em]
+  {\sffamily\small\color{muted}
+    Maximilian Wagner\quad\textperiodcentered\quad\today}
+\end{center}
+
+\vspace{0.6em}
+\par\begingroup\color{accent!35}\hrule height 0.55pt\endgroup
+\vspace{0.8em}
+
+% Metadaten-Block
+\begin{description}[
+  labelwidth=5cm,
+  leftmargin=!,
+  labelsep=0.6em,
+  font=\normalfont\bfseries,
+  itemsep=0.25em
+]
+  \item[Untersuchungsgegenstand] Erste KI-generierte Rohfassung der Einleitung
+  \item[Referenzdokument] Exposé (,,Untersuchung mikroarchitektonischer
+    Ressourcen-Interfe\-renzen\ldots'')
+  \item[Prüfkriterien] Objektivität, Belegprüfung, logische Struktur
+\end{description}
+
+\par\begingroup\color{accent!35}\hrule height 0.55pt\endgroup
+
+% ---------------------------------------------------------------
+\section{Objektivität und Tonalität}
+
+\begin{itemize}
+  \item \textbf{Stärken}
+  \begin{itemize}
+    \item \textbf{Fachsprache:} Die Tonalität ist durchgehend sachlich und wissenschaftlich.
+          Fachbegriffe wie \textit{Last Level Cache}, \textit{Hypervisor}, \textit{CPU-Pinning}
+          und \textit{Hardware-Mitigierung} werden im korrekten Kontext und ohne unnötige
+          Metaphern verwendet.
+    \item \textbf{Faktentrennung:} Die sprachliche Trennung zwischen etablierter Architektur
+          (Multi-Tenancy) und der zu prüfenden Hypothese (Isolationsbruch) wird korrekt vollzogen.
+  \end{itemize}
+
+  \item \textbf{Schwächen}
+  \begin{itemize}
+    \item \textbf{Titel-Diskrepanz:} Der vom LLM generierte Titel (,,\textit{Trade-offs der
+          Virtualisierung auf x86-Systemen: Eine quantitative Analyse von Performance-Overheads
+          und Side-Channel-Risiken}'') weicht inhaltlich stark vom Exposé ab. Er wirkt reißerisch
+          und verschiebt den Fokus inkorrekt in Richtung Side-Channels, obwohl die
+          Leistungsdegradation (DoS) im Fokus steht. Der präzisere Originaltitel
+          (,,\textit{Untersuchung mikroarchitektonischer Ressourcen-Interferenzen (Noisy-Neighbor)
+          in virtualisierten Umgebungen}'') muss wiederhergestellt werden.
+    \item \textbf{Sprachlicher Stil:} Die Formulierung wirkt stellenweise unnatürlich, gezwungen
+          intellektuell und künstlich (KI-typische Phrasierung), was den Lesefluss stört. Die
+          Sprache muss natürlicher und neutraler gestaltet werden.
+  \end{itemize}
+\end{itemize}
+
+% ---------------------------------------------------------------
+\section{Belegprüfung und Literaturfokus}
+
+\begin{itemize}
+  \item \textbf{Stärken}
+  \begin{itemize}
+    \item \textbf{Zitations-Format:} Die syntaktische Vorbereitung der Platzhalter
+          (z.\,B.\ \texttt{\textbackslash cite\{koh2007analysis\}}) ist für die spätere
+          \LaTeX-Transformation und Kompilierung formal korrekt umgesetzt.
+  \end{itemize}
+
+  \item \textbf{Schwächen}
+  \begin{itemize}
+    \item \textbf{Überfokussierung auf Vorab-Literatur:} Der Text baut seine Argumentation
+          namentlich auf vorläufigen Quellen auf (,,Wie bereits Koh et~al.\ darlegten\ldots'',
+          ,,Die Systematisierung durch Ge et~al.\ldots''). Da die finale Literaturrecherche noch
+          aussteht, stellt dies einen strukturellen Fehler dar. In der Einleitung muss das
+          Problem allgemein formuliert werden, wobei Quellen lediglich als Beleg in Klammern
+          dienen. Die namentliche Diskussion der Literatur gehört ausschließlich in das Kapitel
+          ,,Stand der Forschung''.
+  \end{itemize}
+\end{itemize}
+
+% ---------------------------------------------------------------
+\section{Logische Struktur und inhaltliche Tiefe}
+
+\begin{itemize}
+  \item \textbf{Stärken}
+  \begin{itemize}
+    \item \textbf{Der Rote Faden:} Die Einleitung folgt einem kohärenten Trichter-Prinzip
+          (deduktiver Aufbau). Sie beginnt breit bei allgemeinen Cloud-Paradigmen (Multi-Tenancy),
+          verengt sich auf die mikroarchitektonische Ebene der LLC-Ressourcenteilung und mündet
+          präzise in der Forschungsfrage.
+    \item \textbf{Methodische Transparenz:} Der Proof of Concept (inklusive der Werkzeuge
+          \texttt{stress-ng}, \texttt{sysbench}, \texttt{fio}) sowie die essenzielle
+          Fallback-Strategie sind unmissverständlich und detailliert dargelegt und entsprechen
+          den Vorgaben des Exposés.
+  \end{itemize}
+
+  \item \textbf{Schwächen}
+  \begin{itemize}
+    \item \textbf{Technologische Überfokussierung:} Die Einleitung verliert sich in einer zu
+          hohen technologischen Granularität. Die Nennung spezifischer Angriffsvektoren
+          (wie \textsc{Prime+Probe}) ordnet sich nicht der konzeptionellen Abstraktionsebene
+          einer Einleitung unter. Die Argumentation muss sich stärker an die übergeordneten
+          Konzepte der logischen Isolation (gemäß Exposé) halten.
+    \item \textbf{Formale Artefakte:} Das Dokument enthält strukturelle Überreste des verwendeten
+          Prompts (z.\,B.\ Aufzählungszeichen wie ,,\texttt{a) Thematische Einführung:}'',
+          ,,\texttt{b) Problemstellung \& Relevanz:}''). Eine wissenschaftliche Einleitung im
+          IEEE-Format erfordert einen zusammenhängenden Fließtext, der diese Punkte inhaltlich,
+          aber nicht als explizite Zwischenüberschriften abarbeitet.
+    \item \textbf{Fehlende Abgrenzung zur Basisaufgabe:} Die Fallback-Strategie wird erwähnt,
+          der methodische Übergang ist jedoch logisch unzureichend verknüpft. Es muss deutlicher
+          formuliert werden, dass der Vergleich der Virtualisierungslösungen (Basisaufgabe) das
+          Fundament bildet, auf dem der Noisy-Neighbor-Angriff anschließend evaluiert wird.
+  \end{itemize}
+\end{itemize}
+
+\end{document}
