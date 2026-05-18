@@ -31,7 +31,8 @@ Dieses Dokument enthält die überarbeitete Version der Einleitung der
 wissenschaftlichen Hausarbeit zum Thema mikroarchitektonischer
 Ressourcen-Interferenzen in virtualisierten Umgebungen. Die Überarbeitung
 basiert auf einer systematischen wissenschaftlichen Analyse der ersten
-Rohfassung.
+Rohfassung. Im Anhang ist das Überarbeitungs-Protokoll mit den
+vorgenommenen strukturellen und inhaltlichen Korrekturen dokumentiert.
 \end{abstract}
 
 % =============================================================================
@@ -119,5 +120,93 @@ abschließt.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
+
+% =============================================================================
+% Ab hier: Anhang in Einzelspalte
+% =============================================================================
+\clearpage
+\onecolumn
+
+\section*{Anhang: Erstellungs-Dokumentation}
+
+\noindent
+Dieser Anhang dokumentiert den Überarbeitungsprozess der zweiten Version
+auf Basis einer systematischen qualitativen Analyse der ersten Rohfassung.
+
+% --- Protokoll -----------------------------------------------------------------
+\subsection*{A. Protokoll der wissenschaftlichen Analyse}
+
+\noindent
+\begin{tabular}{@{}ll@{}}
+  \textbf{Untersuchungsgegenstand:} &
+    Überarbeitete Fassung der Einleitung auf Basis der Analyse der Rohfassung \\
+  \textbf{Referenzdokument:}        &
+    Protokoll der Analyse (Erste Version) \\
+  \textbf{Methode:}                 &
+    Systematische qualitative Überarbeitung nach IEEE-Kriterien \\
+\end{tabular}
+
+\bigskip
+\noindent\textbf{A.1\quad Wiederherstellung der inhaltlichen Validität und
+Objektivität}
+
+\begin{itemize}
+  \item \textbf{Maßnahme:} Der Titel wurde auf den präzisen Wortlaut des
+        Exposés (,,Untersuchung mikroarchitektonischer
+        Ressourcen-Interferenzen (Noisy-Neighbor) in virtualisierten
+        Umgebungen``) zurückgesetzt, um den Untersuchungsgegenstand korrekt
+        zu repräsentieren.
+  \item \textbf{Begründung:} Der vom LLM generierte Titel verschob den Fokus
+        inkorrekt in Richtung Side-Channels und wirkte reißerisch ---
+        konträr zum Exposé.
+  \item \textbf{Ergebnis:} Der sprachliche Stil versachlicht und strikt
+        auf akademische Präzision (Ökonomie des Ausdrucks) ausgerichtet,
+        um den Lesefluss zu verbessern.
+\end{itemize}
+
+\bigskip
+\noindent\textbf{A.2\quad Korrektur des Literaturfokus
+(Forschungstransparenz)}
+
+\begin{itemize}
+  \item \textbf{Maßnahme:} Die namentliche, argumentative
+        Auseinandersetzung mit spezifischen Autoren im Fließtext wurde
+        entfernt.
+  \item \textbf{Begründung:} Eine detaillierte Literatursynthese ist
+        methodisch dem Kapitel ,,Stand der Forschung`` vorbehalten; die
+        Einleitung darf diese nicht vorwegnehmen.
+  \item \textbf{Ergebnis:} Problemstellung abstrahiert; Quellen dienen nun
+        ausschließlich als komprimierter Nachweis in Klammern.
+\end{itemize}
+
+\bigskip
+\noindent\textbf{A.3\quad Anpassung des Abstraktionsniveaus}
+
+\begin{itemize}
+  \item \textbf{Maßnahme:} Technologische Detailtiefe reduziert
+        (z.\,B.\ Streichung spezifischer Angriffsvektoren wie
+        PRIME+PROBE).
+  \item \textbf{Begründung:} Eine Einleitung operiert auf konzeptioneller
+        Ebene; die Nennung konkreter Angriffsmethoden greift der späteren
+        Detailanalyse unzulässig vor.
+  \item \textbf{Ergebnis:} Fokus liegt wieder auf der konzeptionellen
+        Abgrenzung des Problemfeldes der logischen Isolation gemäß Exposé.
+\end{itemize}
+
+\bigskip
+\noindent\textbf{A.4\quad Strukturelle und methodische Kohärenz}
+
+\begin{itemize}
+  \item \textbf{Maßnahme:} Die starre Abarbeitung expliziter Leitfragen
+        (Aufzählungsartefakte) wurde in einen organischen, zusammenhängenden
+        Fließtext überführt.
+  \item \textbf{Begründung:} IEEE-konforme Einleitungen erfordern einen
+        kohärenten Prosafluss ohne explizite Zwischenüberschriften.
+  \item \textbf{Ergebnis:} Forschungslogik zur Fallback-Strategie
+        geschärft --- es wird nun methodisch sauber hergeleitet, dass der
+        allgemeine Leistungsvergleich der Virtualisierungslösungen
+        (Basisaufgabe) das fundierte Messbett bildet, auf dem der
+        spezifische Noisy-Neighbor-Angriff anschließend evaluiert wird.
+\end{itemize}
 
 \end{document}

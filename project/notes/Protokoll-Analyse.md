@@ -24,3 +24,35 @@
 * **Schwächen:** * **Technologische Überfokussierung:** Die Einleitung verliert sich in einer zu hohen technologischen Granularität. Die Nennung spezifischer Angriffsvektoren (wie "PRIME+PROBE") ordnet sich nicht der konzeptionellen Abstraktionsebene einer Einleitung unter. Die Argumentation muss sich stärker an die übergeordneten Konzepte der logischen Isolation (gemäß Exposé) halten.
   * **Formale Artefakte:** Das Dokument enthält strukturelle Überreste des verwendeten Prompts (z. B. Aufzählungszeichen wie "a) Thematische Einführung:", "b) Problemstellung & Relevanz:"). Eine wissenschaftliche Einleitung im IEEE-Format erfordert einen zusammenhängenden Fließtext, der diese Fragen inhaltlich, aber nicht als explizite Zwischenüberschriften abarbeitet.
   * **Fehlende Abgrenzung zur Basisaufgabe:** Die Fallback-Strategie wird erwähnt, der methodische Übergang ist jedoch logisch unzureichend verknüpft. Es muss deutlicher formuliert werden, dass der Vergleich der Virtualisierungslösungen (Basisaufgabe) das Fundament bildet, auf dem der Noisy-Neighbor-Angriff anschließend evaluiert wird.
+
+---
+
+## Protokoll der wissenschaftlichen Analyse: Einleitung (Überarbeitete Version)
+
+**Untersuchungsgegenstand:** Überarbeitete Fassung der Einleitung auf Basis der Analyse der Rohfassung
+**Referenzdokument:** Protokoll der Analyse
+**Methode:** Systematische qualitative Überarbeitung nach IEEE-Kriterien
+
+### 1. Wiederherstellung der inhaltlichen Validität und Objektivität
+
+* **Maßnahme:** Der Titel wurde auf den präzisen Wortlaut des Exposés ("Untersuchung mikroarchitektonischer Ressourcen-Interferenzen (Noisy-Neighbor) in virtualisierten Umgebungen") zurückgesetzt, um den Untersuchungsgegenstand korrekt zu repräsentieren.
+* **Begründung:** Der vom LLM generierte Titel verschob den Fokus inkorrekt in Richtung Side-Channels und wirkte reißerisch — konträr zum Exposé.
+* **Ergebnis:** Der sprachliche Stil versachlicht und strikt auf akademische Präzision (Ökonomie des Ausdrucks) ausgerichtet, um den Lesefluss zu verbessern.
+
+### 2. Korrektur des Literaturfokus (Forschungstransparenz)
+
+* **Maßnahme:** Die namentliche, argumentative Auseinandersetzung mit spezifischen Autoren im Fließtext wurde entfernt.
+* **Begründung:** Eine detaillierte Literatursynthese ist methodisch dem Kapitel "Stand der Forschung" vorbehalten; die Einleitung darf diese nicht vorwegnehmen.
+* **Ergebnis:** Problemstellung abstrahiert; Quellen dienen nun ausschließlich als komprimierter Nachweis in Klammern.
+
+### 3. Anpassung des Abstraktionsniveaus
+
+* **Maßnahme:** Technologische Detailtiefe reduziert (z. B. Streichung spezifischer Angriffsvektoren wie PRIME+PROBE).
+* **Begründung:** Eine Einleitung operiert auf konzeptioneller Ebene; die Nennung konkreter Angriffsmethoden greift der späteren Detailanalyse unzulässig vor.
+* **Ergebnis:** Fokus liegt wieder auf der konzeptionellen Abgrenzung des Problemfeldes der logischen Isolation gemäß Exposé.
+
+### 4. Strukturelle und methodische Kohärenz
+
+* **Maßnahme:** Die starre Abarbeitung expliziter Leitfragen (Aufzählungsartefakte) wurde in einen organischen, zusammenhängenden Fließtext überführt.
+* **Begründung:** IEEE-konforme Einleitungen erfordern einen kohärenten Prosafluss ohne explizite Zwischenüberschriften.
+* **Ergebnis:** Forschungslogik zur Fallback-Strategie geschärft — es wird nun methodisch sauber hergeleitet, dass der allgemeine Leistungsvergleich der Virtualisierungslösungen (Basisaufgabe) das fundierte Messbett bildet, auf dem der spezifische Noisy-Neighbor-Angriff anschließend evaluiert wird.

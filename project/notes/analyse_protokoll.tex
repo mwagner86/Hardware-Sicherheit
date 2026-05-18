@@ -84,7 +84,7 @@
   \item[Untersuchungsgegenstand] Erste KI-generierte Rohfassung der Einleitung
   \item[Referenzdokument] Exposé (,,Untersuchung mikroarchitektonischer
     Ressourcen-Interfe\-renzen\ldots'')
-  \item[Prüfkriterien] Objektivität, Belegprüfung, logische Struktur
+  \item[Prüfkriterien] Objektivität, Belegprüfung, logische Struktur, Einhaltung wissenschaftlicher Standards
 \end{description}
 
 \par\begingroup\color{accent!35}\hrule height 0.55pt\endgroup
@@ -109,12 +109,16 @@
           Virtualisierung auf x86-Systemen: Eine quantitative Analyse von Performance-Overheads
           und Side-Channel-Risiken}'') weicht inhaltlich stark vom Exposé ab. Er wirkt reißerisch
           und verschiebt den Fokus inkorrekt in Richtung Side-Channels, obwohl die
-          Leistungsdegradation (DoS) im Fokus steht. Der präzisere Originaltitel
-          (,,\textit{Untersuchung mikroarchitektonischer Ressourcen-Interferenzen (Noisy-Neighbor)
-          in virtualisierten Umgebungen}'') muss wiederhergestellt werden.
+          Leistungsdegradation (DoS) im Fokus steht. Dies verletzt das wissenschaftliche Prinzip
+          der sachlichen Richtigkeit und der \textbf{Inhaltlichen Validität} (Konstruktvalidität),
+          da der tatsächliche Untersuchungsgegenstand im Titel falsch repräsentiert wird. Der
+          präzisere Originaltitel des Exposés muss wiederhergestellt werden.
     \item \textbf{Sprachlicher Stil:} Die Formulierung wirkt stellenweise unnatürlich, gezwungen
-          intellektuell und künstlich (KI-typische Phrasierung), was den Lesefluss stört. Die
-          Sprache muss natürlicher und neutraler gestaltet werden.
+          intellektuell und künstlich (KI-typische Phrasierung), was den Lesefluss stört. Dies
+          widerspricht dem wissenschaftlichen Standard der \textbf{Präzision und Klarheit} (Ökonomie
+          des Ausdrucks). Ein wissenschaftlicher Text darf nicht durch dekorative Rhetorik oder
+          syntaktische Komplexität Verständlichkeit einbüßen; die Sprache muss natürlicher und
+          neutraler gestaltet werden.
   \end{itemize}
 \end{itemize}
 
@@ -133,11 +137,14 @@
   \begin{itemize}
     \item \textbf{Überfokussierung auf Vorab-Literatur:} Der Text baut seine Argumentation
           namentlich auf vorläufigen Quellen auf (,,Wie bereits Koh et~al.\ darlegten\ldots'',
-          ,,Die Systematisierung durch Ge et~al.\ldots''). Da die finale Literaturrecherche noch
-          aussteht, stellt dies einen strukturellen Fehler dar. In der Einleitung muss das
-          Problem allgemein formuliert werden, wobei Quellen lediglich als Beleg in Klammern
-          dienen. Die namentliche Diskussion der Literatur gehört ausschließlich in das Kapitel
-          ,,Stand der Forschung''.
+          ,,Die Systematisierung durch Ge et~al.\ldots''). Dies stellt einen \textbf{strukturellen
+          Fehler im wissenschaftlichen Arbeiten} dar. Die explizite, argumentative Auseinandersetzung
+          mit spezifischen Autoren gehört methodisch ausschließlich in das Kapitel ,,Stand der Forschung''
+          (State of the Art). In der Einleitung hingegen muss das Problem abstrakt und allgemein formuliert
+          werden, wobei Quellen lediglich als komprimierter Nachweis in Klammern dienen. Zudem simuliert
+          die namentliche Fokussierung eine abgeschlossene Literatursynthese, die zum jetzigen
+          Projektzeitpunkt real noch nicht stattgefunden hat, was dem Prinzip der \textbf{Forschungstransparenz}
+          widerspricht (Vermeidung von Scheinfundierung).
   \end{itemize}
 \end{itemize}
 
@@ -161,18 +168,23 @@
   \begin{itemize}
     \item \textbf{Technologische Überfokussierung:} Die Einleitung verliert sich in einer zu
           hohen technologischen Granularität. Die Nennung spezifischer Angriffsvektoren
-          (wie \textsc{Prime+Probe}) ordnet sich nicht der konzeptionellen Abstraktionsebene
-          einer Einleitung unter. Die Argumentation muss sich stärker an die übergeordneten
-          Konzepte der logischen Isolation (gemäß Exposé) halten.
+          (wie \textsc{Prime+Probe}) verletzt das geforderte \textbf{Abstraktionsniveau} einer Einleitung.
+          Eine Einleitung hat die Aufgabe, das Problemfeld konzeptionell und holistisch abzugrenzen; die
+          technologische Mikroebene greift der späteren Detailanalyse unzulässig vor. Die Argumentation
+          muss sich strikter an die übergeordneten Konzepte der logischen Isolation halten.
     \item \textbf{Formale Artefakte:} Das Dokument enthält strukturelle Überreste des verwendeten
           Prompts (z.\,B.\ Aufzählungszeichen wie ,,\texttt{a) Thematische Einführung:}'',
-          ,,\texttt{b) Problemstellung \& Relevanz:}''). Eine wissenschaftliche Einleitung im
-          IEEE-Format erfordert einen zusammenhängenden Fließtext, der diese Punkte inhaltlich,
-          aber nicht als explizite Zwischenüberschriften abarbeitet.
+          ,,\texttt{b) Problemstellung \& Relevanz:}''). Das direkte Übernehmen von Strukturvorgaben
+          aus dem Prompt-Gerüst verletzt den \textbf{formalen Publikationsstandard} (IEEE-Format).
+          Wissenschaftliche Einleitungen erfordern einen kontinuierlichen, organischen Fließtext, der
+          die Leitfragen implizit beantwortet, anstatt sie als deklarierte Fragenkataloge abzuarbeiten.
     \item \textbf{Fehlende Abgrenzung zur Basisaufgabe:} Die Fallback-Strategie wird erwähnt,
-          der methodische Übergang ist jedoch logisch unzureichend verknüpft. Es muss deutlicher
-          formuliert werden, dass der Vergleich der Virtualisierungslösungen (Basisaufgabe) das
-          Fundament bildet, auf dem der Noisy-Neighbor-Angriff anschließend evaluiert wird.
+          der methodische Übergang ist jedoch logisch unzureichend verknüpft. Dies beeinträchtigt die
+          \textbf{Forschungslogik und methodische Kohärenz}. Es muss wissenschaftlich sauber hergeleitet
+          werden, dass der komparative Leistungsvergleich der Virtualisierungslösungen (Basisaufgabe) das
+          fundamentale Messbett bildet, auf dessen methodischen Erkenntnissen der spezifische
+          Noisy-Neighbor-Angriff erst evaluiert werden kann. Der Fallback darf nicht wie ein isolierter
+          Fremdkörper wirken, sondern muss als logische Reduktion des Forschungsdesigns ex ante begründet sein.
   \end{itemize}
 \end{itemize}
 
