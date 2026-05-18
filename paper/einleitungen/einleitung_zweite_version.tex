@@ -12,7 +12,7 @@
 
 \begin{document}
 
-\title{Untersuchung mikroarchitektonischer Ressourcen-Interferenzen (Noisy-Neighbor) in virtualisierten Umgebungen}
+\title{Der Noisy-Neighbor-Effekt: Eine Untersuchung mikroarchitektonischer Ressourcen-Interferenzen in virtualisierten Umgebungen}
 
 \author{%
   \IEEEauthorblockN{Maximilian Wagner}
@@ -31,7 +31,8 @@ Dieses Dokument enthält die überarbeitete Version der Einleitung der
 wissenschaftlichen Hausarbeit zum Thema mikroarchitektonischer
 Ressourcen-Interferenzen in virtualisierten Umgebungen. Die Überarbeitung
 basiert auf einer systematischen wissenschaftlichen Analyse der ersten
-Rohfassung. Im Anhang ist das Überarbeitungs-Protokoll mit den
+Rohfassung sowie der expliziten konzeptionellen Schärfung des
+Noisy-Neighbor-Phänomens. Im Anhang ist das Überarbeitungs-Protokoll mit den
 vorgenommenen strukturellen und inhaltlichen Korrekturen dokumentiert.
 \end{abstract}
 
@@ -49,38 +50,39 @@ Sicherheitsprinzip von Multi-Tenant-Architekturen in modernen
 Cloud-Infrastrukturen. Auf mikroarchitektonischer Ebene bleibt diese
 Isolation jedoch unvollständig: Physische Komponenten wie der Last Level
 Cache (LLC), die Hauptspeicherbandbreite und I/O-Subsysteme werden von
-koexistierenden Systemen geteilt. Da der Hypervisor diese
-Hardwarekomponenten oft transparent an die Gastsysteme weiterreicht,
+koexistierenden Systemen gemeinsam genutzt. Da der Hypervisor diese
+Hardwarekomponenten transparent an die Gastsysteme weiterreicht,
 entstehen unkontrollierte Interferenzkanäle \cite{koh2007analysis}.
 
-Diese unkontrollierte Ressourcenteilung begründet eine systemische
-Schwachstellenklasse mit erheblichem Gefährdungspotenzial. Während
-Virtualisierungslösungen eine funktionale Fehler- und Sicherheitsisolation
-bereitstellen, kann eine strikte Performance-Isolation strukturell oft nicht
-garantiert werden \cite{koh2007analysis}. Die resultierende
-Ressourcen-Konkurrenz manifestiert sich insbesondere im sogenannten
-Noisy-Neighbor-Effekt: Ein aggressiver Workload innerhalb einer Instanz
-verdrängt gezielt Cache-Zeilen koexistierender Systeme. Dies führt zu einer
-unautorisierten Degradation von Durchsatz und Latenz benachbarter Mandanten,
-was einem mikroarchitektonischen Denial-of-Service-Angriff gleichkommt
+Dieses fundamentale Defizit der Performance-Isolation begründet den
+sogenannten Noisy-Neighbor-Effekt. Dieses Phänomen beschreibt die wechselseitige
+Leistungsbeeinflussung koexistierender Mandanten auf identischer Hardware
+durch unkoordinierte Ressourcenkonkurrenz. Der Noisy-Neighbor-Effekt stellt
+eine systemische Schwachstellenklasse mit erheblichem Gefährdungspotenzial
+für Cloud-Infrastrukturen dar \cite{koh2007analysis}. Die Relevanz dieser
+Thematik manifestiert sich darin, dass ein aggressiver Workload innerhalb
+einer Instanz die Cache-Zeilen benachbarter Systeme verdrängen kann. Dies
+ermöglicht eine unautorisierte Degradation von Durchsatz und Latenz, was einem
+mikroarchitektonischen Denial-of-Service-Angriff gleichkommt
 \cite{ge2018survey}. Regulatorische Standards wie die Richtlinien des
 National Institute of Standards and Technology (NIST) klassifizieren diese
-unkontrollierte Ressourcenerschöpfung auf Plattformebene daher als kritisches
-Risiko und fordern den Einsatz hardwaregestützter Isolations- und
-Kontrollmechanismen \cite{nist2014hypervisor}.
+Form der Ressourcenerschöpfung auf Plattformebene als kritisches Risiko und
+fordern den Einsatz hardwaregestützter Isolations- und Kontrollmechanismen
+\cite{nist2014hypervisor}.
 
 Während die grundlegende Anfälligkeit geteilter Ressourcen in der Literatur
 dokumentiert ist, besteht bei aktuellen Hardware-Architekturen ein Defizit
-an systematischen Untersuchungen. Moderne Prozessorgenerationen
-implementieren komplexe, hybride Kern-Topologien (Performance- und
-Efficient-Cores) sowie hardwaregestützte Abwehrfunktionen wie die Intel
-Resource Director Technology (RDT) inklusive Cache Allocation Technology
-(CAT). Inwiefern diese Schutzmechanismen unter produktiven Bedingungen eine
-hinreichende Isolation gewährleisten, ist bisher unzureichend dokumentiert.
-Die vorliegende Arbeit adressiert diese Lücke und prüft die Hypothese, ob
-historische, LLC-basierte Interferenz-Vektoren auf einer aktuellen Intel
-Raptor Lake Architektur unter Verwendung eines produktiven Hypervisors
-(Proxmox VE) zu statistisch quantifizierbaren Isolationsbrüchen führen.
+an systematischen Untersuchungen des Noisy-Neighbor-Effekts. Moderne
+Prozessorgenerationen implementieren komplexe, hybride Kern-Topologien
+(Performance- und Efficient-Cores) sowie hardwaregestützte Abwehrfunktionen
+wie die Intel Resource Director Technology (RDT) inklusive Cache Allocation
+Technology (CAT). Inwiefern diese Schutzmechanismen unter produktiven
+Bedingungen eine hinreichende Isolation gewährleisten und den Effekt
+vollständig neutralisieren, ist bisher unzureichend dokumentiert. Die
+vorliegende Arbeit adressiert diese Lücke und prüft die Hypothese, ob LLC-basierte
+Noisy-Neighbor-Interferenzen auf einer aktuellen Intel Raptor Lake
+Architektur unter Verwendung eines produktiven Hypervisors (Proxmox VE) zu
+statistisch quantifizierbaren Isolationsbrüchen führen.
 
 Der zur Überprüfung gewählte Messansatz basiert auf einem kontrollierten
 Verfahren auf Host-Ebene. Um Verfälschungen der Ergebnisse durch dynamische
@@ -93,20 +95,20 @@ Virtualisierungsparadigmen – der reinen Emulation, der Para-Virtualisierung
 und der hardwareunterstützten Virtualisierung – hinsichtlich ihrer Rechen-
 und I/O-Kapazitäten.
 
-Auf diesem Fundament wird der spezifische Noisy-Neighbor-Proof-of-Concept
-(PoC) aufgesetzt. Hierbei werden zwei Debian-Instanzen (Angreifer und
-Opfer) mittels CPU-Affinity auf identische physische Performance-Kerne
-gebunden, um eine Cache-Konkurrenz zu erzwingen. Während das
-Angreifer-System über synthetische Lasten eine Sättigung des LLC provoziert,
-erfasst das Opfer-System mittels standardisierter Benchmarking-Werkzeuge die
-Veränderungen von Durchsatz und Latenz. Sollten die hardwareseitigen
-Schutzmechanismen des Prozessors (Intel RDT/CAT) die Interferenzen
-vollständig neutralisieren und die Hypothese somit falsifiziert werden, greift
-eine strukturierte Fallback-Strategie: In diesem Szenario wird die Arbeit auf
-den umfassenden Leistungsvergleich der drei Virtualisierungsparadigmen (QEMU,
-LXC und KVM) unter standardisierten Rechen- und I/O-Lasten fokussiert, um die
-grundlegenden Isolationseigenschaften und Performance-Overheads systematisch
-zu quantifizieren.
+Auf diesem Fundament wird der spezifische Proof-of-Concept (PoC) zur
+Szenario-Replikation aufgesetzt. Dabei werden zwei Debian-Instanzen – ein
+aktiver Störer (Noisy Neighbor) und ein Opfersystem – mittels CPU-Affinity auf
+identische physische Performance-Kerne gebunden, um die Cache-Konkurrenz zu
+erzwingen. Während das Angreifer-System über synthetische Lasten eine Sättigung
+des LLC provoziert, erfasst das Opfer-System mittels standardisierter
+Benchmarking-Werkzeuge die Veränderungen von Durchsatz und Latenz. Sollten die
+hardwareseitigen Schutzmechanismen des Prozessors (Intel RDT/CAT) die
+Interferenzen vollständig unterdrücken und die Hypothese somit falsifiziert
+werden, greift eine strukturierte Fallback-Strategie: In diesem Szenario wird
+die Arbeit auf den umfassenden Leistungsvergleich der drei
+Virtualisierungsparadigmen (QEMU, LXC und KVM) unter standardisierten Rechen-
+und I/O-Lasten fokussiert, um die grundlegenden Isolationseigenschaften und
+Performance-Overheads systematisch zu quantifizieren.
 
 Die weitere Arbeit gliedert sich wie folgt: Abschnitt II bereitet den aktuellen
 Stand der Forschung zu mikroarchitektonischen Interferenz-Vektoren und
@@ -134,7 +136,7 @@ Dieser Anhang dokumentiert den Überarbeitungsprozess der zweiten Version
 auf Basis einer systematischen qualitativen Analyse der ersten Rohfassung.
 
 % --- Protokoll -----------------------------------------------------------------
-\subsection*{A. Protokoll der wissenschaftlichen Analyse}
+\subsection*{A. Protokoll der wissenschaftlichen Überarbeitung}
 
 \noindent
 \begin{tabular}{@{}ll@{}}
@@ -147,66 +149,68 @@ auf Basis einer systematischen qualitativen Analyse der ersten Rohfassung.
 \end{tabular}
 
 \bigskip
-\noindent\textbf{A.1\quad Wiederherstellung der inhaltlichen Validität und
-Objektivität}
+\noindent\textbf{A.1\quad Verankerung und Schärfung des Kernkonzepts}
 
 \begin{itemize}
-  \item \textbf{Maßnahme:} Der Titel wurde auf den präzisen Wortlaut des
-        Exposés (,,Untersuchung mikroarchitektonischer
-        Ressourcen-Interferenzen (Noisy-Neighbor) in virtualisierten
-        Umgebungen``) zurückgesetzt, um den Untersuchungsgegenstand korrekt
-        zu repräsentieren.
-  \item \textbf{Begründung:} Der vom LLM generierte Titel verschob den Fokus
-        inkorrekt in Richtung Side-Channels und wirkte reißerisch ---
-        konträr zum Exposé.
-  \item \textbf{Ergebnis:} Der sprachliche Stil versachlicht und strikt
-        auf akademische Präzision (Ökonomie des Ausdrucks) ausgerichtet,
-        um den Lesefluss zu verbessern.
+  \item \textbf{Maßnahme:} Das Phänomen des ,,Noisy Neighbors`` wird nicht
+        länger nur beiläufig in Klammern erwähnt, sondern wurde direkt im
+        Haupttitel der Arbeit verankert. Zudem wurde der Begriff im ersten 
+        Drittel der Einleitung durch eine explizite Definition als zentraler 
+        Untersuchungsgegenstand etabliert.
+  \item \textbf{Begründung:} Das Konzept bildet die inhaltliche Säule der
+        erweiterten Aufgabenstellung und muss präzise definiert werden,
+        anstatt nur als Randnotiz zu erscheinen.
 \end{itemize}
 
 \bigskip
-\noindent\textbf{A.2\quad Korrektur des Literaturfokus
-(Forschungstransparenz)}
+\noindent\textbf{A.2\quad Wiederherstellung der sachlichen Richtigkeit}
 
 \begin{itemize}
-  \item \textbf{Maßnahme:} Die namentliche, argumentative
-        Auseinandersetzung mit spezifischen Autoren im Fließtext wurde
-        entfernt.
-  \item \textbf{Begründung:} Eine detaillierte Literatursynthese ist
-        methodisch dem Kapitel ,,Stand der Forschung`` vorbehalten; die
+  \item \textbf{Maßnahme:} Der Titel wurde auf den passenden Wortlaut
+        angepasst (,,Der Noisy-Neighbor-Effekt: Eine Untersuchung 
+        mikroarchitektonischer Ressourcen-Interferenzen in virtualisierten 
+        Umgebungen``). Der Text wurde sprachlich neutralisiert und auf
+        eine klare, prägnante wissenschaftliche Ausdrucksweise getrimmt.
+  \item \textbf{Begründung:} Der initial generierte Titel verschob den Fokus
+        fälschlicherweise in Richtung Side-Channels und wirkte reißerisch. 
+        Zudem störten künstlich überhöhte, unnötig komplizierte Formulierungen 
+        den Lesefluss.
+\end{itemize}
+
+\bigskip
+\noindent\textbf{A.3\quad Korrektur des Literaturfokus}
+
+\begin{itemize}
+  \item \textbf{Maßnahme:} Die namentliche Diskussion spezifischer Autoren 
+        im Fließtext wurde entfernt. Quellen dienen nun ausschließlich als 
+        Beleg in Klammern.
+  \item \textbf{Begründung:} Eine detaillierte Auseinandersetzung mit der
+        Literatur gehört methodisch in das Kapitel ,,Stand der Forschung``; die
         Einleitung darf diese nicht vorwegnehmen.
-  \item \textbf{Ergebnis:} Problemstellung abstrahiert; Quellen dienen nun
-        ausschließlich als komprimierter Nachweis in Klammern.
 \end{itemize}
 
 \bigskip
-\noindent\textbf{A.3\quad Anpassung des Abstraktionsniveaus}
+\noindent\textbf{A.4\quad Anpassung der Detailtiefe}
 
 \begin{itemize}
-  \item \textbf{Maßnahme:} Technologische Detailtiefe reduziert
-        (z.\,B.\ Streichung spezifischer Angriffsvektoren wie
-        PRIME+PROBE).
-  \item \textbf{Begründung:} Eine Einleitung operiert auf konzeptioneller
-        Ebene; die Nennung konkreter Angriffsmethoden greift der späteren
+  \item \textbf{Maßnahme:} Die technische Detailtiefe wurde reduziert
+        (z.\,B.\ Streichung spezifischer Angriffsvektoren wie PRIME+PROBE).
+  \item \textbf{Begründung:} Eine Einleitung beschreibt das grundlegende Konzept; 
+        die Nennung konkreter Angriffsmethoden greift der späteren
         Detailanalyse unzulässig vor.
-  \item \textbf{Ergebnis:} Fokus liegt wieder auf der konzeptionellen
-        Abgrenzung des Problemfeldes der logischen Isolation gemäß Exposé.
 \end{itemize}
 
 \bigskip
-\noindent\textbf{A.4\quad Strukturelle und methodische Kohärenz}
+\noindent\textbf{A.5\quad Strukturelle und methodische Kohärenz}
 
 \begin{itemize}
   \item \textbf{Maßnahme:} Die starre Abarbeitung expliziter Leitfragen
-        (Aufzählungsartefakte) wurde in einen organischen, zusammenhängenden
-        Fließtext überführt.
-  \item \textbf{Begründung:} IEEE-konforme Einleitungen erfordern einen
-        kohärenten Prosafluss ohne explizite Zwischenüberschriften.
-  \item \textbf{Ergebnis:} Forschungslogik zur Fallback-Strategie
-        geschärft --- es wird nun methodisch sauber hergeleitet, dass der
-        allgemeine Leistungsvergleich der Virtualisierungslösungen
-        (Basisaufgabe) das fundierte Messbett bildet, auf dem der
-        spezifische Noisy-Neighbor-Angriff anschließend evaluiert wird.
+        wurde in einen zusammenhängenden Fließtext überführt. Die Begründung
+        der Fallback-Strategie wurde logisch nachvollziehbarer aufgebaut.
+  \item \textbf{Begründung:} Es muss methodisch sauber hergeleitet werden,
+        dass der allgemeine Leistungsvergleich der Virtualisierungslösungen
+        (Basisaufgabe) das Fundament bildet, auf dem der spezifische
+        Noisy-Neighbor-Angriff anschließend evaluiert wird.
 \end{itemize}
 
 \end{document}
