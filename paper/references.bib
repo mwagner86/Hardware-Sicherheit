@@ -1,115 +1,76 @@
-% references_expose.bib
 @inproceedings{koh2007analysis,
+  author={Koh, Younggyun and Knauerhase, Rob and Brett, Paul and Bowman, Mic and Wenisch, Thomas F. and Pu, Calton},
+  booktitle={2007 IEEE International Symposium on Performance Analysis of Systems & Software},
   title={An analysis of performance interference effects in virtual environments},
-  author={Koh, Younggyun and Knauerhase, Rob and Brett, Paul and Bowman, Mic and Wenisch, Thomas F and Pu, Calton},
-  booktitle={2007 IEEE International Symposium on Performance Analysis of Systems \& Software},
-  pages={200--209},
   year={2007},
-  organization={IEEE}
+  pages={200--209},
+  doi={10.1109/ISPASS.2007.363750}
 }
+% Relevanz: Wissenschaftliche Basis. Ursprüngliche Quantifizierung des Noisy-Neighbor-Effekts in virtualisierten Umgebungen.
 
 @article{ge2018survey,
-  title={A survey of microarchitectural timing attacks and countermeasures on contemporary hardware},
   author={Ge, Qian and Yarom, Yuval and Cock, David and Heiser, Gernot},
+  title={A survey of microarchitectural timing attacks and countermeasures on contemporary hardware},
   journal={Journal of Cryptographic Engineering},
   volume={8},
   number={1},
   pages={1--27},
   year={2018},
-  publisher={Springer}
+  publisher={Springer},
+  doi={10.1007/s13389-017-0152-y}
 }
+% Relevanz: Wissenschaftliche Systematisierung. Klassifizierung aktueller mikroarchitektonischer Schwachstellen.
 
 @techreport{nist2014hypervisor,
-  title={Security Recommendations for Server-based Hypervisor Platforms},
   author={Chandramouli, Ramaswamy},
-  year={2014},
+  title={Security recommendations for server-based hypervisor platforms},
   institution={National Institute of Standards and Technology},
   type={NIST Special Publication},
   number={800-125A},
+  year={2014},
   doi={10.6028/NIST.SP.800-125A}
 }
+% Relevanz: Aktuelles Thema/Regulatorik. Belegt die systemische Relevanz der Hypervisor-Sicherheit aus regulatorischer Sicht.
 
 @inproceedings{felter2015updated,
   author={Felter, Wes and Ferreira, Alexandre and Rajamony, Ram and Rubio, Juan},
   booktitle={2015 IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS)},
   title={An updated performance comparison of virtual machines and Linux containers},
   year={2015},
-  pages={171-172},
+  pages={171--172},
   doi={10.1109/ISPASS.2015.7095802}
 }
-% Relevanz: Bietet einen detaillierten direkten Performance-Vergleich (CPU, Memory, Storage, Network) zwischen KVM und Linux Containern (LXC/Docker) auf Bare-Metal-Servern.
-
-@inproceedings{morabito2015hypervisors,
-  author={Morabito, Roberto and Kjällman, Jimmy and Komu, Miika},
-  booktitle={2015 IEEE International Conference on Cloud Engineering},
-  title={Hypervisors vs. Lightweight Virtualization: A Performance Comparison},
-  year={2015},
-  pages={386-393},
-  doi={10.1109/IC2E.2015.74}
-}
-% Relevanz: Evaluiert den Overhead von traditionellen Hypervisoren (KVM, Xen) im Vergleich zu leichtgewichtiger Virtualisierung (LXC) unter Einbeziehung von I/O-Metriken.
-
-@article{kozhirbayev2017performance,
-  author={Kozhirbayev, Zh. and Sinnott, R.O.},
-  title={A performance comparison of container-based technologies for the Cloud},
-  journal={Future Generation Computer Systems},
-  volume={68},
-  pages={175-182},
-  year={2017},
-  publisher={Elsevier},
-  doi={10.1016/j.future.2016.08.025}
-}
-% Relevanz: Liefert Benchmarking-Methodiken für den Vergleich des Ressourcenverbrauchs (Disk I/O, CPU) zwischen VMs und OS-Level-Containern.
-
-@inproceedings{hwang2014io,
-  author={Hwang, Jinho and Zeng, Sai and Wu, Hui-I and Wood, Timothy},
-  booktitle={2014 IEEE International Conference on Cloud Engineering},
-  title={A Component-Based Performance Comparison of Four Hypervisors},
-  year={2014},
-  pages={269-274},
-  doi={10.1109/IC2E.2014.41}
-}
-% Relevanz: Systematisiert die Testmethodik für I/O- und Netzwerk-Latenzen unterschiedlicher Virtualisierungsparadigmen, darunter KVM.
-
-@article{joy2015performance,
-  author={Joy, Ann Mary},
-  title={Performance comparison between Linux containers and virtual machines},
-  journal={International Conference on Advances in Computer Engineering and Applications},
-  year={2015},
-  pages={342-346},
-  doi={10.1109/ICACEA.2015.7164727}
-}
-% Relevanz: Eine kompakte quantitative Analyse, die den Leistungsabfall bei Rechen- und I/O-intensiven Lasten zwischen Emulation/KVM und LXC misst.
+% Relevanz: Technische Grundlage/Fallback. Bietet einen detaillierten direkten Performance-Vergleich zwischen KVM und LXC.
 
 @inproceedings{vaucher2015hypervisor,
   author={Vaucher, Sebastien and Barcellos, Marinho P. and Gaspary, Luciano Paschoal and Cordero, Claudio and He, Raymond},
   booktitle={2015 IEEE International Conference on Cloud Engineering},
   title={Hypervisor and Neighbors' Noise: Performance Degradation in Virtualized Environments},
   year={2015},
-  pages={211-216},
+  pages={211--216},
   doi={10.1109/IC2E.2015.42}
 }
-% Relevanz: Hoch. Liefert die theoretische Basis für leistungsbezogene Interferenzmetriken und analysiert das Zusammenspiel zwischen Cache-Verdrängung und Hypervisor-Scheduling-Effekten.
+% Relevanz: Wissenschaftliche Publikation. Analysiert Hypervisor-Scheduling-Effekte versus reine Hardware-Interferenzen.
 
 @inproceedings{selva2017performance,
   author={Selva, Manuel and Petit, Salvador and Gomez, Maria E. and Sahuquillo, Julio},
   booktitle={2017 IEEE 25th International Symposium on Modeling, Analysis, and Simulation of Computer and Telecommunication Systems (MASCOTS)},
   title={Performance evaluation of cache allocation technology for NFV noisy neighbor mitigation},
   year={2017},
-  pages={155-161},
+  pages={155--161},
   doi={10.1109/MASCOTS.2017.20}
 }
-% Relevanz: Sehr hoch. Adressiert direkt die Falsifikationshypothese durch die empirische Evaluierung von Intel CAT zur Isolation von Cache-hungrigen Störfaktoren.
+% Relevanz: Aktuelles Thema. Empirische Evaluierung von Intel CAT zur Isolation von Cache-hungrigen Störfaktoren.
 
 @inproceedings{pinto2025esther,
   author={Pinto, Gabriel and Santos, Jose and Van Damme, Gergely and Wauters, Tim and De Turck, Filip and Volckaert, Bruno},
   booktitle={2025 IEEE International Symposium on High-Performance Computer Architecture (HPCA)},
   title={ESTHER: Application-First Hardware-Level QoS-Enforcement for Cloud Native Environments},
   year={2025},
-  pages={412-425},
+  pages={412--425},
   doi={10.1109/HPCA.2025.10120581}
 }
-% Relevanz: Sehr hoch. Repräsentiert den aktuellen Stand der Forschung (2025/2026) bezüglich der hardwaregestützten Dienstgüte-Erzwingung (QoS via Intel RDT) in geteilten Umgebungen.
+% Relevanz: Aktuelles Thema. Stand der Forschung 2025 zu hardwaregestütztem QoS-Enforcement (Intel RDT).
 
 @inproceedings{danielsson2019testing,
   author={Danielsson, Jakob and Seceleanu, Tiberiu and J{\"a}gemar, Marcus and Behnam, Moris and Sj{\"o}din, Mikael},
@@ -120,16 +81,7 @@
   pages={604--609},
   doi={10.1109/COMPSAC.2019.00092}
 }
-% Relevanz: Sehr hoch. Dient als primäre methodische Referenz für das experimentelle Messbett (Proof of Concept). Die dargelegten Teststrategien zur empirischen Quantifizierung von Cache-Verdrängungseffekten lassen sich präzise auf die geplante Proxmox/KVM-Umgebung übertragen.
-
-@inproceedings{annapoorani2018analysis,
-  author={Annapoorani, S. and Srinivasan, B. and Mylavathi, G. A.},
-  booktitle={2018 2nd International Conference on Inventive Systems and Control (ICISC)},
-  title={Analysis of various virtual machine attacks in cloud computing},
-  year={2018},
-  doi={10.1109/ICISC.2018.8398955}
-}
-% Relevanz: Mittel. Qualifiziert sich primär für das Kapitel "Stand der Forschung". Ermöglicht die theoretische Einordnung von mikroarchitektonischen DoS-Angriffen in die übergeordnete Bedrohungslandschaft von Cloud-Umgebungen durch eine systematische Taxonomie, liefert jedoch keine Messdaten für das spezifische PoC.
+% Relevanz: Methodik. Primäre Referenz für den Versuchsaufbau zur Quantifizierung von Cache-Verdrängung.
 
 @inproceedings{plauth2017performance,
   author={Plauth, Max and Feinbube, Lukas and Polze, Andreas},
@@ -138,7 +90,7 @@
   year={2017},
   pages={14--20}
 }
-% Relevanz: Technische Grundlage. Theoretische Einordnung und Evaluierung von Hypervisoren vs. Containern. (Hinweis: IARIA-Publikationen erhalten standardmäßig keine DOI).
+% Relevanz: Technische Grundlage. Theoretische Einordnung und Evaluierung von Hypervisoren vs. Containern.
 
 @inproceedings{li2017performance,
   author={Li, Zheng and Kihl, Maria and Lu, Qinghua and Andersson, Jens A.},
@@ -168,3 +120,54 @@
   doi={10.1109/TSC.2025.3619151}
 }
 % Relevanz: Wissenschaftliche Publikation. Aktuelle Untersuchung der Latenzdegradation durch I/O- und Cache-Sättigung (DoS-Vektor).
+
+@inproceedings{morabito2015hypervisors,
+  author={Morabito, Roberto and Kjällman, Jimmy and Komu, Miika},
+  booktitle={2015 IEEE International Conference on Cloud Engineering},
+  title={Hypervisors vs. Lightweight Virtualization: A Performance Comparison},
+  year={2015},
+  pages={386--393},
+  doi={10.1109/IC2E.2015.74}
+}
+% Hinweis: Diese Quelle wird im finalen Paper nicht verwendet (inhaltliche Redundanz zu Li et al. / Felter et al.), verbleibt jedoch zur Kompilierung für das Exposé und die initiale Einleitung in der Datenbank.
+
+@article{kozhirbayev2017performance,
+  author={Kozhirbayev, Zh. and Sinnott, R.O.},
+  title={A performance comparison of container-based technologies for the Cloud},
+  journal={Future Generation Computer Systems},
+  volume={68},
+  pages={175--182},
+  year={2017},
+  publisher={Elsevier},
+  doi={10.1016/j.future.2016.08.025}
+}
+% Hinweis: Diese Quelle wird im finalen Paper nicht verwendet, verbleibt jedoch zur Kompilierung für das Exposé und die initiale Einleitung in der Datenbank.
+
+@inproceedings{hwang2014io,
+  author={Hwang, Jinho and Zeng, Sai and Wu, Hui-I and Wood, Timothy},
+  booktitle={2014 IEEE International Conference on Cloud Engineering},
+  title={A Component-Based Performance Comparison of Four Hypervisors},
+  year={2014},
+  pages={269--274},
+  doi={10.1109/IC2E.2014.41}
+}
+% Hinweis: Diese Quelle wird im finalen Paper nicht verwendet, verbleibt jedoch zur Kompilierung für das Exposé und die initiale Einleitung in der Datenbank.
+
+@article{joy2015performance,
+  author={Joy, Ann Mary},
+  title={Performance comparison between Linux containers and virtual machines},
+  journal={International Conference on Advances in Computer Engineering and Applications},
+  year={2015},
+  pages={342--346},
+  doi={10.1109/ICACEA.2015.7164727}
+}
+% Hinweis: Diese Quelle wird im finalen Paper nicht verwendet, verbleibt jedoch zur Kompilierung für das Exposé und die initiale Einleitung in der Datenbank.
+
+@inproceedings{annapoorani2018analysis,
+  author={Annapoorani, S. and Srinivasan, B. and Mylavathi, G. A.},
+  booktitle={2018 2nd International Conference on Inventive Systems and Control (ICISC)},
+  title={Analysis of various virtual machine attacks in cloud computing},
+  year={2018},
+  doi={10.1109/ICISC.2018.8398955}
+}
+% Hinweis: Diese Quelle wird im finalen Paper nicht verwendet, verbleibt jedoch zur Kompilierung für das Exposé und die initiale Einleitung in der Datenbank.
