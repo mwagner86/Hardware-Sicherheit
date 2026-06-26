@@ -7,7 +7,7 @@ gepinnt (siehe [`../notes/PoC.md`](../notes/PoC.md)).
 
 ## Topologie
 
-```
+```text
   Control-Node (Laptop)              run_experiment.sh
         │  SSH                          │
         ├──────────────► Opfer-Gast    (victim_benchmark.sh: sysbench, fio)
@@ -21,13 +21,17 @@ SSH-Key-Auth zu beiden Gästen (kein Passwort-Prompt).
 
 | Datei | Rolle |
 | --- | --- |
-| `config.env` | SSH-Ziele, Wiederholungen, Benchmark-/Last-Parameter |
+| `config.env` | SSH-Ziele, Wiederholungen, Benchmark-/Last-Parameter, `FALLBACK_VICTIMS` |
 | `lib/common.sh` | Logging, Median, Delta-Berechnung (geteilt) |
+| `lib/orchestrator.sh` | geteilte Control-Node-Helfer: SSH/SCP, Deploy, Collect, Aggregation |
 | `victim_benchmark.sh` | **Opfer**: ein Messdurchlauf → `cpu_eps;mem_mibps;iops;lat_p95_ms` |
 | `attacker_load.sh` | **Angreifer**: `start [s]` / `stop` / `run <s>` der Störlast |
-| `run_experiment.sh` | **Control-Node**: Deploy + Baseline + Noisy + Aggregation |
-| `data/<ts>/` | je Lauf: `baseline_raw.csv`, `noisy_raw.csv`, `summary.csv` |
-| `poc_summary.csv` | jeweils letztes Aggregat (Paper-Tabelle) |
+| `run_experiment.sh` | **PoC**: Angreifer + 1 Opfer → Baseline/Noisy → `poc_summary.csv` |
+| `run_fallback.sh` | **Fallback**: 3 Opfer (QEMU/LXC/KVM) sequenziell → `fallback_summary.csv` |
+| `data/<ts>/` | PoC je Lauf: `baseline_raw.csv`, `noisy_raw.csv`, `summary.csv` |
+| `data/fallback_<ts>/` | Fallback: je Opfer ein Unterordner + `fallback_summary.csv` |
+| `poc_summary.csv` | letztes PoC-Aggregat (Paper-Tabelle) |
+| `fallback_summary.csv` | letztes Fallback-Aggregat (gruppiertes Balkendiagramm) |
 
 ## Nutzung
 
@@ -37,13 +41,21 @@ SSH-Key-Auth zu beiden Gästen (kein Passwort-Prompt).
 # 2. Werkzeuge einmalig auf den Gästen installieren + Skripte ausrollen
 ./run_experiment.sh --install --deploy-only
 
-# 3. Vollständiges Experiment (Deploy + Messung + Aggregation)
+# 3. PoC: Angreifer + 1 Opfer (Deploy + Messung + Aggregation)
 ./run_experiment.sh
+
+# 4. Fallback: alle 3 Opfer (QEMU/LXC/KVM) sequenziell vergleichen
+./run_fallback.sh --install        # erster Lauf installiert auf allen Opfern
+./run_fallback.sh                  # weitere Läufe
 
 # Weitere Optionen
 ./run_experiment.sh --no-deploy        # Skripte schon ausgerollt
 ./run_experiment.sh --config other.env
 ```
+
+Welches Opfer der PoC nutzt, steht in `VICTIM_HOST`; die drei Fallback-Opfer in
+`FALLBACK_VICTIMS` (`config.env`). Der Angreifer (`ATTACKER_HOST`) ist in beiden
+Fällen konstant.
 
 ## Messgrößen
 
@@ -66,10 +78,15 @@ das oft nicht sichtbar — `run_experiment.sh` warnt nur best-effort.
 
 ## Hinweis zur Datenpipeline (offen)
 
-- `poc_summary.csv` = **PoC** (dieses Skript).
-- `summary.csv` = aktuell Dummy-Daten der **Fallback**-Strategie (QEMU/LXC/KVM),
-  erzeugt von `generate_dummy_data.sh`; wird vom Exposé-Balkendiagramm gelesen.
+- `poc_summary.csv` = **PoC** (run_experiment.sh), Schema
+  `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms`.
+- `fallback_summary.csv` = **Fallback** (run_fallback.sh), Schema
+  `Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN`
+  — passt zum gruppierten Balkendiagramm (`assets/mock_fallback.tex`).
+- `summary.csv` = **Legacy-Dummy** (`generate_dummy_data.sh`, Schema
+  `Virtualisierung;Baseline;NoisyNeighbor`); vom abgegebenen Exposé gelesen,
+  bewusst unberührt.
 
-`paper/main.tex` referenziert derzeit `summary.csv` mit PoC-Spalten — diese
-Verknüpfung muss bei der Paper-Integration auf `poc_summary.csv` umgestellt
-werden (eigener Arbeitsschritt).
+Offen (eigener Arbeitsschritt bei der Paper-Integration): `paper/main.tex`
+referenziert noch `summary.csv` mit PoC-Spalten → auf `poc_summary.csv` umstellen;
+das gruppierte Diagramm auf `fallback_summary.csv` setzen.

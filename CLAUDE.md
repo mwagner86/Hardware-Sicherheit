@@ -120,6 +120,86 @@ echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo
 # CPU-Governor auf performance setzen
 ```
 
+## Experiment-Infrastruktur (Stand: 2026-06-26)
+
+Die automatisierte Testumgebung liegt in `project/experiments/`. Orchestrierung
+vom **Control-Node (Laptop)** aus per SSH; die Skripte laufen auf den Gästen.
+Details: `project/experiments/README.md`, Deployment: `project/notes/VM-Deployment.md`
+(CLI `qm`/`pct`) bzw. `project/notes/Proxmox-Klickanleitung.md` (Web-UI + BIOS),
+Topologie-Diagramm (Präsentation): `Experiment-Topologie.canvas`.
+
+### VM-Topologie (4 Instanzen, alle auf P-Core `4,5` gepinnt, Heimnetz vmbr0)
+
+| Rolle | Paradigma | Proxmox-Typ | ID | IP |
+| --- | --- | --- | --- | --- |
+| Angreifer | konstante Störquelle | LXC | 200 | `192.168.178.200` |
+| Opfer | Emulation | QEMU-VM **`--kvm 0`** | 201 | `192.168.178.201` |
+| Opfer | Para-Virt. | LXC | 202 | `192.168.178.202` |
+| Opfer | HW-Virt. | KVM-VM `--cpu host` | 203 | `192.168.178.203` |
+
+Host: Proxmox `pve` @ `192.168.178.50` (i7-13700). PoC nutzt KVM-Opfer (203);
+QEMU-Opfer ist NICHT PoC-tauglich (Emulation verschluckt den Effekt). Fallback
+läuft **sequenziell** über alle drei Opfer → konstanter Angreifer.
+
+### Skripte (`project/experiments/`)
+
+- `victim_benchmark.sh` — Opfer: 1 Lauf sysbench(cpu+mem) + fio → `cpu_eps;mem_mibps;iops;lat_p95_ms`
+- `attacker_load.sh` — Angreifer: `start [s]` / `stop` / `run <s>`, stress-ng cache(L3)+hdd
+- `run_experiment.sh` — PoC (Angreifer + 1 Opfer) → `poc_summary.csv`
+- `run_fallback.sh` — Fallback (3 Opfer) → `fallback_summary.csv`
+- `lib/common.sh` (Logging/Median/Delta), `lib/orchestrator.sh` (SSH/Deploy/Collect, geteilt)
+- `config.env` — SSH-Ziele, `REPEATS`, Benchmark-/Last-Parameter, `FALLBACK_VICTIMS`
+
+Erststart: `./run_experiment.sh --install --deploy-only` (installiert sysbench/fio/jq
+bzw. stress-ng auf den Gästen). SSH-Key-Auth muss vorab stehen (Henne-Ei).
+Aggregation = **Median** über `REPEATS` Läufe. Alle Skripte: `bash -n` + `shellcheck -x` sauber.
+
+### Drei CSV-Schemata (NICHT vermischen!)
+
+- `summary.csv` — Legacy-Dummy (`generate_dummy_data.sh`), `Virtualisierung;Baseline;NoisyNeighbor`, vom **abgegebenen Exposé** gelesen → unberührt lassen.
+- `poc_summary.csv` — PoC, `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms`.
+- `fallback_summary.csv` — Fallback, `Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN`.
+
+**Diagramm-Design (entschieden):** gruppierte Balken, Baseline vs. Noisy Neighbor,
+ein Diagramm je Metrik. Mock: `assets/mock_fallback.{tex,csv,png}`.
+
+### OFFEN — Paper-Integration (eigener Arbeitsschritt)
+
+`paper/main.tex` referenziert noch `summary.csv` mit PoC-Spalten (`CPU_Events_per_sec`,
+`IOPS_Random_Write`), die dort nicht existieren → auf `poc_summary.csv` umstellen und
+das gruppierte Diagramm (aus `mock_fallback.tex`) auf `fallback_summary.csv` setzen.
+Echte Messdaten stehen noch aus (VMs werden erst aufgesetzt).
+
+## Präsentation (`presentation/`)
+
+Slidev-Deck zum experimentellen Teil (~15 min), lokal hostbar + **PDF-exportierbar**
+(harte Abgabe-Anforderung). Node 18+ nötig.
+
+```bash
+cd presentation
+npm install
+npm run dev      # Live-Preview :3030
+npm run build    # statische Website -> dist/
+npm run export   # PDF (braucht playwright-chromium; siehe presentation/README.md)
+```
+
+- **Folien:** `slides.md` (eine Datei, `---`-getrennt, Speaker-Notes je Folie).
+  Inhalt: Motivation/Themenwahl, Hintergrund, Homeserver, Topologie (Mermaid),
+  Methodik, Codebasis (echte Snippets), Ergebnis-**Platzhalter** (PoC-Tabelle +
+  Fallback-Bild).
+- **Platzhalter ersetzen:** Fotos → `public/img/homeserver/server.jpg`; Fallback-
+  Diagramm → `public/img/mock_fallback.png` überschreiben; PoC-Tabelle aus
+  `poc_summary.csv`.
+- **Farbschema:** SentinelOne-inspiriert (Dark-Mode, Primär `#6B0AEA`, Magenta
+  `#FF2D7E`). Zentral in `presentation/style.css`. **Wichtig:** Slidev merged
+  KEINE `uno.config.ts` — die `s1`-Akzentklassen (`border-s1`, `bg-s1/10`,
+  `*-s1-magenta`) sind daher als manuelle CSS-Klassen in `style.css` definiert.
+- **Typo-/Eyecatcher-System** (ebenfalls `style.css`): automatische Akzente für
+  `strong` (violett), Inline-`code` (magenta), Überschriften-Balken, Zitate,
+  Tabellen; plus Klassen `.kicker .lead .hl .hl-m .mark .stat .muted`.
+- **Public-Assets:** im Markdown als `<img :src="'/img/...'" />` einbinden
+  (gebundener String), sonst behandelt Vite den Pfad als Build-Import und bricht ab.
+
 ## Abgaben & Zwischenstände
 
 | Datei | Beschreibung |
@@ -127,3 +207,4 @@ echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo
 | `project/expose/expose_hardware_security.tex` | Exposé (abgegeben) |
 | `paper/literatur_recherche_draft.tex` | Literatur-Recherche Zwischenabgabe |
 | `paper/main.tex` | Finale Hausarbeit |
+| `presentation/slides.md` | Präsentations-Deck (Slidev, PDF-Abgabe) |
