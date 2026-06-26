@@ -1,0 +1,151 @@
+/* SentinelOne-inspiriertes Farbschema — global, ergänzt das Default-Theme. */
+
+:root {
+  --slidev-theme-primary: #6B0AEA;
+}
+
+/* Dunkler, leicht violetter Grundton */
+html.dark .slidev-layout {
+  background-color: #0B0B1A;
+  color: #E7E3F4;
+  --slidev-code-background: #15132B;
+}
+
+html.dark .slidev-layout h1,
+html.dark .slidev-layout h2 {
+  color: #FFFFFF;
+}
+
+/* Cover & Abschnittstrenner: subtiler Purple→Magenta-Verlauf */
+html.dark .slidev-layout.cover,
+html.dark .slidev-layout.section {
+  background: radial-gradient(120% 120% at 15% 0%, #2A0E55 0%, #0B0B1A 55%);
+}
+
+/* Abschnitts-Überschriften als Verlaufstext (markentypisch) */
+html.dark .slidev-layout.section h1 {
+  background: linear-gradient(90deg, #A855F7, #FF2D7E);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Links/Akzente in der hellen Variante besser lesbar */
+html.dark a {
+  color: #A855F7;
+}
+
+/* ---------------------------------------------------------------------------
+   Marken-Utilities (s1) — manuell, da Slidev die uno.config.ts nicht merged.
+   Zentrale Stelle für alle SentinelOne-Akzentfarben im Deck.
+--------------------------------------------------------------------------- */
+.border-s1          { border-color: #6B0AEA !important; }
+.border-s1-magenta  { border-color: #FF2D7E !important; }
+.bg-s1\/10          { background-color: rgba(107, 10, 234, 0.10); }
+.bg-s1-magenta\/10  { background-color: rgba(255, 45, 126, 0.10); }
+.text-s1            { color: #6B0AEA; }
+.text-s1-magenta    { color: #FF2D7E; }
+
+/* ===========================================================================
+   Typografie & Eye-Catcher — wissenschaftlich, aber nicht langweilig.
+   Globale Treatments werten fast jede Folie automatisch auf.
+=========================================================================== */
+
+/* Akzentbalken unter Überschriften der Inhaltsfolien */
+html.dark .slidev-layout:not(.cover):not(.section):not(.center) h1::after {
+  content: '';
+  display: block;
+  width: 3.2rem;
+  height: 3px;
+  margin-top: 0.5rem;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #6B0AEA, #FF2D7E);
+}
+
+/* Abschnittstrenner: Akzentbalken über dem Verlaufstitel */
+html.dark .slidev-layout.section h1::before {
+  content: '';
+  display: block;
+  width: 2.6rem;
+  height: 4px;
+  margin-bottom: 1rem;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #6B0AEA, #FF2D7E);
+}
+
+/* Fettungen werden automatisch zu dezenten violetten Highlights */
+html.dark .slidev-layout strong,
+html.dark .slidev-layout b {
+  color: #CBA6FF;
+  font-weight: 600;
+}
+
+/* Inline-Code als magenta Eyecatcher auf zartem Violett */
+html.dark .slidev-layout :not(pre) > code {
+  color: #FF8AC4;
+  background: rgba(107, 10, 234, 0.16);
+  padding: 0.08em 0.36em;
+  border-radius: 0.28em;
+  font-size: 0.92em;
+}
+
+/* Listen-Marker in Akzentfarbe */
+html.dark .slidev-layout ul > li::marker {
+  color: #A855F7;
+}
+
+/* Blockquote: Akzentkante + zarte Fläche */
+html.dark .slidev-layout blockquote {
+  border-left: 3px solid #FF2D7E;
+  background: rgba(107, 10, 234, 0.10);
+  padding: 0.6em 1em;
+  border-radius: 0 0.4rem 0.4rem 0;
+  color: #ECE8F8;
+}
+
+/* Tabellen: Kopfzeile + hervorgehobene Werte mit Akzent */
+html.dark .slidev-layout th {
+  color: #CBA6FF;
+  border-bottom: 2px solid #6B0AEA !important;
+}
+html.dark .slidev-layout td strong { color: #FF8AC4; }
+
+/* --- Wiederverwendbare Klassen -------------------------------------------- */
+
+/* Kicker / Eyebrow: kleines Label über der Überschrift */
+.kicker {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #A855F7, #FF2D7E);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Lead: große, ruhige Einleitung */
+.lead { font-size: 1.4rem; line-height: 1.5; opacity: 0.9; font-weight: 300; }
+
+/* Inline-Highlights */
+.hl   { color: #CBA6FF; font-weight: 600; }
+.hl-m { color: #FF8AC4; font-weight: 600; }
+
+/* Textmarker-Effekt */
+.mark {
+  background: linear-gradient(transparent 55%, rgba(255, 45, 126, 0.38) 55%);
+  padding: 0 0.1em;
+}
+
+/* Große Statistik-Zahl mit Verlauf */
+.stat {
+  font-weight: 800;
+  background: linear-gradient(90deg, #A855F7, #FF2D7E);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Gedämpfter Sekundärtext */
+.muted { opacity: 0.6; }

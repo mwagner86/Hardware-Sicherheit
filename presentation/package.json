@@ -1,0 +1,17 @@
+{
+  "name": "noisy-neighbor-presentation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "slidev --open",
+    "build": "slidev build",
+    "export": "slidev export --output dist/Praesentation-Noisy-Neighbor.pdf"
+  },
+  "dependencies": {
+    "@slidev/cli": "latest",
+    "@slidev/theme-default": "latest"
+  },
+  "optionalDependencies": {
+    "playwright-chromium": "latest"
+  }
+}
