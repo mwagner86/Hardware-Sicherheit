@@ -1,0 +1,23 @@
+{
+	"nodes":[
+		{"id":"n_title","type":"text","x":-820,"y":160,"width":480,"height":600,"color":"6","text":"## Experiment-Topologie\n### Noisy-Neighbor-PoC\n\n**Ziel:** Mikroarchitektonische Interferenz über den geteilten **Last Level Cache (LLC)** zwischen Angreifer- und Opfer-Instanz auf **einem physischen P-Core** quantifizieren.\n\n---\n**Legende**\n\n- 🔴 **Ressourcen-Contention** — geteilter L3-Cache (LLC) + I/O-Subsystem\n- 🔵 **SSH-Orchestrierung** — Control-Node steuert alle Gäste\n\n---\n**Ablauf**\n\n1. Baseline am Opfer (ohne Last)\n2. Angreifer-Störlast starten\n3. Messung am Opfer unter Last\n4. Delta = Isolationsbruch\n\nDie 3 Opfer werden **sequenziell** getestet — zu jedem Zeitpunkt ist nur **ein** Opfer aktiv, der Angreifer bleibt **konstante Störquelle**.\n\n---\n**4 Instanzen**\n\n1× Angreifer + 3× Opfer\n(QEMU / LXC / KVM = Emulation / Para-Virt. / HW-Virt.)"},
+		{"id":"n_control","type":"text","x":120,"y":-360,"width":440,"height":240,"color":"5","text":"### 💻 Control-Node (Laptop)\n\n- **Rolle:** Orchestrierung — **misst nicht selbst**\n- **Skript:** `run_experiment.sh`\n- **Netz:** Heimnetz, `192.168.178.x` (DHCP)\n- **Zugriff:** SSH (Key-Auth, BatchMode) auf alle 4 Gäste\n\n→ Deploy · Baseline · Störlast · Messung · Aggregation"},
+		{"id":"n_net","type":"text","x":-360,"y":-360,"width":420,"height":240,"color":"3","text":"### 🌐 Netzwerk\n\n- **Heimnetz:** `192.168.178.0/24` → **vmbr0**\n- **Gateway:** Fritz!Box `192.168.178.1`\n- **DNS:** Pi-hole `192.168.178.55`\n\n**Experiment-Gäste:** statische IPs `192.168.178.200–203` (außerhalb DHCP-Pool)"},
+		{"id":"g_host","type":"group","x":-360,"y":180,"width":1640,"height":820,"color":"4","label":"Proxmox VE Host  ·  pve  ·  https://192.168.178.50:8006  ·  Intel Core i7-13700 (Raptor Lake)"},
+		{"id":"n_hostinfo","type":"text","x":-320,"y":260,"width":460,"height":300,"color":"4","text":"### ⚙️ Host-Determinismus (zwingend)\n\n- C-States **aus**\n  `intel_idle.max_cstate=1 processor.max_cstate=1 idle=poll`\n- Turbo Boost **aus** (`no_turbo=1`)\n- CPU-Governor **performance**\n\n**Bridge:** vmbr0 (2,5 Gbit, Intel I226-V)\n\n→ deterministische Taktbasis = reproduzierbare Latenzmessung (siehe `PoC.md`)"},
+		{"id":"g_pcore","type":"group","x":200,"y":240,"width":1040,"height":720,"color":"2","label":"Physischer P-Core  ·  CPU 4 & 5 (SMT-Geschwister)  ·  gemeinsamer L3-Cache (LLC)  ·  CPU-Affinity 4,5"},
+		{"id":"n_att","type":"text","x":240,"y":480,"width":300,"height":260,"color":"1","text":"### 🗡️ Angreifer\n\n- **Typ:** LXC-Container\n- **ID:** `200`\n- **IP:** `192.168.178.200`\n- **Pinning:** CPU `4,5`\n- **Skript:** `attacker_load.sh`\n\n**Last:**\n`stress-ng --cache 2`\n`  --cache-level 3 --hdd 1`\n\n→ sättigt LLC + I/O\n(konstante Störquelle)"},
+		{"id":"n_vqemu","type":"text","x":900,"y":290,"width":300,"height":180,"color":"2","text":"### 🎯 Opfer 1 — Emulation\n\n- **Typ:** QEMU-VM (**KVM aus**, TCG)\n- **ID:** `201` · IP `…201`\n- **Pinning:** CPU `4,5`\n- **Messung:** sysbench + fio\n\n*Nur Fallback (Emulation verschluckt PoC-Effekt)*"},
+		{"id":"n_vlxc","type":"text","x":900,"y":510,"width":300,"height":180,"color":"2","text":"### 🎯 Opfer 2 — Para-Virt.\n\n- **Typ:** LXC-Container\n- **ID:** `202` · IP `…202`\n- **Pinning:** CPU `4,5`\n- **Messung:** sysbench + fio\n\n*Fallback + PoC-tauglich (hardwarenah)*"},
+		{"id":"n_vkvm","type":"text","x":900,"y":730,"width":300,"height":180,"color":"2","text":"### 🎯 Opfer 3 — HW-Virt.\n\n- **Typ:** KVM-VM (`--cpu host`)\n- **ID:** `203` · IP `…203`\n- **Pinning:** CPU `4,5`\n- **Messung:** sysbench + fio\n\n*PoC-Hauptopfer + Fallback*"}
+	],
+	"edges":[
+		{"id":"e_ctl_att","fromNode":"n_control","fromSide":"bottom","toNode":"n_att","toSide":"top","color":"5","label":"SSH · Störlast (start/stop)"},
+		{"id":"e_ctl_qemu","fromNode":"n_control","fromSide":"bottom","toNode":"n_vqemu","toSide":"top","color":"5"},
+		{"id":"e_ctl_lxc","fromNode":"n_control","fromSide":"right","toNode":"n_vlxc","toSide":"top","color":"5"},
+		{"id":"e_ctl_kvm","fromNode":"n_control","fromSide":"right","toNode":"n_vkvm","toSide":"top","color":"5","label":"SSH · Messung + Ergebnisse"},
+		{"id":"e_con_qemu","fromNode":"n_att","fromSide":"right","toNode":"n_vqemu","toSide":"left","color":"1","fromEnd":"arrow","toEnd":"arrow"},
+		{"id":"e_con_lxc","fromNode":"n_att","fromSide":"right","toNode":"n_vlxc","toSide":"left","color":"1","fromEnd":"arrow","toEnd":"arrow","label":"geteilter L3-Cache (LLC) + I/O → Interferenz"},
+		{"id":"e_con_kvm","fromNode":"n_att","fromSide":"right","toNode":"n_vkvm","toSide":"left","color":"1","fromEnd":"arrow","toEnd":"arrow"}
+	]
+}

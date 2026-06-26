@@ -331,3 +331,8 @@ Thumbs.db
 
 # Benchmark-Rohdaten (falls zu groß)
 project/experiments/bench_*/
+
+# Experiment-Artefakte: lokale Arbeitsverzeichnisse (fio-Testdateien, Logs, PID)
+project/experiments/work/
+project/experiments/lib/work/
+# Aggregierte Messreihen unter data/ werden bewusst versioniert (Reproduzierbarkeit).
