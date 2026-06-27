@@ -13,6 +13,7 @@ experiments/
 ├── run_fallback.sh       # Control-Node: Fallback-Orchestrator → results/fallback_summary.csv
 ├── config.env            # SSH-Ziele + Versuchsparameter (voller Lauf)
 ├── smoke.env             # dito, verkürzt — reine Funktionsprüfung (../notes/Smoke-Test.md)
+├── demo.env              # dito, minimal (REPEATS=1, nur KVM) — Live-Demo im Vortrag
 ├── lib/                  # geteilte Control-Node-Logik
 │   ├── common.sh         #   Logging, Median, Delta (auch auf Gäste deployed)
 │   └── orchestrator.sh   #   SSH/SCP, Deploy, Collect, Aggregation
@@ -51,6 +52,7 @@ selbst. Voraussetzung: SSH-Key-Auth zu allen Gästen (kein Passwort-Prompt).
 # Weitere Optionen
 ./run_experiment.sh --no-deploy        # Skripte schon ausgerollt
 ./run_experiment.sh --config smoke.env # Smoke-Test-Profil (kurze Läufe)
+./run_experiment.sh --config demo.env  # Live-Demo: REPEATS=1, nur KVM (~30–45 s)
 ```
 
 Welches Opfer der PoC nutzt, steht in `VICTIM_HOST`; die drei Fallback-Opfer in

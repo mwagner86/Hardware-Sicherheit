@@ -10,7 +10,9 @@ Governor) und liefert daher **keine belastbaren Zahlen**.
 > (Determinismus) → dann der echte Messlauf mit [`../experiments/config.env`](../experiments/config.env).
 
 Profil: [`../experiments/smoke.env`](../experiments/smoke.env) (kurze Läufe,
-`REPEATS=2`, nur schnelle Opfer).
+`REPEATS=2`, nur schnelle Opfer). Für die Live-Demo im Vortrag gibt es zusätzlich
+[`../experiments/demo.env`](../experiments/demo.env) (noch minimaler: `REPEATS=1`,
+nur KVM-Opfer, ~30–45 s; PoC-only via `run_experiment.sh`).
 
 ---
 

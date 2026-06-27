@@ -627,6 +627,58 @@ Tabelle/Diagramm im Paper. Kein manuelles Abtippen, volle Reproduzierbarkeit.
 -->
 
 ---
+
+# Live-Demo: die Pipeline läuft
+
+<div class="text-sm opacity-80 mb-4">
+Verkürztes Profil <code>demo.env</code> — <b>ein</b> Durchlauf, nur das KVM-Opfer.
+Es geht um <b>„es läuft echt"</b>, nicht um belastbare Zahlen.
+</div>
+
+```bash
+# vor dem Vortrag (einmalig): Werkzeuge + Skripte ausrollen
+./run_experiment.sh --config demo.env --install --deploy-only
+
+# LIVE — nur die Messung (~30–45 s)
+./run_experiment.sh --config demo.env --no-deploy
+```
+
+<div grid="~ cols-2 gap-6" class="mt-6 text-sm">
+
+<div>
+
+**Was hier passiert**
+- Baseline am Opfer messen
+- Angreifer-Störlast starten
+- erneut messen → **Delta**
+- Median → CSV → Tabelle
+
+</div>
+
+<div>
+
+**Bewusst klein gehalten**
+- `REPEATS=1`, 5-Sekunden-Läufe
+- kein Host-Determinismus nötig
+- die **echten** Deltas: nächste Folie
+
+</div>
+
+</div>
+
+<div class="mt-4 text-xs opacity-70 text-center">
+Sicherheitsnetz: Mitschnitt des Laufs als Fallback, falls das Heimnetz streikt.
+</div>
+
+<!--
+Hier lasse ich die Suite live laufen. Wichtig zu sagen: das demo.env ist absichtlich
+winzig (ein Durchlauf, 5-s-Benchmarks, nur das KVM-Opfer) und OHNE Host-Determinismus
+— es beweist, dass es echter, laufender Code ist, keine Folien-Behauptung. Die Zahlen
+sind hier verrauscht und NICHT die Ergebnisse; die echten Deltas zeige ich gleich.
+Falls das Netz spinnt: ich habe einen Mitschnitt als Fallback.
+-->
+
+---
 layout: section
 ---
 
@@ -657,7 +709,8 @@ Delta der Metriken am **KVM-Opfer**, Baseline vs. Noisy Neighbor:
 
 <div class="mt-6 text-sm opacity-70">
 Quelle nach der Messung: <code>project/experiments/results/poc_summary.csv</code> —
-Tabelle wird automatisch aus dem CSV befüllt.
+Tabelle wird automatisch aus dem CSV befüllt.<br>
+Werte aus dem <b>vollen</b> Lauf (Host-Determinismus) — <b>nicht</b> die Live-Demo.
 </div>
 
 <!--
