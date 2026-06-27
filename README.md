@@ -1,27 +1,92 @@
-# Hardware Sicherheit — Scientific Paper (IEEE Template)
+# Hardware Sicherheit — Wissenschaftliche Ausarbeitung (IEEE)
 
-Dieses Repository enthält die wissenschaftliche Ausarbeitung zum Modul *Hardware-Sicherheit*. 
-Das Projekt untersucht mikroarchitektonische Ressourcen-Interferenzen (Noisy-Neighbor-Problem) über Virtualisierungsgrenzen hinweg. Es umfasst das Exposé, das finale IEEE-Paper sowie alle zugehörigen Orchestrierungs-Skripte und Messdaten.
+Dieses Repository enthält die Ausarbeitung zum Modul *Hardware-Sicherheit*.
+Untersucht werden mikroarchitektonische Ressourcen-Interferenzen
+(*Noisy-Neighbor*-Problem) über Virtualisierungsgrenzen hinweg auf Intel Raptor
+Lake unter Proxmox VE. Es umfasst Exposé, Literatur-Recherche, das finale
+IEEE-Paper, ein Präsentations-Deck sowie die komplette Mess- und
+Orchestrierungs-Infrastruktur.
 
-## Projektmethodik
+## Methodik
 
-Das Projekt verfolgt eine zweistufige Methodik zur Evaluierung der Hardware-Isolation:
-1. **Proof of Concept (PoC):** Quantifizierung von Leistungseinbrüchen (I/O und Cache) unter deterministischer Noisy-Neighbor-Last (`stress-ng`) auf fest zugewiesenen physischen CPU-Kernen.
-2. **Baseline (Fallback):** Vergleichendes Leistungs-Benchmarking von reiner Emulation (QEMU), Para-Virtualisierung (LXC) und Hardware-Virtualisierung (KVM) unter strikter Limitierung von Host-Interferenzen (C-States, CPU-Governor).
+Zweistufiger Ansatz zur Bewertung der Hardware-Isolation:
+
+1. **PoC (primär):** Angreifer- und Opfer-Gast werden host-seitig per
+   CPU-Affinity auf **denselben physischen P-Core** gepinnt. Der Angreifer fährt
+   mit `stress-ng` eine deterministische Störlast (L3-Cache-Eviction + I/O), das
+   Opfer misst parallel mit `sysbench` (CPU/RAM) und `fio` (IOPS/Latenz). Als
+   PoC-Opfer dient die **KVM**-Instanz; das QEMU-Opfer ist nicht PoC-tauglich
+   (Emulation verschluckt den Effekt).
+2. **Fallback:** Vergleichendes Benchmarking der drei Virtualisierungs-Paradigmen
+   — Emulation (**QEMU**, `--kvm 0`), Para-Virtualisierung (**LXC**) und
+   Hardware-Virtualisierung (**KVM**, `--cpu host`) — **sequenziell** unter
+   identischer, konstanter Angreifer-Störlast.
+
+Vor jeder Messreihe wird der Host deterministisch konfiguriert (C-States
+deaktiviert, Turbo Boost aus, Governor `performance`); siehe
+[project/notes/PoC.md](project/notes/PoC.md).
+
+### VM-Topologie
+
+Vier Instanzen, alle auf P-Core `4,5` gepinnt, im Heimnetz `vmbr0`. Host:
+Proxmox `pve` (i7-13700).
+
+| Rolle | Paradigma | Typ | ID | IP |
+| --- | --- | --- | --- | --- |
+| Angreifer (Störquelle) | konstant | LXC | 200 | `…178.200` |
+| Opfer | Emulation | QEMU `--kvm 0` | 201 | `…178.201` |
+| Opfer | Para-Virt. | LXC | 202 | `…178.202` |
+| Opfer | HW-Virt. | KVM `--cpu host` | 203 | `…178.203` |
 
 ## Projektstruktur
 
-- `/assets/`: Zentrale Ablage für Bilder und Diagramme (wird von allen `.tex`-Dokumenten referenziert).
-- `/paper/`: Finales Paper (IEEE-Template).
-- `/project/experiments/`: Bash-Skripte für die Orchestrierung der Interferenz-Tests (`benchmark.sh`, `generate_dummy_data.sh`) und resultierende Daten (`summary.csv`).
-- `/project/expose/`: Vorbereitendes Exposé und lokale Literaturdatenbank (`references_expose.bib`).
-- `/project/notes/`: Markdown-Notizen und Literaturrecherchen.
+- [paper/](paper/) — finale Hausarbeit ([main.tex](paper/main.tex)) und
+  Literatur-Recherche-Zwischenabgabe ([literatur_recherche_draft.tex](paper/literatur_recherche_draft.tex)).
+- [project/expose/](project/expose/) — abgegebenes Exposé und primäre
+  Literaturdatenbank (`references_expose.bib`).
+- [project/experiments/](project/experiments/) — automatisierte Mess-Suite
+  (Orchestrierung vom Control-Node per SSH); Details in
+  [project/experiments/README.md](project/experiments/README.md).
+- [project/notes/](project/notes/) — PoC-/Deployment-Anleitungen und
+  Recherche-Notizen ([PoC.md](project/notes/PoC.md),
+  [VM-Deployment.md](project/notes/VM-Deployment.md),
+  [Proxmox-Klickanleitung.md](project/notes/Proxmox-Klickanleitung.md)).
+- [presentation/](presentation/) — Slidev-Deck zum experimentellen Teil
+  (lokal hostbar + PDF-exportierbar); siehe [presentation/README.md](presentation/README.md).
+- [assets/](assets/) — zentrale Bild-/Diagramm-Ablage (`\graphicspath`, von allen
+  `.tex`-Dokumenten referenziert).
 
-## Workflow & Build-Prozess
+### Mess-Suite ([project/experiments/](project/experiments/))
 
-Das Repository ist für die Bearbeitung in **VS Code** (mit den Erweiterungen *LaTeX Workshop* und *LTeX*) vorkonfiguriert.
+- `victim_benchmark.sh` — Opfer: ein Messlauf `sysbench` + `fio`.
+- `attacker_load.sh` — Angreifer: `start`/`stop`/`run` der `stress-ng`-Störlast.
+- `run_experiment.sh` — PoC (Angreifer + 1 Opfer) → `poc_summary.csv`.
+- `run_fallback.sh` — Fallback (3 Opfer sequenziell) → `fallback_summary.csv`.
+- `lib/common.sh`, `lib/orchestrator.sh` — geteilte Helfer (Logging/Median,
+  SSH/Deploy/Collect). `config.env` — SSH-Ziele und Versuchsparameter.
 
-1. **Host-Präparation:** Vor der Ausführung der Tests müssen auf dem Proxmox-Host zwingend C-States limitiert und die dynamische Frequenzskalierung (`performance` governor) deaktiviert werden, um Messrauschen zu minimieren.
-2. **Datenerhebung:** Die orchestrierten Testreihen (`sysbench`, `fio` parallel zu `stress-ng`) werden auf dem Testsystem (Debian/Proxmox) ausgeführt.
-3. **Datenintegration:** Das Ausgabeformat `summary.csv` muss im Verzeichnis `/project/experiments/` bereitgestellt werden.
-4. **Kompilierung:** Beim Speichern einer `.tex`-Datei führt LaTeX Workshop im Hintergrund `latexmk -pdf` aus. Die Pakete `pgfplots` und `pgfplotstable` importieren die CSV-Daten zur Laufzeit und rendern die Diagramme automatisch.
+Drei CSV-Schemata werden **nicht** vermischt: `summary.csv` (Legacy-Dummy, vom
+abgegebenen Exposé gelesen), `poc_summary.csv` (PoC) und `fallback_summary.csv`
+(Fallback, Quelle des gruppierten Balkendiagramms).
+
+## Build
+
+LaTeX-Dokumente werden über `make` gebaut (`latexmk -pdf`, IEEEtran; `pgfplots`/
+`pgfplotstable` importieren die CSV-Daten zur Kompilierzeit und rendern Tabellen
+und Diagramme automatisch):
+
+```bash
+make paper      # paper/main.tex → paper/main.pdf
+make expose     # Exposé
+make draft      # Literatur-Recherche
+make all        # alle drei Dokumente
+make clean      # Hilfsdateien löschen   (fullclean: zusätzlich PDFs)
+```
+
+Präsentation:
+
+```bash
+cd presentation && npm install
+npm run dev      # Live-Preview :3030
+npm run export   # PDF (Abgabeformat)
+```
