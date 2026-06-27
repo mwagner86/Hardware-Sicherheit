@@ -1,6 +1,8 @@
 #!/bin/bash
 # Generiert hypothetische Testdaten für das LaTeX-Exposé
-# Pfad: project/experiments/generate_dummy_data.sh
+# Pfad: project/experiments/legacy/generate_dummy_data.sh
+# Legacy: schreibt summary.csv (in cwd) NUR für das abgegebene Exposé
+# (expose_hardware_security.tex). Für PoC/Fallback NICHT verwenden.
 
 OUTPUT_FILE="summary.csv"
 

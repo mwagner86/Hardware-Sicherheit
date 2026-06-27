@@ -83,11 +83,12 @@ Der Build nutzt `latexmk -pdf -interaction=nonstopmode -file-line-error -synctex
 
 * **Bilder:** `\graphicspath{{../assets/}}` — alle Grafiken liegen in `/assets/`
 * **Bibliographie:** `\bibliography{../project/expose/references_expose}` — die `.bib`-Datei liegt im Exposé-Verzeichnis
-* **CSV-Daten:** `pgfplotstable` liest `../project/experiments/summary.csv` direkt zur Kompilierzeit und rendert daraus Tabellen und Diagramme
+* **CSV-Daten:** `pgfplotstable` liest `../project/experiments/results/poc_summary.csv` direkt zur Kompilierzeit und rendert daraus die Ergebnis-Tabelle. (Das abgegebene Exposé liest separat `legacy/summary.csv`.)
 
-### CSV-Datenformat (`project/experiments/summary.csv`)
+### CSV-Datenformat (`project/experiments/legacy/summary.csv`)
 
-Semikolon-getrennt, erste Zeile ist Header:
+Legacy-Dummy, semikolon-getrennt, erste Zeile ist Header — **nur** vom
+abgegebenen Exposé gelesen, eingefroren:
 
 ```text
 Virtualisierung;Baseline;NoisyNeighbor
@@ -96,7 +97,7 @@ KVM;45000;31500
 LXC;52000;20800
 ```
 
-Änderungen an dieser Datei wirken sich sofort auf die gerenderten Tabellen im Paper aus.
+Das finale Paper (`main.tex`) liest stattdessen `results/poc_summary.csv` (s. u.).
 
 ### Bibliographie-Hierarchie
 
@@ -120,7 +121,7 @@ echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo
 # CPU-Governor auf performance setzen
 ```
 
-## Experiment-Infrastruktur (Stand: 2026-06-26)
+## Experiment-Infrastruktur (Stand: 2026-06-27)
 
 Die automatisierte Testumgebung liegt in `project/experiments/`. Orchestrierung
 vom **Control-Node (Laptop)** aus per SSH; die Skripte laufen auf den Gästen.
@@ -141,14 +142,21 @@ Host: Proxmox `pve` @ `192.168.178.50` (i7-13700). PoC nutzt KVM-Opfer (203);
 QEMU-Opfer ist NICHT PoC-tauglich (Emulation verschluckt den Effekt). Fallback
 läuft **sequenziell** über alle drei Opfer → konstanter Angreifer.
 
-### Skripte (`project/experiments/`)
+### Struktur (`project/experiments/`)
 
-- `victim_benchmark.sh` — Opfer: 1 Lauf sysbench(cpu+mem) + fio → `cpu_eps;mem_mibps;iops;lat_p95_ms`
-- `attacker_load.sh` — Angreifer: `start [s]` / `stop` / `run <s>`, stress-ng cache(L3)+hdd
-- `run_experiment.sh` — PoC (Angreifer + 1 Opfer) → `poc_summary.csv`
-- `run_fallback.sh` — Fallback (3 Opfer) → `fallback_summary.csv`
-- `lib/common.sh` (Logging/Median/Delta), `lib/orchestrator.sh` (SSH/Deploy/Collect, geteilt)
-- `config.env` — SSH-Ziele, `REPEATS`, Benchmark-/Last-Parameter, `FALLBACK_VICTIMS`
+Getrennt nach **wo etwas läuft** (Verzeichnisbaum: `project/experiments/README.md`):
+
+- **Control-Node** (Top-Level + `lib/`):
+  - `run_experiment.sh` — PoC (Angreifer + 1 Opfer) → `results/poc_summary.csv`
+  - `run_fallback.sh` — Fallback (3 Opfer) → `results/fallback_summary.csv`
+  - `lib/common.sh` (Logging/Median/Delta), `lib/orchestrator.sh` (SSH/Deploy/Collect, geteilt)
+  - `config.env` — SSH-Ziele, `REPEATS`, Benchmark-/Last-Parameter, `FALLBACK_VICTIMS`
+  - `smoke.env` — verkürztes Profil für die reine Funktionsprüfung (`project/notes/Smoke-Test.md`)
+- **`roles/`** (auf die Gäste deployed, dort ausgeführt):
+  - `roles/victim_benchmark.sh` — Opfer: 1 Lauf sysbench(cpu+mem) + fio → `cpu_eps;mem_mibps;iops;lat_p95_ms`
+  - `roles/attacker_load.sh` — Angreifer: `start [s]` / `stop` / `run <s>`, stress-ng cache(L3)+hdd
+- **`results/`** — Aggregat-CSVs (getrackt, Platzhalter) + `data/` (Rohdaten, gitignored)
+- **`legacy/`** — `summary.csv` + `generate_dummy_data.sh`, **nur** fürs abgegebene Exposé (eingefroren)
 
 Erststart: `./run_experiment.sh --install --deploy-only` (installiert sysbench/fio/jq
 bzw. stress-ng auf den Gästen). SSH-Key-Auth muss vorab stehen (Henne-Ei).
@@ -156,19 +164,26 @@ Aggregation = **Median** über `REPEATS` Läufe. Alle Skripte: `bash -n` + `shel
 
 ### Drei CSV-Schemata (NICHT vermischen!)
 
-- `summary.csv` — Legacy-Dummy (`generate_dummy_data.sh`), `Virtualisierung;Baseline;NoisyNeighbor`, vom **abgegebenen Exposé** gelesen → unberührt lassen.
-- `poc_summary.csv` — PoC, `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms`.
-- `fallback_summary.csv` — Fallback, `Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN`.
+- `legacy/summary.csv` — Legacy-Dummy (`legacy/generate_dummy_data.sh`), `Virtualisierung;Baseline;NoisyNeighbor`, vom **abgegebenen Exposé** gelesen → unberührt lassen.
+- `results/poc_summary.csv` — PoC, `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms`. Zeilen: `Baseline`, `NoisyNeighbor`, `Delta-Prozent` (Bindestrich, kein `_` — wegen `string type` im LaTeX-Typeset). Gelesen von `paper/main.tex`.
+- `results/fallback_summary.csv` — Fallback, `Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN`.
+
+Beide `results/`-Aggregate sind mit **Platzhalterwerten** vorbelegt und werden
+getrackt (Paper liest sie zur Compile-Zeit); echte Läufe überschreiben sie.
 
 **Diagramm-Design (entschieden):** gruppierte Balken, Baseline vs. Noisy Neighbor,
 ein Diagramm je Metrik. Mock: `assets/mock_fallback.{tex,csv,png}`.
 
-### OFFEN — Paper-Integration (eigener Arbeitsschritt)
+### OFFEN — Paper-Integration (Rest)
 
-`paper/main.tex` referenziert noch `summary.csv` mit PoC-Spalten (`CPU_Events_per_sec`,
-`IOPS_Random_Write`), die dort nicht existieren → auf `poc_summary.csv` umstellen und
-das gruppierte Diagramm (aus `mock_fallback.tex`) auf `fallback_summary.csv` setzen.
-Echte Messdaten stehen noch aus (VMs werden erst aufgesetzt).
+- **Erledigt:** `main.tex` liest jetzt `results/poc_summary.csv`; alle Spalten haben
+  saubere Anzeigenamen, der Build ist CSV-seitig grün.
+- **Noch offen:** das gruppierte Diagramm (aus `mock_fallback.tex`) in `main.tex`
+  einbauen und auf `results/fallback_summary.csv` setzen; echte Messdaten ersetzen
+  die Platzhalter (VMs werden erst aufgesetzt).
+- **Unabhängig kaputt (Paper-Track):** `make paper` scheitert noch an der
+  Bibliografie (fehlende `main.bbl`, undefinierte Citations `intelvtx`/`kvmsecurity`
+  in `references_expose.bib`).
 
 ## Präsentation (`presentation/`)
 
@@ -189,7 +204,7 @@ npm run export   # PDF (braucht playwright-chromium; siehe presentation/README.m
   Fallback-Bild).
 - **Platzhalter ersetzen:** Fotos → `public/img/homeserver/server.jpg`; Fallback-
   Diagramm → `public/img/mock_fallback.png` überschreiben; PoC-Tabelle aus
-  `poc_summary.csv`.
+  `results/poc_summary.csv`.
 - **Farbschema:** SentinelOne-inspiriert (Dark-Mode, Primär `#6B0AEA`, Magenta
   `#FF2D7E`). Zentral in `presentation/style.css`. **Wichtig:** Slidev merged
   KEINE `uno.config.ts` — die `s1`-Akzentklassen (`border-s1`, `bg-s1/10`,

@@ -75,7 +75,7 @@ if [[ "${DO_DEPLOY}" -eq 1 ]]; then
 fi
 
 TS="$(date +%Y%m%d_%H%M%S)"
-DATA_DIR="${SCRIPT_DIR}/data/fallback_${TS}"
+DATA_DIR="${SCRIPT_DIR}/results/data/fallback_${TS}"
 mkdir -p "${DATA_DIR}"
 log "Datenverzeichnis: ${DATA_DIR}"
 
@@ -109,9 +109,9 @@ for entry in "${FALLBACK_VICTIMS[@]}"; do
 done
 
 # Kanonische Fallback-CSV fürs Paper-Diagramm ablegen.
-cp "${SUMMARY}" "${SCRIPT_DIR}/fallback_summary.csv"
+cp "${SUMMARY}" "${SCRIPT_DIR}/results/fallback_summary.csv"
 
 log "Fertig. Aggregat:"
 cat "${SUMMARY}" >&2
 log "Rohdaten je Opfer unter: ${DATA_DIR}"
-log "Paper-Diagramm-Daten: ${SCRIPT_DIR}/fallback_summary.csv"
+log "Paper-Diagramm-Daten: ${SCRIPT_DIR}/results/fallback_summary.csv"

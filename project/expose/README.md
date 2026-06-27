@@ -7,10 +7,10 @@ Dieses Verzeichnis enthält das wissenschaftliche Exposé zur Untersuchung von P
 Das Dokument bindet externe Daten und Grafiken dynamisch ein. Damit der LaTeX-Build (`latexmk`) nicht abbricht, müssen folgende Vorbedingungen erfüllt sein:
 
 1. **Grafiken:** Das Dokument erwartet das Vorhandensein von Bilddateien im relativen Pfad `../../assets/`.
-2. **Messdaten:** Das Paket `pgfplotstable` erfordert zwingend die Datei `../experiments/summary.csv` (semikolongetrennt).
+2. **Messdaten:** Das Paket `pgfplotstable` erfordert zwingend die Datei `../experiments/legacy/summary.csv` (semikolongetrennt).
 
 > **Hinweis zur Testumgebung:**
-> Falls noch keine echten Benchmark-Daten des Proxmox-Servers vorliegen, muss das Skript `../experiments/generate_dummy_data.sh` ausgeführt werden. Dieses erzeugt eine formell korrekte Platzhalter-CSV, die den Build-Prozess ermöglicht.
+> Falls noch keine echten Benchmark-Daten des Proxmox-Servers vorliegen, muss das Skript `../experiments/legacy/generate_dummy_data.sh` (aus `legacy/` heraus) ausgeführt werden. Dieses erzeugt eine formell korrekte Platzhalter-CSV, die den Build-Prozess ermöglicht. (Das finale Paper nutzt stattdessen `../experiments/results/poc_summary.csv`.)
 
 ## Kontakt
 Maximilian Wagner

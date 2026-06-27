@@ -35,10 +35,10 @@ deploy_role() {
     rscp "${SCRIPT_DIR}/lib/common.sh" "$u" "$h" "${REMOTE_DIR}/lib/"
     case "$role" in
         victim)
-            rscp "${SCRIPT_DIR}/victim_benchmark.sh" "$u" "$h" "${REMOTE_DIR}/"
+            rscp "${SCRIPT_DIR}/roles/victim_benchmark.sh" "$u" "$h" "${REMOTE_DIR}/"
             rssh "$u" "$h" "chmod +x ${REMOTE_DIR}/victim_benchmark.sh" ;;
         attacker)
-            rscp "${SCRIPT_DIR}/attacker_load.sh" "$u" "$h" "${REMOTE_DIR}/"
+            rscp "${SCRIPT_DIR}/roles/attacker_load.sh" "$u" "$h" "${REMOTE_DIR}/"
             rssh "$u" "$h" "chmod +x ${REMOTE_DIR}/attacker_load.sh" ;;
         *) die "deploy_role: unbekannte Rolle '${role}'" ;;
     esac

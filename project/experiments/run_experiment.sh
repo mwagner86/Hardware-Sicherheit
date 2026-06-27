@@ -84,7 +84,7 @@ if [[ "${DEPLOY_ONLY}" -eq 1 ]]; then
 fi
 
 TS="$(date +%Y%m%d_%H%M%S)"
-DATA_DIR="${SCRIPT_DIR}/data/${TS}"
+DATA_DIR="${SCRIPT_DIR}/results/data/${TS}"
 mkdir -p "${DATA_DIR}"
 log "Datenverzeichnis: ${DATA_DIR}"
 
@@ -113,16 +113,16 @@ SUMMARY="${DATA_DIR}/summary.csv"
     echo "Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms"
     echo "Baseline;${B[2]};${B[3]};${B[4]};${B[5]}"
     echo "NoisyNeighbor;${N[2]};${N[3]};${N[4]};${N[5]}"
-    printf 'Delta_Prozent;%s;%s;%s;%s\n' \
+    printf 'Delta-Prozent;%s;%s;%s;%s\n' \
         "$(delta_pct "${B[2]}" "${N[2]}")" \
         "$(delta_pct "${B[3]}" "${N[3]}")" \
         "$(delta_pct "${B[4]}" "${N[4]}")" \
         "$(delta_pct "${B[5]}" "${N[5]}")"
 } > "${SUMMARY}"
 
-cp "${SUMMARY}" "${SCRIPT_DIR}/poc_summary.csv"
+cp "${SUMMARY}" "${SCRIPT_DIR}/results/poc_summary.csv"
 
 log "Fertig. Ergebnis:"
 cat "${SUMMARY}" >&2
 log "Roh- und Aggregatdaten unter: ${DATA_DIR}"
-log "Paper-Tabelle aktualisiert: ${SCRIPT_DIR}/poc_summary.csv"
+log "Paper-Tabelle aktualisiert: ${SCRIPT_DIR}/results/poc_summary.csv"

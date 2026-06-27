@@ -44,7 +44,7 @@ Jede Folie wird zu genau einer PDF-Seite.
   `PLATZHALTER.md`.
 - **Ergebnisse:** Die Folien „PoC-Ergebnis" und „Fallback-Ergebnis" sind als
   `PLATZHALTER` markiert.
-  - PoC: Tabelle aus `../project/experiments/poc_summary.csv` füllen.
+  - PoC: Tabelle aus `../project/experiments/results/poc_summary.csv` füllen.
   - Fallback: `public/img/mock_fallback.png` durch das echte Diagramm ersetzen
     (gleicher Dateiname → keine weitere Änderung nötig).
 - **Speaker-Notes:** stehen je Folie im `<!-- ... -->`-Block, im Presenter-Mode

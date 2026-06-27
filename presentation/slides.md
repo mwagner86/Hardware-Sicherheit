@@ -656,7 +656,7 @@ Delta der Metriken am **KVM-Opfer**, Baseline vs. Noisy Neighbor:
 </div>
 
 <div class="mt-6 text-sm opacity-70">
-Quelle nach der Messung: <code>project/experiments/poc_summary.csv</code> —
+Quelle nach der Messung: <code>project/experiments/results/poc_summary.csv</code> —
 Tabelle wird automatisch aus dem CSV befüllt.
 </div>
 

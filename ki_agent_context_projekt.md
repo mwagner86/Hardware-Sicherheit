@@ -46,9 +46,13 @@ Die Code-Basis ist wie folgt strukturiert, um eine saubere Trennung zwischen Exp
 │   ├── literatur_recherche_draft.tex # Zwischenabgabe Literatur-Recherche
 │   └── ieee-template/         # Offizielle IEEE-Stil-Dateien und Klassen
 └── project/                   # Projektbegleitende Unterlagen & Experimente
-    ├── experiments/           # Skripte und Rohdaten des PoC
-    │   ├── benchmark.sh       # Ausführung der Messreihen
-    │   └── summary.csv        # Gesammelte Messergebnisse
+    ├── experiments/           # Mess-Suite (Control-Node) — s. experiments/README.md
+    │   ├── run_experiment.sh  # PoC-Orchestrator      → results/poc_summary.csv
+    │   ├── run_fallback.sh    # Fallback-Orchestrator → results/fallback_summary.csv
+    │   ├── lib/               # geteilte Logik (common.sh, orchestrator.sh)
+    │   ├── roles/             # auf Gäste deployed (victim_benchmark.sh, attacker_load.sh)
+    │   ├── results/           # Aggregat-CSVs (getrackt) + data/ (Rohdaten, gitignored)
+    │   └── legacy/            # eingefrorene Dummy-CSV nur fürs Exposé
     ├── expose/                # Einreichung der Projektskizze
     │   ├── expose_hardware_security.tex
     │   └── references_expose.bib

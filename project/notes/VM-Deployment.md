@@ -234,10 +234,10 @@ zeigt, auf welchen logischen CPUs (`PSR`) die Threads tatsächlich laufen.
 
 - **PoC:** `ATTACKER_HOST=`200, `VICTIM_HOST=`203 (KVM) in `config.env`, dann
   `./run_experiment.sh --install --deploy-only` (einmalig), danach
-  `./run_experiment.sh` → `poc_summary.csv`.
-- **Fallback:** drei Läufe (Opfer 201/202/203), Aggregation in `summary.csv` im
-  Schema `Virtualisierung;...;_Base;_NN` — Automatisierung folgt mit
-  `run_fallback.sh` (nächster Arbeitsschritt).
+  `./run_experiment.sh` → `results/poc_summary.csv`.
+- **Fallback:** `./run_fallback.sh` testet die drei Opfer (201/202/203)
+  sequenziell unter konstanter Störlast → `results/fallback_summary.csv`
+  (Schema `Virtualisierung;CPU_Base;CPU_NN;...;Lat_NN`).
 
 ---
 

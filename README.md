@@ -58,16 +58,22 @@ Proxmox `pve` (i7-13700).
 
 ### Mess-Suite ([project/experiments/](project/experiments/))
 
-- `victim_benchmark.sh` — Opfer: ein Messlauf `sysbench` + `fio`.
-- `attacker_load.sh` — Angreifer: `start`/`stop`/`run` der `stress-ng`-Störlast.
-- `run_experiment.sh` — PoC (Angreifer + 1 Opfer) → `poc_summary.csv`.
-- `run_fallback.sh` — Fallback (3 Opfer sequenziell) → `fallback_summary.csv`.
-- `lib/common.sh`, `lib/orchestrator.sh` — geteilte Helfer (Logging/Median,
-  SSH/Deploy/Collect). `config.env` — SSH-Ziele und Versuchsparameter.
+Getrennt nach **wo etwas läuft** (Details + Verzeichnisbaum in
+[project/experiments/README.md](project/experiments/README.md)):
 
-Drei CSV-Schemata werden **nicht** vermischt: `summary.csv` (Legacy-Dummy, vom
-abgegebenen Exposé gelesen), `poc_summary.csv` (PoC) und `fallback_summary.csv`
-(Fallback, Quelle des gruppierten Balkendiagramms).
+- **Control-Node** (Top-Level + `lib/`): `run_experiment.sh` (PoC →
+  `results/poc_summary.csv`), `run_fallback.sh` (Fallback, 3 Opfer sequenziell →
+  `results/fallback_summary.csv`), `config.env`/`smoke.env`, `lib/{common,orchestrator}.sh`.
+- **`roles/`** (auf die Gäste deployed): `victim_benchmark.sh` (Opfer:
+  `sysbench`+`fio`), `attacker_load.sh` (Angreifer: `stress-ng`-Störlast).
+- **`results/`**: Aggregat-CSVs (getrackt, Platzhalter) + `data/` (Rohdaten, gitignored).
+- **`legacy/`**: eingefrorene Dummy-CSV `summary.csv` + Generator, **nur** fürs
+  abgegebene Exposé.
+
+Drei CSV-Schemata werden **nicht** vermischt: `legacy/summary.csv` (Legacy-Dummy,
+vom abgegebenen Exposé gelesen), `results/poc_summary.csv` (PoC, gelesen von
+`paper/main.tex`) und `results/fallback_summary.csv` (Fallback, Quelle des
+gruppierten Balkendiagramms).
 
 ## Build
 

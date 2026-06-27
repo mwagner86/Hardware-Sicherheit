@@ -56,11 +56,14 @@ Die Rohdaten der Messreihen sind in Tabelle \ref{tab:results} aufgeführt.
 \pgfplotstabletypeset[
     col sep=semicolon, 
     string type,
+    columns/Szenario/.style={column name={Szenario}},
     columns/CPU_Events_per_sec/.style={column name={CPU (Events/s)}},
+    columns/Memory_MiBps/.style={column name={RAM (MiB/s)}},
     columns/IOPS_Random_Write/.style={column name={I/O (IOPS)}},
+    columns/Latenz_p95_ms/.style={column name={Latenz p95 (ms)}},
     every head row/.style={before row=\toprule,after row=\midrule},
     every last row/.style={after row=\bottomrule},
-]{../project/experiments/summary.csv} 
+]{../project/experiments/results/poc_summary.csv}
 \label{tab:results}
 \end{table}
 

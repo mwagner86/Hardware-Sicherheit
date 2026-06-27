@@ -57,8 +57,8 @@ Sofern Hardware-Mitigierungen die Interferenz auf ein nicht verwertbares Maß ne
     x tick label style={font=\small},
     legend style={at={(0.5,-0.15)}, anchor=north, legend columns=-1, font=\footnotesize},
 ]
-\addplot table [x=Virtualisierung, y=Baseline, col sep=semicolon] {../experiments/summary.csv};
-\addplot table [x=Virtualisierung, y=NoisyNeighbor, col sep=semicolon] {../experiments/summary.csv};
+\addplot table [x=Virtualisierung, y=Baseline, col sep=semicolon] {../experiments/legacy/summary.csv};
+\addplot table [x=Virtualisierung, y=NoisyNeighbor, col sep=semicolon] {../experiments/legacy/summary.csv};
 \legend{Baseline, Noisy Neighbor}
 \end{axis}
 \end{tikzpicture}

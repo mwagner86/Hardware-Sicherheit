@@ -1,0 +1,7 @@
+# Rohdaten je Lauf (von run_experiment.sh / run_fallback.sh erzeugt) — nicht versionieren
+data/
+
+# Die Aggregat-CSVs poc_summary.csv und fallback_summary.csv werden bewusst
+# GETRACKT (mit Platzhalterwerten vorbelegt): das Paper liest sie zur
+# Compile-Zeit, sie müssen also im Checkout liegen. Echte Messläufe
+# überschreiben sie.
