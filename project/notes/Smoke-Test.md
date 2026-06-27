@@ -34,6 +34,13 @@ nur KVM-Opfer, ~30–45 s; PoC-only via `run_experiment.sh`).
   (Das QEMU-Opfer `.201` lassen wir im Smoke-Test bewusst außen vor — als
   Emulation ist es zäh; der Code-Pfad ist identisch zu den anderen Opfern.)
 
+> **Control-Node beim Smoke-Test beliebig.** Da hier nur die Mechanik geprüft
+> wird (nicht die Messwerte), kann der Orchestrator auf jeder Maschine mit
+> SSH-Zugriff zu den Gästen laufen — auch auf einer weiteren VM am selben Host
+> (z. B. dem Debian-Dev-Gast). Für den **echten Messlauf** dagegen extern
+> steuern (MacBook): eine zusätzliche VM am Host belegt LLC/Memory/I/O und
+> verfälscht genau die Interferenz, die gemessen werden soll.
+
 ---
 
 ## 2. Ablauf
