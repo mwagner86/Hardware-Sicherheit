@@ -11,15 +11,41 @@
 \usepackage[demo]{graphicx} 
 \usepackage{url}
 \usepackage{booktabs} 
-\usepackage{pgfplotstable} 
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
 \pgfplotsset{compat=1.18}
 
 % --- Pfaddefinitionen ---
 \graphicspath{{../assets/}}
 
+% --- TikZ (Topologie-Diagramm) ---
+\usetikzlibrary{fit, backgrounds, positioning, arrows.meta, calc}
+
+% --- Fallback-Diagramm: gruppierte Balken je Metrik aus der (Platzhalter-)CSV ---
+% Schema: Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN
+\pgfplotstableread[col sep=semicolon]{../project/experiments/results/fallback_summary.csv}\fallbackdata
+% #1=Titel #2=ylabel #3=Spalte Baseline #4=Spalte NoisyNeighbor #5=ymax
+\newcommand{\metricplot}[5]{%
+\begin{axis}[
+    title={#1},
+    ybar, bar width=9pt,
+    width=7.5cm, height=5cm,
+    enlarge x limits=0.30,
+    ylabel={#2}, ymin=0, ymax=#5,
+    symbolic x coords={QEMU, KVM, LXC},
+    xtick=data,
+    nodes near coords, nodes near coords align={vertical},
+    every node near coord/.append style={font=\tiny, /pgf/number format/fixed},
+    x tick label style={font=\small},
+    title style={font=\small\bfseries},
+]
+\addplot[fill=blue!55, draw=blue!55!black] table [x=Virtualisierung, y=#3] {\fallbackdata};
+\addplot[fill=orange!70, draw=orange!70!black] table [x=Virtualisierung, y=#4] {\fallbackdata};
+\end{axis}}
+
 \begin{document}
 
-\title{Trade-offs der Virtualisierung auf x86-Systemen: Eine quantitative Analyse von Performance-Overheads und Side-Channel-Risiken}
+\title{Der Noisy-Neighbor-Effekt: Eine Untersuchung mikroarchitektonischer Ressourcen-Interferenzen in virtualisierten Umgebungen}
 
 \author{\IEEEauthorblockN{Maximilian Wagner}
 \IEEEauthorblockA{\textit{Studiengang IT-Sicherheit} \\
@@ -35,23 +61,87 @@ Dieses Paper untersucht den Zielkonflikt zwischen Hardware-Isolation und Systeml
 \end{abstract}
 
 \section{Einleitung}
-Virtualisierung ist ein Kernaspekt der modernen Cloud-Sicherheit \cite{intelvtx}. Besonders die hardwaregestützte Virtualisierung bietet Angriffsflächen für Seitenkanal-Attacken \cite{kvmsecurity}.
+Virtualisierung bezeichnet die softwaregestützte Abstraktion physischer Rechenhardware in logisch isolierte Ausführungsumgebungen, sogenannte Gastsysteme. Ein Hypervisor vermittelt dabei zwischen den Gastsystemen und der physischen Hardware, um zu gewährleisten, dass Instanzen weder den Adressraum noch die Ausführungskontrolle benachbarter Systeme direkt adressieren können. Diese logische Isolation bildet das tragende Sicherheitsprinzip von Multi-Tenant-Architekturen in modernen Cloud-Infrastrukturen. Auf mikroarchitektonischer Ebene bleibt diese Isolation jedoch unvollständig: Physische Komponenten wie der Last Level Cache (LLC), die Hauptspeicherbandbreite und I/O-Subsysteme werden von koexistierenden Systemen gemeinsam genutzt. Da der Hypervisor diese Hardwarekomponenten transparent an die Gastsysteme weiterreicht, entstehen unkontrollierte Interferenzkanäle \cite{koh2007analysis}.
+
+Dieses fundamentale Defizit der Performance-Isolation begründet den sogenannten Noisy-Neighbor-Effekt. Dieses Phänomen beschreibt die Leistungsbeeinflussung koexistierender Mandanten auf identischer Hardware durch unkoordinierte Ressourcenkonkurrenz. Der Noisy-Neighbor-Effekt stellt eine systemische Schwachstellenklasse mit erheblichem Gefährdungspotenzial für Cloud-Infrastrukturen dar \cite{koh2007analysis}. Die Relevanz dieser Thematik manifestiert sich darin, dass ein aggressiver Workload innerhalb einer Instanz die Cache-Zeilen benachbarter Systeme verdrängen kann. Dies ermöglicht eine unautorisierte Degradation von Durchsatz und Latenz, was einem mikroarchitektonischen Denial-of-Service-Angriff gleichkommt \cite{ge2018survey}. Regulatorische Standards wie die Richtlinien des National Institute of Standards and Technology (NIST) klassifizieren diese Form der Ressourcenerschöpfung auf Plattformebene als kritisches Risiko und fordern den Einsatz hardwaregestützter Isolations- und Kontrollmechanismen \cite{nist2014hypervisor}.
+
+Während die grundlegende Anfälligkeit geteilter Ressourcen in der Literatur dokumentiert ist, besteht bei aktuellen Hardware-Architekturen ein Defizit an systematischen Untersuchungen des Noisy-Neighbor-Effekts. Moderne Prozessorgenerationen implementieren komplexe, hybride Kern-Topologien (Performance- und Efficient-Cores) sowie hardwaregestützte Abwehrfunktionen wie die Intel Resource Director Technology (RDT) inklusive Cache Allocation Technology (CAT). Inwiefern diese Schutzmechanismen unter produktiven Bedingungen eine hinreichende Isolation gewährleisten und den Effekt vollständig neutralisieren, ist bisher unzureichend dokumentiert. Die vorliegende Arbeit adressiert diese Lücke und prüft die Hypothese, ob LLC-basierte Noisy-Neighbor-Interferenzen auf einer aktuellen Intel Raptor Lake Architektur unter Verwendung eines produktiven Hypervisors (Proxmox VE) zu statistisch quantifizierbaren Isolationsbrüchen führen.
+
+Der zur Überprüfung gewählte Messansatz basiert auf einem kontrollierten Verfahren auf Host-Ebene. Um Verfälschungen der Ergebnisse durch dynamische Hardware-Optimierungen auszuschließen, werden auf dem Host-System Energiesparmodi (C-States) sowie die dynamische Frequenzskalierung (Intel Turbo Boost, CPU-Governor) vollständig deaktiviert. Auf diesem bereinigten Fundament bildet die gezielte Replikation des Noisy-Neighbor-Szenarios den primären Untersuchungsgegenstand der Arbeit.
+
+In diesem Proof-of-Concept (PoC) werden zwei Debian-Instanzen – ein aktiver Störer (Noisy Neighbor) und ein Opfersystem – mittels CPU-Affinity auf identische physische Performance-Kerne gebunden, um die Cache-Konkurrenz zu erzwingen. Während das Angreifer-System über synthetische Lasten eine Sättigung des LLC provoziert, erfasst das Opfer-System mittels standardisierter Benchmarking-Werkzeuge die Veränderungen von Durchsatz und Latenz. Sollten moderne hardwareseitige Schutzmechanismen des Prozessors (Intel RDT/CAT) die Interferenzen so weit unterdrücken, dass kein statistisch quantifizierbarer Effekt nachweisbar ist, greift als Rückfallebene ein systematischer Leistungsvergleich der drei Virtualisierungsparadigmen (QEMU, LXC und KVM) unter standardisierten Rechen- und I/O-Lasten. Dieser Vergleich quantifiziert die grundlegenden Isolationseigenschaften und Performance-Overheads der Paradigmen unabhängig vom Ausgang des PoC.
+
+Die weitere Arbeit gliedert sich wie folgt: Abschnitt II bereitet den aktuellen Stand der Forschung zu mikroarchitektonischen Interferenz-Vektoren und Virtualisierungskonzepten auf. Abschnitt III dokumentiert detailliert den Versuchsaufbau sowie die Host- und Gast-Konfigurationen. Die Präsentation und kritische Evaluation der Messergebnisse des PoC sowie der Vergleiche erfolgt in Abschnitt IV. In Abschnitt V werden die Implikationen der Ergebnisse im Kontext der Ausgangshypothese diskutiert, bevor Abschnitt VI die Arbeit mit einer Zusammenfassung und einem Ausblick auf zukünftige Forschungsfragen abschließt.
 
 \section{Methodik und Benchmarking}
 Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illustriert den Testaufbau.
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.4\textwidth]{picture.jpg}
-    \caption{Schematischer Aufbau der Testumgebung.}
-    \label{fig:setup}
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize, >=Stealth,
+  guest/.style={draw, rounded corners, align=center, inner sep=2.5pt,
+                fill=black!3, text width=2.55cm, minimum height=8mm},
+  ctrl/.style={draw, rounded corners, align=center, inner sep=3pt,
+               fill=blue!6, text width=5.4cm},
+  ssh/.style={->, draw=blue!55!black, dashed, semithick},
+  cont/.style={<->, draw=red!75!black, thick},
+]
+% --- Control-Node ---
+\node[ctrl] (ctrl) {\textbf{Control-Node (Laptop)}\\[1pt]
+  \texttt{run\_experiment.sh} -- SSH-Orchestrierung\\
+  Deploy $\cdot$ Baseline $\cdot$ Last $\cdot$ Messung $\cdot$ Aggregation};
+
+% --- Angreifer + Opfer (im P-Core) ---
+\node[guest, fill=red!7, below=28mm of ctrl.south west, anchor=north west,
+      text width=2.5cm, minimum height=34mm] (att)
+  {\textbf{Angreifer}\\ LXC 200\\[1pt] \texttt{stress-ng}\\ Cache-L3 $+$ I/O\\[1pt]
+   \emph{konstante Störquelle}};
+
+\node[guest, right=14mm of att.north east, anchor=north west] (vq)
+  {\textbf{Opfer 1} -- QEMU 201\\ Emulation \emph{(nur Fallback)}};
+\node[guest, below=2.5mm of vq] (vl)
+  {\textbf{Opfer 2} -- LXC 202\\ Para-Virtualisierung};
+\node[guest, below=2.5mm of vl, fill=green!9, draw=green!45!black] (vk)
+  {\textbf{Opfer 3} -- KVM 203\\ HW-Virt.\ \emph{(PoC-Hauptopfer)}};
+
+% --- Ressourcen-Contention (geteilter LLC + I/O) ---
+\draw[cont] (att.east|-vq) -- (vq.west);
+\draw[cont] (att.east|-vl) -- (vl.west)
+  node[midway, above=1pt, font=\scriptsize\itshape, text=red!70!black]{L3 (LLC) $+$ I/O};
+\draw[cont] (att.east|-vk) -- (vk.west);
+
+% --- Container: P-Core und Host (Hintergrund), Titel jeweils oben eingefittet ---
+\begin{scope}[on background layer]
+\node[anchor=south, font=\scriptsize, text=black!75] (pcoreTitle)
+  at ($(att.north)!0.5!(vq.north)+(0,3.5mm)$)
+  {Physischer P-Core $\cdot$ CPU 4,5 (SMT) $\cdot$ gemeinsamer L3-Cache (LLC)};
+\node[draw, dashed, rounded corners, inner sep=6pt,
+      fit=(att)(vq)(vk)(pcoreTitle)] (pcore) {};
+\node[anchor=south, font=\scriptsize, align=center, text=black!75] (hostTitle)
+  at ($(pcore.north)+(0,3mm)$)
+  {\textbf{Proxmox VE Host} $\cdot$ \texttt{pve} $\cdot$ Intel i7-13700 (Raptor Lake)\\[-1pt]
+   Determinismus: C-States/Turbo aus, Governor \texttt{performance}};
+\node[draw, rounded corners, inner sep=6pt,
+      fit=(pcore)(hostTitle)] (host) {};
+\end{scope}
+
+% --- SSH-Orchestrierung (ein Pfeil in den Host: gilt für alle 4 Gäste) ---
+\draw[ssh] (ctrl.south) to[out=-90, in=90] ($(host.north west)+(0.55,0)$);
+\node[font=\scriptsize\itshape, text=blue!55!black, align=left, anchor=west]
+  at ($(ctrl.east)+(0.3,0)$) {SSH (Key-Auth)\\ alle 4 Gäste};
+\end{tikzpicture}
+\caption{Schematischer Aufbau der Testumgebung. Der Control-Node orchestriert die vier auf denselben physischen P-Core (CPU 4,5) gepinnten Gäste über SSH und misst nicht selbst. Der Angreifer (LXC 200) sättigt den geteilten Last Level Cache; die drei Opfer (QEMU/LXC/KVM) werden sequenziell vermessen, wobei nur das KVM-Opfer als PoC-Hauptopfer dient. Rote Pfeile markieren die Ressourcen-Contention über LLC und I/O.}
+\label{fig:setup}
 \end{figure}
 
 \section{Ergebnisse}
-Die Rohdaten der Messreihen sind in Tabelle \ref{tab:results} aufgeführt.
+\textit{Hinweis: Die in diesem Abschnitt gezeigten Werte sind Platzhalter auf Basis hypothetischer Mock-Daten; die realen Messungen am Proxmox-Host stehen noch aus. Tabelle und Diagramm werden zur Kompilierzeit automatisch aus den CSV-Dateien der Mess-Suite erzeugt und ersetzen sich nach der Datenerhebung selbsttätig.}
+
+Tabelle \ref{tab:results} fasst das PoC-Ergebnis am KVM-Opfer zusammen, Abbildung \ref{fig:fallback} den Fallback-Vergleich der drei Virtualisierungsparadigmen.
 
 \begin{table}[htbp]
-\caption{Benchmark-Ergebnisse (Mittelwerte aus 10 Durchläufen)}
+\caption{PoC am KVM-Opfer: Median je Metrik, Baseline gegen Noisy Neighbor (Platzhalterwerte).}
 \centering
 \pgfplotstabletypeset[
     col sep=semicolon, 
@@ -66,6 +156,38 @@ Die Rohdaten der Messreihen sind in Tabelle \ref{tab:results} aufgeführt.
 ]{../project/experiments/results/poc_summary.csv}
 \label{tab:results}
 \end{table}
+
+In den Platzhalterdaten sinkt der I/O-Durchsatz des Opfers unter Störlast um rund 30\,\% (von 45\,000 auf 31\,500 IOPS), während die 95.\,Perzentil-Latenz um etwa 75\,\% ansteigt (0{,}40 auf 0{,}70\,ms). Auf CPU-Durchsatz (11{,}9\,\%) und Speicherbandbreite (21{,}6\,\%) fällt die Degradation geringer aus --- ein Muster, das die Erwartung einer primär I/O- und latenzgetriebenen Interferenz widerspiegelt.
+
+\begin{figure*}[t]
+  \centering
+  \begin{tikzpicture}
+    \begin{scope}[local bounding box=A]
+      \metricplot{CPU (sysbench)}{Events/s}{CPU_Base}{CPU_NN}{2700}
+    \end{scope}
+    \begin{scope}[xshift=8.2cm]
+      \metricplot{Speicher (sysbench)}{MiB/s}{RAM_Base}{RAM_NN}{16000}
+    \end{scope}
+    \begin{scope}[yshift=-6cm]
+      \metricplot{I/O (fio 4K randwrite)}{IOPS}{IOPS_Base}{IOPS_NN}{65000}
+    \end{scope}
+    \begin{scope}[yshift=-6cm, xshift=8.2cm]
+      \metricplot{I/O-Latenz p95 (fio)}{ms}{Lat_Base}{Lat_NN}{1.2}
+    \end{scope}
+    % gemeinsame Legende (einmal, zentriert unter dem Raster)
+    \coordinate (lg) at ($(current bounding box.south)+(-2.3,-0.3)$);
+    \node[draw=blue!55!black, fill=blue!55, minimum width=3.2mm, minimum height=2.4mm,
+          inner sep=0pt, anchor=west] (lb) at (lg) {};
+    \node[anchor=west, font=\footnotesize] (lbt) at ($(lb.east)+(1.3mm,0)$) {Baseline};
+    \node[draw=orange!70!black, fill=orange!70, minimum width=3.2mm, minimum height=2.4mm,
+          inner sep=0pt, anchor=west] (ln) at ($(lbt.east)+(6mm,0)$) {};
+    \node[anchor=west, font=\footnotesize] at ($(ln.east)+(1.3mm,0)$) {Noisy Neighbor};
+  \end{tikzpicture}
+  \caption{Fallback-Vergleich (Platzhalter/Mock-Daten): gruppierte Balken je Metrik, Baseline gegen Noisy Neighbor, für QEMU (Emulation), KVM (Hardware-Virtualisierung) und LXC (Para-Virtualisierung).}
+  \label{fig:fallback}
+\end{figure*}
+
+Im Mock-Szenario zeigt LXC die stärkste relative Degradation beim zufälligen Schreib-I/O (Einbruch um rund 60\,\%) und damit die schwächste Performance-Isolation, gefolgt von KVM (etwa 30\,\%); die reine Emulation (QEMU) bewegt sich auf durchweg niedrigem absolutem Niveau und zeigt entsprechend nur geringe relative Veränderung. Diese hypothetische Tendenz ist die zu prüfende Arbeitshypothese, nicht das Messergebnis.
 
 \bibliographystyle{IEEEtran}
 \bibliography{../project/expose/references_expose}

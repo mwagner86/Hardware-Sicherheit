@@ -152,6 +152,7 @@ Getrennt nach **wo etwas läuft** (Verzeichnisbaum: `project/experiments/README.
   - `lib/common.sh` (Logging/Median/Delta), `lib/orchestrator.sh` (SSH/Deploy/Collect, geteilt)
   - `config.env` — SSH-Ziele, `REPEATS`, Benchmark-/Last-Parameter, `FALLBACK_VICTIMS`
   - `smoke.env` — verkürztes Profil für die reine Funktionsprüfung (`project/notes/Smoke-Test.md`)
+  - `demo.env` — Minimal-Profil (`REPEATS=1`, nur KVM) für die Live-Demo im Vortrag
 - **`roles/`** (auf die Gäste deployed, dort ausgeführt):
   - `roles/victim_benchmark.sh` — Opfer: 1 Lauf sysbench(cpu+mem) + fio → `cpu_eps;mem_mibps;iops;lat_p95_ms`
   - `roles/attacker_load.sh` — Angreifer: `start [s]` / `stop` / `run <s>`, stress-ng cache(L3)+hdd
@@ -174,16 +175,53 @@ getrackt (Paper liest sie zur Compile-Zeit); echte Läufe überschreiben sie.
 **Diagramm-Design (entschieden):** gruppierte Balken, Baseline vs. Noisy Neighbor,
 ein Diagramm je Metrik. Mock: `assets/mock_fallback.{tex,csv,png}`.
 
-### OFFEN — Paper-Integration (Rest)
+### Paper-Stand `main.tex` (Stand: 2026-06-27)
 
-- **Erledigt:** `main.tex` liest jetzt `results/poc_summary.csv`; alle Spalten haben
-  saubere Anzeigenamen, der Build ist CSV-seitig grün.
-- **Noch offen:** das gruppierte Diagramm (aus `mock_fallback.tex`) in `main.tex`
-  einbauen und auf `results/fallback_summary.csv` setzen; echte Messdaten ersetzen
-  die Platzhalter (VMs werden erst aufgesetzt).
-- **Unabhängig kaputt (Paper-Track):** `make paper` scheitert noch an der
-  Bibliografie (fehlende `main.bbl`, undefinierte Citations `intelvtx`/`kvmsecurity`
-  in `references_expose.bib`).
+Das finale Paper ist strukturell aufgesetzt und baut **vollständig grün**
+(`make paper` → 3 Seiten, alle Zitate `[1]`–`[3]` aufgelöst) — mit Platzhaltern,
+bis die echten Messwerte vorliegen. Verifikation der Abbildungen erfolgte über
+gerendertes PDF (`pdftoppm`/`convert`-Crops).
+
+**Fertig:**
+
+- **Titel:** „Der Noisy-Neighbor-Effekt: Eine Untersuchung mikroarchitektonischer
+  Ressourcen-Interferenzen in virtualisierten Umgebungen". Maßgebliche Einleitungs-Basis
+  ist `paper/einleitungen/einleitung_zweite_version.tex` — **NICHT** die Markdown-Fassung
+  `Einleitung.md` (= ältere erste Version).
+- **Einleitung:** aus der zweiten Version übernommen; Methodik-Framing geschärft
+  (**PoC = primär**, Paradigmen-Vergleich = **Rückfallebene**, falls kein Effekt messbar).
+  Zitate `koh2007analysis`, `ge2018survey`, `nist2014hypervisor` (alle in
+  `references_expose.bib`). Die kaputten `intelvtx`/`kvmsecurity` sind raus → Bib baut.
+- **Abbildung 1** (`fig:setup`, Methodik): Testumgebungs-Topologie als **reines TikZ**
+  (kein externes Bild), nachgebaut aus `Experiment-Topologie.canvas`. Control-Node →SSH→
+  Host (P-Core 4,5, LLC) mit Angreifer + 3 Opfern, rote Contention-Pfeile.
+- **Abbildung 2** (`fig:fallback`, Ergebnisse): gruppierte Balken, 4 Metriken, `figure*`,
+  liest `results/fallback_summary.csv`; **eine** gemeinsame Legende (blau=Baseline,
+  orange=Noisy Neighbor). Makro `\metricplot` in der Präambel (adaptiert aus `mock_fallback.tex`).
+- **Tabelle I** (`tab:results`): PoC-Median aus `results/poc_summary.csv`, Spalten mit
+  sauberen Anzeigenamen.
+- Ergebnis-Abschnitt mit **Platzhalter-Hinweis** + interpretierender Prosa zu den
+  Mock-Werten (klar als Arbeitshypothese markiert, nicht als Messung).
+
+**Sobald echte Messwerte da sind — nächste Schritte:**
+
+1. `./run_experiment.sh` + `./run_fallback.sh` laufen lassen → überschreiben die
+   Platzhalter in `results/poc_summary.csv` / `results/fallback_summary.csv`.
+   `make paper` zieht die Zahlen automatisch in Tabelle I + Abbildung 2.
+2. **Platzhalter-Hinweis** im Ergebnis-Abschnitt entfernen und die Prosa an die realen
+   Deltas anpassen (aktuell auf Mock-Werte getextet).
+3. Captions bereinigen (Tabelle I „Platzhalterwerte", Abbildung 2 „Platzhalter/Mock-Daten").
+
+**Noch offen / bewusst zurückgestellt (keine Blocker):**
+
+- Abschnitte **II Stand der Forschung, III Versuchsaufbau, V Diskussion, VI Fazit**
+  fehlen — die Einleitung („Aufbau der Arbeit") verspricht sie bereits.
+- **Abstract** ist noch generischer Platzhalter (an Titel/Scope angleichen).
+- Konkretes 4-Instanz-Setup/Tools bewusst **nicht** in der Einleitung (gehört nach
+  Abschnitt III; die 2. Version hat solche Details absichtlich gestrichen).
+- `\usepackage[demo]{graphicx}` + `picture.jpg` werden nicht mehr genutzt (entfernbar).
+- Bei echten Daten ggf. `nodes near coords`-Labels in Abbildung 2 entzerren
+  (überlappen bei eng beieinanderliegenden Balken).
 
 ## Präsentation (`presentation/`)
 
