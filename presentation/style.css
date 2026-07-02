@@ -1,65 +1,106 @@
-/* SentinelOne-inspiriertes Farbschema — global, ergänzt das Default-Theme. */
+/* SentinelOne-inspiriertes Farbschema — global, ergänzt das Default-Theme.
+   Palette bewusst beibehalten; modernisiert wurden Tiefe, Typografie und
+   Flächen (Surfaces/Shadows/Grid-Mesh), nicht die Farben selbst. */
 
 :root {
   --slidev-theme-primary: #6B0AEA;
+
+  /* Kern-Palette (unverändert) */
+  --s1-purple:  #6B0AEA;
+  --s1-violet:  #A855F7;
+  --s1-magenta: #FF2D7E;
+  --s1-lilac:   #CBA6FF;
+  --s1-pink:    #FF8AC4;
+
+  /* Abgeleitete Töne für Flächen & Kanten (nur Tints der Kernfarben) */
+  --s1-bg:      #0B0B1A;
+  --s1-code-bg: #14122A;
+  --s1-border:  rgba(168, 85, 247, 0.16);
+  --s1-surface: rgba(255, 255, 255, 0.04);
+  --s1-shadow:  0 14px 34px -18px rgba(0, 0, 0, 0.75);
 }
 
-/* Dunkler, leicht violetter Grundton */
+/* Weiche Kantenglättung für die neuen Verläufe */
+html.dark .slidev-layout,
+html.dark .slidev-layout * { -webkit-font-smoothing: antialiased; }
+
+/* ---------------------------------------------------------------------------
+   Grundflächen: dunkler Violettgrund + zwei sehr dezente Farb-Glows und ein
+   feines Punktraster — gibt Tiefe, ohne den Text zu stören.
+--------------------------------------------------------------------------- */
 html.dark .slidev-layout {
-  background-color: #0B0B1A;
+  background-color: var(--s1-bg);
   color: #E7E3F4;
-  --slidev-code-background: #15132B;
+  --slidev-code-background: var(--s1-code-bg);
+  background-image:
+    radial-gradient(55% 45% at 100% 0%, rgba(107, 10, 234, 0.12) 0%, transparent 60%),
+    radial-gradient(45% 45% at 0% 100%, rgba(255, 45, 126, 0.06) 0%, transparent 55%),
+    radial-gradient(rgba(255, 255, 255, 0.026) 1px, transparent 1px);
+  background-size: auto, auto, 26px 26px;
 }
 
 html.dark .slidev-layout h1,
 html.dark .slidev-layout h2 {
   color: #FFFFFF;
+  letter-spacing: -0.015em;
 }
 
-/* Cover & Abschnittstrenner: subtiler Purple→Magenta-Verlauf */
+/* Cover & Abschnittstrenner: kräftigerer Purple→Magenta-Mesh, kein Raster */
 html.dark .slidev-layout.cover,
 html.dark .slidev-layout.section {
-  background: radial-gradient(120% 120% at 15% 0%, #2A0E55 0%, #0B0B1A 55%);
+  background-color: var(--s1-bg);
+  background-image:
+    radial-gradient(75% 75% at 12% -5%, rgba(107, 10, 234, 0.38) 0%, transparent 55%),
+    radial-gradient(65% 65% at 105% 110%, rgba(255, 45, 126, 0.16) 0%, transparent 55%);
+}
+
+/* Cover-Titel als heller Gradient-Text, groß und eng gesetzt */
+html.dark .slidev-layout.cover h1 {
+  background: linear-gradient(92deg, #FFFFFF 0%, var(--s1-lilac) 55%, var(--s1-magenta) 125%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
 /* Abschnitts-Überschriften als Verlaufstext (markentypisch) */
 html.dark .slidev-layout.section h1 {
-  background: linear-gradient(90deg, #A855F7, #FF2D7E);
+  background: linear-gradient(90deg, var(--s1-violet), var(--s1-magenta));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  font-weight: 800;
 }
 
 /* Links/Akzente in der hellen Variante besser lesbar */
-html.dark a {
-  color: #A855F7;
-}
+html.dark a { color: var(--s1-violet); }
 
 /* ---------------------------------------------------------------------------
    Marken-Utilities (s1) — manuell, da Slidev die uno.config.ts nicht merged.
-   Zentrale Stelle für alle SentinelOne-Akzentfarben im Deck.
 --------------------------------------------------------------------------- */
-.border-s1          { border-color: #6B0AEA !important; }
-.border-s1-magenta  { border-color: #FF2D7E !important; }
+.border-s1          { border-color: var(--s1-purple) !important; }
+.border-s1-magenta  { border-color: var(--s1-magenta) !important; }
 .bg-s1\/10          { background-color: rgba(107, 10, 234, 0.10); }
 .bg-s1-magenta\/10  { background-color: rgba(255, 45, 126, 0.10); }
-.text-s1            { color: #6B0AEA; }
-.text-s1-magenta    { color: #FF2D7E; }
+.text-s1            { color: var(--s1-purple); }
+.text-s1-magenta    { color: var(--s1-magenta); }
 
 /* ===========================================================================
    Typografie & Eye-Catcher — wissenschaftlich, aber nicht langweilig.
-   Globale Treatments werten fast jede Folie automatisch auf.
 =========================================================================== */
 
-/* Akzentbalken unter Überschriften der Inhaltsfolien */
+/* Akzentbalken unter Überschriften der Inhaltsfolien (mit zartem Glow) */
 html.dark .slidev-layout:not(.cover):not(.section):not(.center) h1::after {
   content: '';
   display: block;
-  width: 3.2rem;
+  width: 3.4rem;
   height: 3px;
-  margin-top: 0.5rem;
+  margin-top: 0.55rem;
   border-radius: 2px;
-  background: linear-gradient(90deg, #6B0AEA, #FF2D7E);
+  background: linear-gradient(90deg, var(--s1-purple), var(--s1-magenta));
+  box-shadow: 0 0 14px rgba(255, 45, 126, 0.45);
 }
 
 /* Abschnittstrenner: Akzentbalken über dem Verlaufstitel */
@@ -70,45 +111,95 @@ html.dark .slidev-layout.section h1::before {
   height: 4px;
   margin-bottom: 1rem;
   border-radius: 2px;
-  background: linear-gradient(90deg, #6B0AEA, #FF2D7E);
+  background: linear-gradient(90deg, var(--s1-purple), var(--s1-magenta));
+  box-shadow: 0 0 16px rgba(255, 45, 126, 0.5);
 }
 
 /* Fettungen werden automatisch zu dezenten violetten Highlights */
 html.dark .slidev-layout strong,
 html.dark .slidev-layout b {
-  color: #CBA6FF;
+  color: var(--s1-lilac);
   font-weight: 600;
 }
 
 /* Inline-Code als magenta Eyecatcher auf zartem Violett */
 html.dark .slidev-layout :not(pre) > code {
-  color: #FF8AC4;
+  color: var(--s1-pink);
   background: rgba(107, 10, 234, 0.16);
   padding: 0.08em 0.36em;
   border-radius: 0.28em;
   font-size: 0.92em;
 }
 
-/* Listen-Marker in Akzentfarbe */
-html.dark .slidev-layout ul > li::marker {
-  color: #A855F7;
+/* Code-Blöcke: eigene Kante, weiche Rundung, dezenter Schatten */
+html.dark .slidev-layout pre {
+  border: 1px solid var(--s1-border);
+  border-radius: 0.7rem !important;
+  box-shadow: var(--s1-shadow);
 }
+
+/* Listen-Marker in Akzentfarbe */
+html.dark .slidev-layout ul > li::marker { color: var(--s1-violet); }
 
 /* Blockquote: Akzentkante + zarte Fläche */
 html.dark .slidev-layout blockquote {
-  border-left: 3px solid #FF2D7E;
+  border-left: 3px solid var(--s1-magenta);
   background: rgba(107, 10, 234, 0.10);
   padding: 0.6em 1em;
   border-radius: 0 0.4rem 0.4rem 0;
   color: #ECE8F8;
 }
 
-/* Tabellen: Kopfzeile + hervorgehobene Werte mit Akzent */
-html.dark .slidev-layout th {
-  color: #CBA6FF;
-  border-bottom: 2px solid #6B0AEA !important;
+/* Tabellen: luftiger, dezente Zeilentrennung, Akzent-Kopf */
+html.dark .slidev-layout table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
 }
-html.dark .slidev-layout td strong { color: #FF8AC4; }
+html.dark .slidev-layout th {
+  color: var(--s1-lilac);
+  border-bottom: 2px solid var(--s1-purple) !important;
+  padding: 0.55rem 0.9rem;
+  text-align: left;
+}
+html.dark .slidev-layout td {
+  padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+html.dark .slidev-layout tbody tr:nth-child(odd) td {
+  background: rgba(255, 255, 255, 0.02);
+}
+html.dark .slidev-layout td strong { color: var(--s1-pink); }
+
+/* ---------------------------------------------------------------------------
+   Karten & Chips — modernes Surface-System (ersetzt „p-4 border rounded").
+--------------------------------------------------------------------------- */
+.card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 100%);
+  border: 1px solid var(--s1-border);
+  border-radius: 0.85rem;
+  padding: 1.05rem 1.15rem;
+  box-shadow: var(--s1-shadow);
+  backdrop-filter: blur(6px);
+}
+.card-accent {
+  border-color: rgba(107, 10, 234, 0.55);
+  box-shadow: 0 0 0 1px rgba(107, 10, 234, 0.22), 0 16px 34px -18px rgba(107, 10, 234, 0.55);
+}
+.card-magenta {
+  border-color: rgba(255, 45, 126, 0.5);
+  box-shadow: 0 0 0 1px rgba(255, 45, 126, 0.20), 0 16px 34px -18px rgba(255, 45, 126, 0.5);
+}
+
+.chip {
+  background: rgba(107, 10, 234, 0.10);
+  border: 1px solid var(--s1-border);
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.5rem;
+}
+.chip-accent  { border-color: rgba(107, 10, 234, 0.6); background: rgba(107, 10, 234, 0.14); }
+.chip-magenta { border-color: rgba(255, 45, 126, 0.55); background: rgba(255, 45, 126, 0.12); }
 
 /* --- Wiederverwendbare Klassen -------------------------------------------- */
 
@@ -117,9 +208,9 @@ html.dark .slidev-layout td strong { color: #FF8AC4; }
   display: inline-block;
   font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  background: linear-gradient(90deg, #A855F7, #FF2D7E);
+  background: linear-gradient(90deg, var(--s1-violet), var(--s1-magenta));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -129,8 +220,8 @@ html.dark .slidev-layout td strong { color: #FF8AC4; }
 .lead { font-size: 1.4rem; line-height: 1.5; opacity: 0.9; font-weight: 300; }
 
 /* Inline-Highlights */
-.hl   { color: #CBA6FF; font-weight: 600; }
-.hl-m { color: #FF8AC4; font-weight: 600; }
+.hl   { color: var(--s1-lilac); font-weight: 600; }
+.hl-m { color: var(--s1-pink); font-weight: 600; }
 
 /* Textmarker-Effekt */
 .mark {
@@ -141,7 +232,8 @@ html.dark .slidev-layout td strong { color: #FF8AC4; }
 /* Große Statistik-Zahl mit Verlauf */
 .stat {
   font-weight: 800;
-  background: linear-gradient(90deg, #A855F7, #FF2D7E);
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, var(--s1-violet), var(--s1-magenta));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -149,3 +241,11 @@ html.dark .slidev-layout td strong { color: #FF8AC4; }
 
 /* Gedämpfter Sekundärtext */
 .muted { opacity: 0.6; }
+
+/* Feinschliff: Textauswahl & Scrollbar in Markenfarbe */
+html.dark ::selection { background: rgba(255, 45, 126, 0.32); color: #fff; }
+html.dark ::-webkit-scrollbar { width: 8px; height: 8px; }
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.35);
+  border-radius: 8px;
+}

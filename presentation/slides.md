@@ -15,6 +15,10 @@ mdc: true
 colorSchema: dark
 themeConfig:
   primary: '#6B0AEA'
+fonts:
+  sans: Inter
+  mono: JetBrains Mono
+  weights: '300,400,500,600,700,800'
 ---
 
 # Der Noisy-Neighbor-Effekt
@@ -56,7 +60,7 @@ layout: two-cols
 
 ::right::
 
-<div class="mt-16 ml-6 p-4 border-l-4 border-s1 opacity-90">
+<div class="mt-16 ml-6 p-4 border-l-4 border-s1 bg-s1/10 rounded-r-lg opacity-90">
 
 **Roter Faden**
 
@@ -180,7 +184,7 @@ Drei Paradigmen & der geteilte Cache
 
 <div grid="~ cols-3 gap-4" class="mt-8">
 
-<div class="p-4 border rounded">
+<div class="card">
 
 ### Emulation
 **QEMU (TCG)**
@@ -192,7 +196,7 @@ CPU-Befehle werden in Software nachgebildet.
 
 </div>
 
-<div class="p-4 border rounded">
+<div class="card">
 
 ### Para-Virtualisierung
 **LXC (Container)**
@@ -204,7 +208,7 @@ Geteilter Host-Kernel, OS-Level-Isolation.
 
 </div>
 
-<div class="p-4 border rounded border-s1">
+<div class="card card-accent">
 
 ### Virtualisierung
 **KVM (HW-gestützt)**
@@ -303,7 +307,7 @@ layout: two-cols
 
 <div class="ml-6">
 
-<div class="border-2 border-dashed border-gray-400 rounded-lg h-[340px] flex items-center justify-center text-center opacity-70">
+<div class="border-2 border-dashed border-s1 bg-s1/10 rounded-xl h-[340px] flex items-center justify-center text-center opacity-70">
   📷 <br><br>
   <b>Foto: Homeserver / Rack</b><br>
   <span class="text-xs">Datei nach<br><code>public/img/homeserver/server.jpg</code><br>legen und Platzhalter ersetzen</span>
@@ -329,7 +333,7 @@ takten ständig dynamisch um.
 
 <div grid="~ cols-3 gap-4" class="mt-6">
 
-<div class="p-4 border rounded">
+<div class="card">
 
 **C-States aus**
 
@@ -341,7 +345,7 @@ idle=poll
 
 </div>
 
-<div class="p-4 border rounded">
+<div class="card">
 
 **Turbo Boost aus**
 
@@ -351,7 +355,7 @@ echo 1 > .../intel_pstate/no_turbo
 
 </div>
 
-<div class="p-4 border rounded">
+<div class="card">
 
 **Governor: performance**
 
@@ -450,10 +454,10 @@ Control-Node steuert alles per SSH, misst aber nicht selbst.
 </div>
 
 <div class="mt-8 grid grid-cols-4 gap-3 text-center text-sm">
-  <div class="p-3 border rounded border-s1-magenta">🗡️ Angreifer<br><code>.200</code></div>
-  <div class="p-3 border rounded">🎯 QEMU<br><code>.201</code></div>
-  <div class="p-3 border rounded">🎯 LXC<br><code>.202</code></div>
-  <div class="p-3 border rounded border-s1">🎯 KVM<br><code>.203</code></div>
+  <div class="chip chip-magenta">🗡️ Angreifer<br><code>.200</code></div>
+  <div class="chip">🎯 QEMU<br><code>.201</code></div>
+  <div class="chip">🎯 LXC<br><code>.202</code></div>
+  <div class="chip chip-accent">🎯 KVM<br><code>.203</code></div>
 </div>
 
 <!--
@@ -575,39 +579,43 @@ läuft in QEMU, LXC und KVM. Das macht den Vergleich fair.
 
 Der Angreifer wird über SSH **exakt** um die Messung herum gestartet und gestoppt:
 
-```bash {all|2-3|5-7|9-11}{lines:true}
-# attacker_load.sh — startet stress-ng im Hintergrund mit Zeitbudget
+```bash {all|3-5|8-10}{lines:true}
+# attacker_load.sh — Störlast im Hintergrund; gestoppt wird IMMER explizit
 build_cmd() {
   stress-ng --cache "$CACHE_WORKERS" --cache-level "$CACHE_LEVEL" \
             --hdd "$HDD_WORKERS" --hdd-bytes "$HDD_BYTES" \
-            --timeout "$1" --metrics-brief
+            --timeout "$1" --metrics-brief   # Timeout = reines Sicherheitsnetz
 }
 
-start)  # PID merken → sauberes Stoppen, kein verwaister Prozess
+start)  # PID merken → gezieltes Stoppen, kein verwaister Prozess
   nohup "${cmd[@]}" > "$WORKDIR/attacker.log" 2>&1 &
   echo "$!" > "$PID_FILE" ;;
 ```
 
 <div class="mt-4 text-sm opacity-80">
-Ein EXIT-Trap im Orchestrator garantiert: nach dem Lauf läuft <b>nie</b> eine
-Störlast weiter.
+Gestoppt wird <b>explizit</b> um die Messung herum (plus EXIT-Trap als Absicherung).
+Das <code>--timeout</code> ist nur ein Sicherheitsnetz gegen verwaiste Läufe — kein knapp
+kalkuliertes Budget, das <b>mitten</b> in der Messphase ablaufen könnte.
 </div>
 
 <!--
-Hier sieht man die Kombination aus Cache- und I/O-Last. Das Zeitbudget und die
-PID-Datei sorgen dafür, dass nie eine Last verwaist weiterläuft — wichtig für
-reproduzierbare Messreihen.
+Hier sieht man die Kombination aus Cache- und I/O-Last. Wichtig: Gestoppt wird die
+Last IMMER explizit um die Messung herum (plus EXIT-Trap); das --timeout ist nur ein
+Sicherheitsnetz gegen verwaiste Prozesse, KEIN knapp kalkuliertes Budget. Ein zu knappes
+Budget könnte mitten in der Messphase ablaufen (sysbench memory ist volumen-, nicht
+zeitgebunden) und die Noisy-Neighbor-Werte still verfälschen. Läuft die Last unerwartet
+schon nicht mehr, warnt der Stopp — die betroffene Phase gilt dann als nicht belastbar.
 -->
 
 ---
 
 # Code: Messen & Aggregieren
 
-```bash {all|3-4|6-9|11-12}{lines:true}
+```bash {all|4|6-7|12}{lines:true}
 # lib/orchestrator.sh — N Messläufe sammeln, Median bilden
 collect_phase() {
   for i in $(seq 1 "$REPEATS"); do
-    line="$(victim_run "$user" "$host")"   # via SSH
+    line="$(victim_run "$user" "$host" 2>>"$log")"   # SSH; Gast-Log daneben
     # "cpu_eps=..;iops=..;.." → Spalten extrahieren
     iops="$(sed -n 's/.*iops=\([^;]*\).*/\1/p' <<< "$line")"
     echo "$i;$cpu;$mem;$iops;$lat" >> "$out"
@@ -619,6 +627,8 @@ col_median() { tail -n +2 "$1" | cut -d';' -f"$2" | median; }
 
 <div class="mt-4 text-sm opacity-80">
 Ergebnis je Lauf: eine maschinenlesbare Zeile → CSV → direkt in LaTeX/Diagramm.
+Das <code>stderr</code> der Gäste landet je Phase in einer <code>.log</code>-Datei daneben —
+so bleibt ein fehlgeschlagener Lauf diagnostizierbar.
 </div>
 
 <!--
@@ -753,9 +763,9 @@ KVM „bezahlt" Isolation mit Leistung — und ist dafür <b>robuster</b>.
 </div>
 
 <div class="mt-10 grid grid-cols-3 gap-4 text-center">
-  <div class="p-4 border rounded">QEMU<br><span class="stat text-4xl">≈ 0%</span><br><span class="text-xs opacity-70">Emulation puffert</span></div>
-  <div class="p-4 border rounded border-s1">KVM<br><span class="stat text-4xl">~ −30%</span><br><span class="text-xs opacity-70">moderat</span></div>
-  <div class="p-4 border rounded border-s1-magenta">LXC<br><span class="stat text-4xl">~ −60%</span><br><span class="text-xs opacity-70">stärkster Einbruch</span></div>
+  <div class="card">QEMU<br><span class="stat text-4xl">≈ 0%</span><br><span class="text-xs opacity-70">Emulation puffert</span></div>
+  <div class="card card-accent">KVM<br><span class="stat text-4xl">~ −30%</span><br><span class="text-xs opacity-70">moderat</span></div>
+  <div class="card card-magenta">LXC<br><span class="stat text-4xl">~ −60%</span><br><span class="text-xs opacity-70">stärkster Einbruch</span></div>
 </div>
 
 <div class="mt-6 text-xs opacity-60 text-center">Prozentwerte = hypothetische IOPS-Degradation (Mock)</div>
@@ -791,7 +801,7 @@ layout: two-cols
 
 ::right::
 
-<div class="ml-6 mt-4 p-4 border-l-4 border-s1">
+<div class="ml-6 mt-4 p-4 border-l-4 border-s1 bg-s1/10 rounded-r-lg">
 
 **Einordnung**
 

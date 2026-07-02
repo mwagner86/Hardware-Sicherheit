@@ -55,6 +55,8 @@ stop_load() {
             kill "${pid}" 2>/dev/null || true
             # stress-ng-Kindprozesse sicherheitshalber mit aufräumen
             pkill -P "${pid}" 2>/dev/null || true
+        else
+            warn "Störlast (PID ${pid}) lief bereits nicht mehr (Timeout/Absturz?) — Phase evtl. ohne Last gemessen, Werte prüfen!"
         fi
         rm -f "${PID_FILE}"
     fi

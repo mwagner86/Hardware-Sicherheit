@@ -23,7 +23,7 @@ experiments/
 ├── results/              # ERGEBNISSE
 │   ├── poc_summary.csv       # PoC-Aggregat (Paper-Tabelle) — getrackt, Platzhalter
 │   ├── fallback_summary.csv  # Fallback-Aggregat (Paper-Diagramm) — getrackt, Platzhalter
-│   └── data/                 # Rohdaten je Lauf (gitignored)
+│   └── data/                 # Rohdaten + Gast-Logs je Lauf (gitignored)
 └── legacy/               # eingefroren, NUR für das abgegebene Exposé
     ├── summary.csv           # Dummy-CSV, die expose_hardware_security.tex liest
     └── generate_dummy_data.sh
@@ -62,6 +62,20 @@ Fällen konstant.
 > **Vor dem ersten echten Lauf:** Pipeline mit dem Smoke-Test-Profil prüfen —
 > siehe [`../notes/Smoke-Test.md`](../notes/Smoke-Test.md). Erst danach den
 > Host-Determinismus herstellen und voll messen.
+
+## Diagnose & Sicherheitsnetz
+
+- **Gast-Logs:** stderr der Opfer-Benchmarks (Fortschritt, Fehlermeldungen)
+  landet je Phase neben der Roh-CSV, z. B. `results/data/<ts>/baseline_raw.log`.
+  Bricht der Orchestrator mit „nicht parsebar" ab, zuerst dort nachsehen.
+- **Störlast-Sicherheitsnetz:** `attacker_load.sh start` läuft mit 1 h
+  Default-Timeout — reiner Schutz vor verwaisten Läufen (etwa bei Absturz des
+  Control-Node); regulär stoppt der Orchestrator die Last immer explizit.
+  Bewusst kein knapp kalkuliertes Zeitbudget: das könnte mitten in der
+  Messphase ablaufen (sysbench memory ist volumen-, nicht zeitgebunden) und
+  die NoisyNeighbor-Werte still verfälschen. Meldet `stop` die Warnung
+  „Störlast … lief bereits nicht mehr", endete die Last vorzeitig — die
+  NoisyNeighbor-Werte dieser Phase sind dann nicht belastbar.
 
 ## Messgrößen
 
