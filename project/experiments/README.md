@@ -5,6 +5,26 @@ einem **Angreifer-** und einem **Opfer-Gast** unter Proxmox VE (Intel Raptor Lak
 Beide Gäste sind host-seitig per CPU-Affinity auf **denselben physischen P-Core**
 gepinnt (siehe [`../notes/PoC.md`](../notes/PoC.md)).
 
+## Status (2026-07-05)
+
+- **PoC erfolgreich.** Der erste echte Lauf (Profil `config`, Label `nodeterm`,
+  10 Wiederholungen) weist den Effekt eindeutig nach: **CPU −21 %, RAM −45 %,
+  IOPS −48 %, p95-Latenz +407 %** (KVM-Opfer unter konstanter L3-Störlast).
+  Rohdaten unter `results/data/20260705_141654_config_nodeterm/`, Vergleichs-Index
+  in `results/history/poc_runs.csv`.
+- **Codebasis komplett, Benchmarks sauber und orchestrierbar.** Pipeline läuft
+  vom Control-Node durch (SSH → Deploy → Messen → Median → CSV); Werte sind
+  reproduzierbar und für das Paper verwendbar.
+- **Determinismus-Lauf steht noch aus.** Die finalen Zahlen fürs IEEE-Paper
+  liefert ein Lauf mit BIOS-Determinismus (Label `determ`). Bis dahin bleibt die
+  kanonische `results/poc_summary.csv` bewusst auf **Platzhalterwerten** — der
+  `nodeterm`-Lauf validiert Methodik und Pipeline, ersetzt aber die Paper-Zahlen
+  noch nicht.
+- **Fallback zu den Akten gelegt.** Da der PoC eindeutig greift, ist der
+  3-Paradigmen-Vergleich (QEMU/LXC/KVM) **nicht mehr Rückfallebene**, sondern
+  höchstens ergänzende Einordnung. `run_fallback.sh` bleibt lauffähig (ein
+  `nodeterm`-Lauf existiert bereits), wird aber nicht weiter verfolgt.
+
 ## Verzeichnisstruktur
 
 ```text
@@ -49,7 +69,7 @@ selbst. Voraussetzung: SSH-Key-Auth zu allen Gästen (kein Passwort-Prompt).
 # 3. PoC: Angreifer + 1 Opfer  → results/poc_summary.csv
 ./run_experiment.sh
 
-# 4. Fallback: 3 Opfer (QEMU/LXC/KVM) sequenziell → results/fallback_summary.csv
+# 4. Fallback (zu den Akten gelegt, s. Status): 3 Opfer (QEMU/LXC/KVM) sequenziell
 ./run_fallback.sh --install        # erster Lauf installiert auf allen Opfern
 ./run_fallback.sh                  # weitere Läufe
 

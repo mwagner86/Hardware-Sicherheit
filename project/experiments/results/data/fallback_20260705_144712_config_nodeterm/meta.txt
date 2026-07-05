@@ -1,0 +1,23 @@
+timestamp      = 2026-07-05 14:47:12 CEST
+script         = fallback
+profile        = config
+label          = nodeterm
+git_commit     = b35c463
+repeats        = 10
+host           = 192.168.178.50
+det_governor   = performance
+det_no_turbo   = 0
+det_max_cstate = 9
+attacker_host  = 192.168.178.210
+# --- Benchmark-/Last-Parameter ---
+SYSBENCH_CPU_PRIME = 20000
+SYSBENCH_TIME = 30
+SYSBENCH_MEM_TOTAL = 10G
+FIO_SIZE = 512M
+FIO_RUNTIME = 30
+FIO_IODEPTH = 16
+TASKSET_CPU = 
+ATTACKER_CACHE_WORKERS = 2
+ATTACKER_CACHE_LEVEL = 3
+ATTACKER_HDD_WORKERS = 1
+ATTACKER_HDD_BYTES = 1G

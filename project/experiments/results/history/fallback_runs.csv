@@ -1,3 +1,6 @@
 timestamp;label;profile;git;repeats;det_gov;det_no_turbo;det_max_cstate;victim;cpu_delta;mem_delta;iops_delta;lat_delta;datadir
 20260705_135011;;smoke;c4d4739;2;performance;0;9;LXC;-18.35;-43.90;-51.83;101.40;results/data/fallback_20260705_135011_smoke
 20260705_135011;;smoke;c4d4739;2;performance;0;9;KVM;-21.75;-47.38;-63.14;386.25;results/data/fallback_20260705_135011_smoke
+20260705_144712;nodeterm;config;b35c463;10;performance;0;9;QEMU;-53.38;-62.59;-68.45;421.09;results/data/fallback_20260705_144712_config_nodeterm
+20260705_144712;nodeterm;config;b35c463;10;performance;0;9;LXC;-19.30;-44.17;-32.54;271.68;results/data/fallback_20260705_144712_config_nodeterm
+20260705_144712;nodeterm;config;b35c463;10;performance;0;9;KVM;-22.32;-46.44;-58.15;466.32;results/data/fallback_20260705_144712_config_nodeterm
