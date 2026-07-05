@@ -53,7 +53,7 @@ layout: two-cols
 4. **Experiment-Topologie** — der Versuchsaufbau
 5. **Methodik** — wie wird gemessen?
 6. **Codebasis** — die Automatisierung
-7. **Ergebnisse** — PoC & Fallback
+7. **Ergebnisse** — PoC & Paradigmen-Vergleich
 8. **Fazit & Ausblick**
 
 </v-clicks>
@@ -158,16 +158,17 @@ Consumer-Hardware <span class="mark">quantitativ messbar</span> nachweisen?
 
 <div class="mt-6 text-sm opacity-80">
 
-**Zweistufige Absicherung:** PoC (aktiver Angriff) — und falls
-Hardware-Mitigierungen greifen, ein **Fallback**: systematischer Leistungs­vergleich
-der drei Virtualisierungs­paradigmen.
+**Vorgehen:** primär der **PoC** (aktiver Angriff, ein Opfer) — er greift
+eindeutig. Ergänzend ein systematischer **Vergleich** der drei
+Virtualisierungs­paradigmen unter identischer Störlast (Isolationsstärke).
 
 </div>
 
 <!--
 Die Forschungsfrage ist bewusst quantitativ formuliert: Es geht nicht um "gibt es
-das", sondern um "wie groß ist der messbare Effekt". Die Fallback-Strategie sichert
-ab, dass die Arbeit auch dann valide Ergebnisse liefert, wenn der Angriff scheitert.
+das", sondern um "wie groß ist der messbare Effekt". Ursprünglich war der
+Paradigmen-Vergleich als Rückfallebene gedacht, falls der Angriff scheitert — der
+PoC greift aber eindeutig, also ist der Vergleich jetzt eine ergänzende Einordnung.
 -->
 
 ---
@@ -288,6 +289,10 @@ Der Homeserver
 layout: two-cols
 ---
 
+<script setup>
+const base = import.meta.env.BASE_URL
+</script>
+
 # Homeserver: Proxmox VE
 
 **Hardware**
@@ -307,15 +312,13 @@ layout: two-cols
 
 <div class="ml-6">
 
-<div class="border-2 border-dashed border-s1 bg-s1/10 rounded-xl h-[340px] flex items-center justify-center text-center opacity-70">
-  📷 <br><br>
-  <b>Foto: Homeserver / Rack</b><br>
-  <span class="text-xs">Datei nach<br><code>public/img/homeserver/server.jpg</code><br>legen und Platzhalter ersetzen</span>
-</div>
+<img :src="base + 'img/homeserver/server.jpg'"
+     alt="Homeserver: Lenovo ThinkCentre M70s mit Proxmox VE"
+     class="rounded-xl shadow-lg border border-s1/30 w-full max-h-[380px] object-contain" />
 
-<!-- Echtes Foto: einfach diese Zeile aktivieren und den Platzhalter-Block oben löschen
-<img :src="'/img/homeserver/server.jpg'" class="rounded-lg shadow-lg" />
--->
+<div class="mt-2 text-xs opacity-60 text-center">
+Lenovo ThinkCentre M70s · Intel i7-13700 · Proxmox VE
+</div>
 
 </div>
 
@@ -537,7 +540,7 @@ Die Automatisierung
 ```mermaid {scale: 0.6}
 flowchart TB
   RE[run_experiment.sh<br/>PoC] --> O
-  RF[run_fallback.sh<br/>Fallback] --> O
+  RF[run_fallback.sh<br/>Paradigmen-Vergleich] --> O
   O[lib/orchestrator.sh<br/>SSH · Deploy · Collect]
   O --> VB[victim_benchmark.sh]
   O --> AL[attacker_load.sh]
@@ -569,8 +572,8 @@ Vollständig per <code>shellcheck</code> geprüft · Konfiguration zentral in <c
 
 <!--
 Der Aufbau ist bewusst modular: Die gemeinsame Orchestrator-Lib wird von PoC und
-Fallback geteilt. Das Opfer-Skript ist virtualisierungs-agnostisch — derselbe Code
-läuft in QEMU, LXC und KVM. Das macht den Vergleich fair.
+Paradigmen-Vergleich geteilt. Das Opfer-Skript ist virtualisierungs-agnostisch —
+derselbe Code läuft in QEMU, LXC und KVM. Das macht den Vergleich fair.
 -->
 
 ---
@@ -625,15 +628,29 @@ collect_phase() {
 col_median() { tail -n +2 "$1" | cut -d';' -f"$2" | median; }
 ```
 
-<div class="mt-4 text-sm opacity-80">
+<div class="mt-3 text-sm opacity-80">
 Ergebnis je Lauf: eine maschinenlesbare Zeile → CSV → direkt in LaTeX/Diagramm.
-Das <code>stderr</code> der Gäste landet je Phase in einer <code>.log</code>-Datei daneben —
-so bleibt ein fehlgeschlagener Lauf diagnostizierbar.
+Das <code>stderr</code> der Gäste landet je Phase in einer <code>.log</code>-Datei daneben.
+</div>
+
+<div class="mt-3 p-3 bg-s1/10 border border-s1 rounded text-sm">
+
+**Mess-Historie statt Überschreiben** — jeder Lauf wird <b>versioniert</b>
+(`results/history/`) samt <code>meta.txt</code>: Determinismus-Schnappschuss vom Host
+(Governor / Turbo / C-State), git-Commit, Parameter.
+
+→ Läufe werden <span class="mark">vergleichbar</span> — z. B. **mit vs. ohne Determinismus** — statt in einer Datei zu verschwinden.
+
 </div>
 
 <!--
-Der Datenfluss ist durchgängig automatisiert: SSH-Messung → CSV → Median → fertige
-Tabelle/Diagramm im Paper. Kein manuelles Abtippen, volle Reproduzierbarkeit.
+Wichtiger Punkt: Ergebnisse werden NICHT in eine Datei überschrieben, sondern jeder
+Lauf landet versioniert unter results/history/ mit einer meta.txt. Die meta.txt
+enthält einen objektiven Determinismus-Schnappschuss (direkt vom Host ausgelesen:
+Governor, Turbo, C-State), den git-Commit und alle Parameter. Dadurch sind Läufe
+reproduzierbar und direkt vergleichbar — etwa der Lauf ohne Determinismus gegen den
+mit Determinismus. Der Datenfluss bleibt durchgängig automatisiert: SSH → CSV →
+Median → Historie → Tabelle/Diagramm.
 -->
 
 ---
@@ -694,14 +711,16 @@ layout: section
 
 # 7 · Ergebnisse
 
-PoC & Fallback
+PoC & Paradigmen-Vergleich
 
 ---
 
-# PoC-Ergebnis · Platzhalter
+<div class="kicker">Ergebnis · PoC</div>
 
-<div class="absolute top-20 right-12 px-3 py-1 bg-amber-500 text-white text-xs rounded rotate-3">
-PLATZHALTER — echte Daten folgen
+# PoC-Ergebnis: der Effekt ist eindeutig
+
+<div class="absolute top-20 right-12 px-3 py-1 bg-s1/20 border border-s1 text-xs rounded">
+KVM-Opfer · 10× · ohne Determinismus
 </div>
 
 Delta der Metriken am **KVM-Opfer**, Baseline vs. Noisy Neighbor:
@@ -710,69 +729,94 @@ Delta der Metriken am **KVM-Opfer**, Baseline vs. Noisy Neighbor:
 
 | Metrik | Baseline | Noisy Neighbor | Delta |
 |---|---|---|---|
-| CPU (Events/s) | — | — | **— %** |
-| Speicher (MiB/s) | — | — | **— %** |
-| I/O (IOPS) | — | — | **— %** |
-| Latenz p95 (ms) | — | — | **— %** |
+| CPU (Events/s) | 1.683 | 1.326 | **−21,2 %** |
+| Speicher (MiB/s) | 9.040 | 5.013 | **−44,6 %** |
+| I/O (IOPS) | 78.943 | 40.761 | **−48,4 %** |
+| Latenz p95 (ms) | 0,153 | 0,774 | <span class="hl-m">**+407 %**</span> |
 
 </div>
 
-<div class="mt-6 text-sm opacity-70">
-Quelle nach der Messung: <code>project/experiments/results/poc_summary.csv</code> —
-Tabelle wird automatisch aus dem CSV befüllt.<br>
-Werte aus dem <b>vollen</b> Lauf (Host-Determinismus) — <b>nicht</b> die Live-Demo.
+<div class="mt-6 text-sm opacity-80">
+Der Angreifer <b>halbiert</b> Speicherbandbreite und I/O — und <b>verfünffacht</b>
+die p95-Latenz. Und das <b>sogar ohne</b> Host-Determinismus (Turbo an, C-States
+offen = eigentlich Rauschquellen): Der Effekt dominiert das Rauschen klar.
+</div>
+
+<div class="mt-3 text-xs opacity-60">
+Quelle: <code>results/history/poc_runs.csv</code> · Lauf <code>config/nodeterm</code>, Median über 10 Läufe.
+Der Determinismus-Lauf (feste Taktbasis) schärft die Werte fürs Paper nur nach.
 </div>
 
 <!--
-Diese Tabelle fülle ich nach der echten Messung. Erwartung: deutlicher Einbruch
-bei IOPS und Anstieg der Latenz, moderater Effekt bei CPU.
+Das ist das Kern-Ergebnis. Wichtig zu betonen: Diese Zahlen entstanden OHNE
+BIOS-Determinismus — Turbo an, C-States offen. Genau das sind eigentlich
+Rauschquellen, und TROTZDEM ist der Effekt eindeutig (IOPS halbiert, Latenz mal
+fünf). Mit Determinismus wird die Baseline nur enger, der Effekt bleibt. Die
+Live-Demo vorhin war ein winziger Ableger dieses Laufs.
 -->
 
 ---
 
-# Fallback-Ergebnis · Platzhalter
+<script setup>
+const base = import.meta.env.BASE_URL
+</script>
 
-<div class="absolute top-20 right-12 px-3 py-1 bg-amber-500 text-white text-xs rounded rotate-3">
-PLATZHALTER — Mock-Daten
+<div class="kicker">Ergebnis · Vergleich</div>
+
+# Paradigmen-Vergleich: Isolationsstärke
+
+<div class="absolute top-20 right-12 px-3 py-1 bg-s1/20 border border-s1 text-xs rounded">
+config/nodeterm · 10×
 </div>
 
-<div class="flex justify-center mt-2">
-  <img :src="'/img/mock_fallback.png'" class="h-[360px] rounded shadow-lg border" />
+<div class="flex justify-center mt-1">
+  <img :src="base + 'img/real_fallback.png'" alt="Relativer Einbruch je Metrik: QEMU, LXC, KVM" class="h-[360px] rounded-lg shadow-lg" />
 </div>
 
-<div class="mt-3 text-center text-sm opacity-70">
-Gruppierte Balken je Metrik · Baseline vs. Noisy Neighbor · QEMU/LXC/KVM<br>
-<span class="text-xs">Mock-Werte — wird durch <code>fallback_summary.csv</code> ersetzt</span>
+<div class="mt-2 text-center text-sm opacity-75">
+Relativer Einbruch unter identischer Störlast · Median über 10 Läufe ·
+<span class="hl-m">QEMU trifft es am härtesten, LXC am wenigsten</span> — konsistent über alle Metriken.
 </div>
 
 <!--
-Das ist das Mock-Diagramm mit hypothetischen Werten. Die Geschichte, die ich
-erwarte: LXC bricht bei I/O am stärksten ein (schwächste Isolation), KVM moderat,
-QEMU kaum. Nach der echten Messung tausche ich nur das Bild aus.
+Echte Daten (config/nodeterm, 10 Läufe je Opfer). Wichtig: das Diagramm zeigt
+RELATIVE Degradation (skalenunabhängig) — die Absolutwerte klaffen 13× auseinander
+(QEMU ist ~4–13× langsamer). Die Story: QEMU am stärksten betroffen, LXC am
+robustesten, KVM dazwischen — durchgängig über CPU/RAM/IOPS. Latenz-Faktoren unten.
+Das widerspricht der ursprünglichen Hypothese — nächste Folie ordnet das ein.
 -->
 
 ---
 
-# Erwartete Kernaussage
+# Kernaussage — entgegen der Erwartung
 
-<div class="mt-8 text-center text-xl">
+<div class="mt-6 text-center text-xl">
 
-LXC ist <b>am schnellsten</b>, aber unter Störlast <span class="mark">am schwächsten isoliert</span>.<br>
-KVM „bezahlt" Isolation mit Leistung — und ist dafür <b>robuster</b>.
+Erwartet: <span class="muted">LXC am schwächsten isoliert</span>. Gemessen: <span class="mark">das Gegenteil</span>.<br>
+<b>QEMU</b> bricht am stärksten ein, <b>LXC</b> ist relativ <b>am robustesten</b> — konsistent über alle Metriken.
 
 </div>
 
-<div class="mt-10 grid grid-cols-3 gap-4 text-center">
-  <div class="card">QEMU<br><span class="stat text-4xl">≈ 0%</span><br><span class="text-xs opacity-70">Emulation puffert</span></div>
-  <div class="card card-accent">KVM<br><span class="stat text-4xl">~ −30%</span><br><span class="text-xs opacity-70">moderat</span></div>
-  <div class="card card-magenta">LXC<br><span class="stat text-4xl">~ −60%</span><br><span class="text-xs opacity-70">stärkster Einbruch</span></div>
+<div class="mt-8 grid grid-cols-3 gap-4 text-center">
+  <div class="card card-magenta">QEMU<br><span class="stat text-4xl">−69%</span><br><span class="text-xs opacity-70">Emulationsschicht selbst cache-empfindlich</span></div>
+  <div class="card card-accent">KVM<br><span class="stat text-4xl">−58%</span><br><span class="text-xs opacity-70">voller LLC-Share, hardwarenah</span></div>
+  <div class="card">LXC<br><span class="stat text-4xl">−33%</span><br><span class="text-xs opacity-70">relativ am robustesten</span></div>
 </div>
 
-<div class="mt-6 text-xs opacity-60 text-center">Prozentwerte = hypothetische IOPS-Degradation (Mock)</div>
+<div class="mt-5 text-sm opacity-75 text-center">
+<b>Aber:</b> absolut ist QEMU ~4–13× langsamer (Emulations-Overhead) — <b>relativer</b> Einbruch ≠ absolute Leistung.
+</div>
+
+<div class="mt-2 text-xs opacity-55 text-center">IOPS-Degradation · Median über 10 Läufe · config/nodeterm · Determinismus-Lauf zur Absicherung ausstehend</div>
 
 <!--
-Diese Folie bringt die zentrale Aussage auf den Punkt — auch ohne echte Zahlen
-schon klar kommunizierbar. Werte nach Messung anpassen.
+Der ehrliche Befund: Die Hypothese (LXC am schwächsten isoliert) hält NICHT. Real
+trifft es QEMU am härtesten (−69% IOPS), LXC am wenigsten (−33%), KVM dazwischen
+(−58%) — konsistent über CPU/RAM/IOPS. Erklärung: Die QEMU-Emulationsschicht (TCG)
+ist selbst stark cache-abhängig und wird von der LLC-Störlast doppelt getroffen;
+LXC läuft hardwarenah und degradiert relativ am wenigsten. WICHTIG einzuordnen:
+Das ist RELATIVE Degradation. Absolut ist QEMU um ein Vielfaches langsamer. Und:
+noch ohne Determinismus — der Determinismus-Lauf sichert das Muster ab.
 -->
 
 ---
@@ -790,13 +834,13 @@ layout: two-cols
 **Erreicht**
 
 - Vollautomatisierte, reproduzierbare Test-Suite
-- Sauberer Versuchsaufbau (Pinning, Determinismus)
-- Durchgängige Pipeline: SSH → CSV → Paper
+- Versuchsaufbau steht: 4 Instanzen, P-Core-Pinning
+- **PoC belegt:** Effekt eindeutig messbar (−48 % IOPS, +407 % p95-Latenz)
 
 **Nächste Schritte**
 
-- VMs aufsetzen, echte Messreihen fahren
-- Daten ins IEEE-Paper integrieren
+- Determinismus-Lauf → finale Zahlen fürs IEEE-Paper
+- 3-Paradigmen-Vergleich (QEMU/LXC/KVM) einpflegen
 - Einordnung der Mitigierungen (Intel RDT/CAT)
 
 ::right::
