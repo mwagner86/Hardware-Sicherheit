@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "slidev --open",
-    "build": "slidev build",
+    "build": "slidev build --base ./",
     "export": "slidev export --output dist/Praesentation-Noisy-Neighbor.pdf"
   },
   "dependencies": {
@@ -13,5 +13,8 @@
   },
   "optionalDependencies": {
     "playwright-chromium": "latest"
+  },
+  "devDependencies": {
+    "playwright-chromium": "^1.61.1"
   }
 }
