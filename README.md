@@ -33,10 +33,10 @@ Proxmox `pve` (i7-13700).
 
 | Rolle | Paradigma | Typ | ID | IP |
 | --- | --- | --- | --- | --- |
-| Angreifer (Störquelle) | konstant | LXC | 200 | `…178.200` |
-| Opfer | Emulation | QEMU `--kvm 0` | 201 | `…178.201` |
-| Opfer | Para-Virt. | LXC | 202 | `…178.202` |
-| Opfer | HW-Virt. | KVM `--cpu host` | 203 | `…178.203` |
+| Angreifer (Störquelle) | konstant | LXC | 300 | `…178.210` |
+| Opfer | Emulation | QEMU `--kvm 0` | 301 | `…178.211` |
+| Opfer | Para-Virt. | LXC | 302 | `…178.212` |
+| Opfer | HW-Virt. | KVM `--cpu host` | 303 | `…178.213` |
 
 ## Projektstruktur
 

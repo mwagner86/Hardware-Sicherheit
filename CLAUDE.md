@@ -133,12 +133,12 @@ Topologie-Diagramm (Präsentation): `Experiment-Topologie.canvas`.
 
 | Rolle | Paradigma | Proxmox-Typ | ID | IP |
 | --- | --- | --- | --- | --- |
-| Angreifer | konstante Störquelle | LXC | 200 | `192.168.178.200` |
-| Opfer | Emulation | QEMU-VM **`--kvm 0`** | 201 | `192.168.178.201` |
-| Opfer | Para-Virt. | LXC | 202 | `192.168.178.202` |
-| Opfer | HW-Virt. | KVM-VM `--cpu host` | 203 | `192.168.178.203` |
+| Angreifer | konstante Störquelle | LXC | 300 | `192.168.178.210` |
+| Opfer | Emulation | QEMU-VM **`--kvm 0`** | 301 | `192.168.178.211` |
+| Opfer | Para-Virt. | LXC | 302 | `192.168.178.212` |
+| Opfer | HW-Virt. | KVM-VM `--cpu host` | 303 | `192.168.178.213` |
 
-Host: Proxmox `pve` @ `192.168.178.50` (i7-13700). PoC nutzt KVM-Opfer (203);
+Host: Proxmox `pve` @ `192.168.178.50` (i7-13700, Storage `local-zfs`). PoC nutzt KVM-Opfer (303);
 QEMU-Opfer ist NICHT PoC-tauglich (Emulation verschluckt den Effekt). Fallback
 läuft **sequenziell** über alle drei Opfer → konstanter Angreifer.
 

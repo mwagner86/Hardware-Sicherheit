@@ -95,15 +95,15 @@ Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illu
 % --- Angreifer + Opfer (im P-Core) ---
 \node[guest, fill=red!7, below=28mm of ctrl.south west, anchor=north west,
       text width=2.5cm, minimum height=34mm] (att)
-  {\textbf{Angreifer}\\ LXC 200\\[1pt] \texttt{stress-ng}\\ Cache-L3 $+$ I/O\\[1pt]
+  {\textbf{Angreifer}\\ LXC 300\\[1pt] \texttt{stress-ng}\\ Cache-L3 $+$ I/O\\[1pt]
    \emph{konstante Störquelle}};
 
 \node[guest, right=14mm of att.north east, anchor=north west] (vq)
-  {\textbf{Opfer 1} -- QEMU 201\\ Emulation \emph{(nur Fallback)}};
+  {\textbf{Opfer 1} -- QEMU 301\\ Emulation \emph{(nur Fallback)}};
 \node[guest, below=2.5mm of vq] (vl)
-  {\textbf{Opfer 2} -- LXC 202\\ Para-Virtualisierung};
+  {\textbf{Opfer 2} -- LXC 302\\ Para-Virtualisierung};
 \node[guest, below=2.5mm of vl, fill=green!9, draw=green!45!black] (vk)
-  {\textbf{Opfer 3} -- KVM 203\\ HW-Virt.\ \emph{(PoC-Hauptopfer)}};
+  {\textbf{Opfer 3} -- KVM 303\\ HW-Virt.\ \emph{(PoC-Hauptopfer)}};
 
 % --- Ressourcen-Contention (geteilter LLC + I/O) ---
 \draw[cont] (att.east|-vq) -- (vq.west);
@@ -131,7 +131,7 @@ Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illu
 \node[font=\scriptsize\itshape, text=blue!55!black, align=left, anchor=west]
   at ($(ctrl.east)+(0.3,0)$) {SSH (Key-Auth)\\ alle 4 Gäste};
 \end{tikzpicture}
-\caption{Schematischer Aufbau der Testumgebung. Der Control-Node orchestriert die vier auf denselben physischen P-Core (CPU 4,5) gepinnten Gäste über SSH und misst nicht selbst. Der Angreifer (LXC 200) sättigt den geteilten Last Level Cache; die drei Opfer (QEMU/LXC/KVM) werden sequenziell vermessen, wobei nur das KVM-Opfer als PoC-Hauptopfer dient. Rote Pfeile markieren die Ressourcen-Contention über LLC und I/O.}
+\caption{Schematischer Aufbau der Testumgebung. Der Control-Node orchestriert die vier auf denselben physischen P-Core (CPU 4,5) gepinnten Gäste über SSH und misst nicht selbst. Der Angreifer (LXC 300) sättigt den geteilten Last Level Cache; die drei Opfer (QEMU/LXC/KVM) werden sequenziell vermessen, wobei nur das KVM-Opfer als PoC-Hauptopfer dient. Rote Pfeile markieren die Ressourcen-Contention über LLC und I/O.}
 \label{fig:setup}
 \end{figure}
 

@@ -399,12 +399,12 @@ flowchart TB
   subgraph HOST["Proxmox VE Host · pve · i7-13700"]
     subgraph PCORE["Physischer P-Core 4,5 · gemeinsamer L3-Cache (LLC)"]
       direction LR
-      ATT["🗡️ Angreifer<br/>LXC 200<br/>stress-ng cache+hdd"]:::att
+      ATT["🗡️ Angreifer<br/>LXC 300<br/>stress-ng cache+hdd"]:::att
       subgraph VIC["Opfer (sequenziell, je 1 aktiv)"]
         direction TB
-        VQ["🎯 QEMU 201 · Emulation"]:::vic
-        VL["🎯 LXC 202 · Para-Virt."]:::vic
-        VK["🎯 KVM 203 · HW-Virt."]:::vic
+        VQ["🎯 QEMU 301 · Emulation"]:::vic
+        VL["🎯 LXC 302 · Para-Virt."]:::vic
+        VK["🎯 KVM 303 · HW-Virt."]:::vic
       end
       ATT -. "LLC + I/O Contention" .-> VIC
     end
@@ -454,10 +454,10 @@ Control-Node steuert alles per SSH, misst aber nicht selbst.
 </div>
 
 <div class="mt-8 grid grid-cols-4 gap-3 text-center text-sm">
-  <div class="chip chip-magenta">🗡️ Angreifer<br><code>.200</code></div>
-  <div class="chip">🎯 QEMU<br><code>.201</code></div>
-  <div class="chip">🎯 LXC<br><code>.202</code></div>
-  <div class="chip chip-accent">🎯 KVM<br><code>.203</code></div>
+  <div class="chip chip-magenta">🗡️ Angreifer<br><code>.210</code></div>
+  <div class="chip">🎯 QEMU<br><code>.211</code></div>
+  <div class="chip">🎯 LXC<br><code>.212</code></div>
+  <div class="chip chip-accent">🎯 KVM<br><code>.213</code></div>
 </div>
 
 <!--

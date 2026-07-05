@@ -27,11 +27,11 @@ nur KVM-Opfer, ~30–45 s; PoC-only via `run_experiment.sh`).
   Schnelltest:
 
   ```bash
-  for ip in 200 202 203; do ssh -o BatchMode=yes root@192.168.178.$ip true \
+  for ip in 210 212 213; do ssh -o BatchMode=yes root@192.168.178.$ip true \
     && echo ".$ip ok" || echo ".$ip FEHLT"; done
   ```
 
-  (Das QEMU-Opfer `.201` lassen wir im Smoke-Test bewusst außen vor — als
+  (Das QEMU-Opfer `.211` lassen wir im Smoke-Test bewusst außen vor — als
   Emulation ist es zäh; der Code-Pfad ist identisch zu den anderen Opfern.)
 
 > **Control-Node beim Smoke-Test beliebig.** Da hier nur die Mechanik geprüft
@@ -53,10 +53,10 @@ cd project/experiments
 # (a) Einmalig: Werkzeuge auf den Gästen installieren + Skripte ausrollen
 ./run_experiment.sh --config smoke.env --install --deploy-only
 
-# (b) PoC-Mechanik prüfen (Angreifer 200 + KVM-Opfer 203)
+# (b) PoC-Mechanik prüfen (Angreifer 300 + KVM-Opfer 303)
 ./run_experiment.sh --config smoke.env
 
-# (c) Fallback-Mechanik prüfen (LXC 202 + KVM 203, sequenziell)
+# (c) Fallback-Mechanik prüfen (LXC 302 + KVM 303, sequenziell)
 ./run_fallback.sh --config smoke.env
 ```
 

@@ -13,13 +13,21 @@ Insgesamt **vier Instanzen** — ein Angreifer und drei Opfer:
 
 | Rolle | Paradigma (Aufgabe 3.4) | Proxmox-Typ | ID | Hostname | IP (vmbr0) |
 | --- | --- | --- | --- | --- | --- |
-| Angreifer | — (konstante Störquelle) | LXC-Container | 200 | `attacker` | `192.168.178.200` |
-| Opfer 1 | **Emulation** | QEMU-VM, **KVM aus** | 201 | `victim-qemu` | `192.168.178.201` |
-| Opfer 2 | **Para-Virtualisierung** | LXC-Container | 202 | `victim-lxc` | `192.168.178.202` |
-| Opfer 3 | **Virtualisierung** | KVM-VM | 203 | `victim-kvm` | `192.168.178.203` |
+| Angreifer | — (konstante Störquelle) | LXC-Container | 300 | `attacker` | `192.168.178.210` |
+| Opfer 1 | **Emulation** | QEMU-VM, **KVM aus** | 301 | `victim-qemu` | `192.168.178.211` |
+| Opfer 2 | **Para-Virtualisierung** | LXC-Container | 302 | `victim-lxc` | `192.168.178.212` |
+| Opfer 3 | **Virtualisierung** | KVM-VM | 303 | `victim-kvm` | `192.168.178.213` |
 
 Alle vier auf **vmbr0 (Heimnetz `192.168.178.0/24`)**, GW Fritz!Box `.1`, DNS
 Pi-hole `.55`. Statische IPs außerhalb des DHCP-Pools.
+
+> **ID-/IP-Schema:** Die IDs `2xx` waren auf diesem Host bereits belegt
+> (`debian-dev`/`parrot`/`nixos`), daher `3xx`. Da `300` kein gültiges IP-Oktett
+> ist, koppeln wir nicht mehr „Oktett = ID", sondern **letzte Ziffer der IP =
+> letzte Ziffer der ID** (0/1/2/3 → `.210`–`.213`).
+>
+> **Storage:** Dieser Host nutzt **ZFS** (`local-zfs`), **nicht** `local-lvm` —
+> alle `qm`/`pct`-Befehle unten verwenden entsprechend `local-zfs`.
 
 **Doppelrolle der Opfer:**
 
@@ -58,12 +66,25 @@ Störquelle** — saubere Variation einer einzigen Variable (Opfer-Virtualisieru
    desselben physischen P-Cores), z. B. `CPU 4` und `CPU 5`. Diese beiden
    logischen Kerne (`4,5`) sind das Pinning-Ziel für **alle** Instanzen.
 
-3. **SSH-Schlüssel** des Control-Nodes (Laptop) bereithalten — der Public Key
-   wird beim Anlegen jeder Instanz hinterlegt:
+3. **SSH-Schlüssel** des Control-Nodes (Laptop) muss auf dem Host in
+   `/root/.ssh/authorized_keys` hinterlegt sein. Da `.50` **nur** `publickey`
+   akzeptiert (kein Passwort-Login), lässt sich der Key **nicht** per
+   `ssh-copy-id` von der VM aus pushen — einmalig über die Proxmox-Web-Shell
+   (`Datacenter → pve → Shell`) oder eine bereits funktionierende Session
+   eintragen:
 
    ```bash
-   cat ~/.ssh/id_ed25519.pub   # auf dem Control-Node; Inhalt für unten kopieren
+   # AUF DEM HOST (Web-Shell), Public Key des Control-Nodes anhängen:
+   mkdir -p /root/.ssh && chmod 700 /root/.ssh
+   echo 'ssh-ed25519 AAAA... control-node' >> /root/.ssh/authorized_keys
+   chmod 600 /root/.ssh/authorized_keys
    ```
+
+   Die `qm`/`pct`-Befehle unten reichen dann `~/.ssh/authorized_keys` (des
+   Hosts) an die Gäste — diese Datei enthält den Control-Node-Key bereits, damit
+   ist der passwortlose Zugang vom Orchestrator gesichert. Für automatisierte
+   Läufe den Key im `ssh-agent` entsperren (`ssh-add ~/.ssh/id_ed25519`), sonst
+   blockt die Passphrase die `BatchMode`-Aufrufe.
 
 ---
 
@@ -86,70 +107,83 @@ pveam download local debian-12-standard_12.7-1_amd64.tar.zst
 
 ---
 
-## 3. Opfer 3 — KVM-VM (Hardware-Virtualisierung), ID 203
+## 3. Opfer 3 — KVM-VM (Hardware-Virtualisierung), ID 303
 
-Das ist die „normale" Proxmox-VM mit Hardwarebeschleunigung.
+Das ist die „normale" Proxmox-VM mit Hardwarebeschleunigung. Das Cloud-Root ist
+nur ~3 GB — mit `qm resize +6G` auf ~9 GB vergrößern, sonst wird es mit
+sysbench/fio + Testdateien zu eng.
 
 ```bash
-qm create 203 --name victim-kvm --memory 2048 --cores 2 \
+IMG=/var/lib/vz/template/iso/debian-12-genericcloud-amd64.qcow2
+qm create 303 --name victim-kvm --memory 2048 --cores 2 \
   --net0 virtio,bridge=vmbr0 --ostype l26 --scsihw virtio-scsi-pci
-qm importdisk 203 /var/lib/vz/template/iso/debian-12-genericcloud-amd64.qcow2 local-lvm
-qm set 203 --scsi0 local-lvm:vm-203-disk-0
-qm set 203 --boot order=scsi0
-qm set 203 --ide2 local-lvm:cloudinit
-qm set 203 --serial0 socket --vga serial0
-qm set 203 --ipconfig0 ip=192.168.178.203/24,gw=192.168.178.1
-qm set 203 --ciuser root --sshkeys ~/.ssh/id_ed25519.pub
-qm set 203 --cpu host          # Gast sieht echte CPU-/Cache-Topologie (LLC!)
-qm set 203 --affinity 4,5      # Pinning auf den P-Core (Proxmox 8)
-qm start 203
+qm importdisk 303 "$IMG" local-zfs
+qm set 303 --scsi0 local-zfs:vm-303-disk-0
+qm set 303 --boot order=scsi0
+qm set 303 --ide2 local-zfs:cloudinit
+qm set 303 --serial0 socket --vga serial0
+qm resize 303 scsi0 +6G
+qm set 303 --ipconfig0 ip=192.168.178.213/24,gw=192.168.178.1
+qm set 303 --nameserver 192.168.178.55
+qm set 303 --ciuser root --sshkeys ~/.ssh/authorized_keys
+qm set 303 --cpu host          # Gast sieht echte CPU-/Cache-Topologie (LLC!)
+qm set 303 --affinity 4,5      # Pinning auf den P-Core (Proxmox 8)
+qm start 303
 ```
 
+> **Verifiziert:** `systemd-detect-virt` im Gast meldet `kvm` (echte
+> HW-Virtualisierung), Boot in ~10 s.
+>
 > `--cpu host` ist wichtig: Nur so „sieht" der Gast die reale LLC-Topologie, was
 > für die mikroarchitektonische Interferenz relevant ist.
 
 ---
 
-## 4. Opfer 1 — QEMU-VM (reine Emulation), ID 201
+## 4. Opfer 1 — QEMU-VM (reine Emulation), ID 301
 
 Identisch zur KVM-VM, aber **Hardware-Virtualisierung abgeschaltet** → QEMU läuft
 im TCG-Emulationsmodus. **Das ist der einzige Unterschied, der aus einer
 Proxmox-VM die „Emulation" der Aufgabenstellung macht.**
 
 ```bash
-qm create 201 --name victim-qemu --memory 2048 --cores 2 \
+IMG=/var/lib/vz/template/iso/debian-12-genericcloud-amd64.qcow2
+qm create 301 --name victim-qemu --memory 2048 --cores 2 \
   --net0 virtio,bridge=vmbr0 --ostype l26 --scsihw virtio-scsi-pci
-qm importdisk 201 /var/lib/vz/template/iso/debian-12-genericcloud-amd64.qcow2 local-lvm
-qm set 201 --scsi0 local-lvm:vm-201-disk-0
-qm set 201 --boot order=scsi0
-qm set 201 --ide2 local-lvm:cloudinit
-qm set 201 --serial0 socket --vga serial0
-qm set 201 --ipconfig0 ip=192.168.178.201/24,gw=192.168.178.1
-qm set 201 --ciuser root --sshkeys ~/.ssh/id_ed25519.pub
-qm set 201 --kvm 0             # <-- ENTSCHEIDEND: Hardware-Virtualisierung AUS
-qm set 201 --cpu qemu64        # mit kvm=0 KEIN '--cpu host' (kein KVM verfügbar)
-qm set 201 --affinity 4,5
-qm start 201
+qm importdisk 301 "$IMG" local-zfs
+qm set 301 --scsi0 local-zfs:vm-301-disk-0
+qm set 301 --boot order=scsi0
+qm set 301 --ide2 local-zfs:cloudinit
+qm set 301 --serial0 socket --vga serial0
+qm resize 301 scsi0 +6G
+qm set 301 --ipconfig0 ip=192.168.178.211/24,gw=192.168.178.1
+qm set 301 --nameserver 192.168.178.55
+qm set 301 --ciuser root --sshkeys ~/.ssh/authorized_keys
+qm set 301 --kvm 0             # <-- ENTSCHEIDEND: Hardware-Virtualisierung AUS
+qm set 301 --cpu qemu64        # mit kvm=0 KEIN '--cpu host' (kein KVM verfügbar)
+qm set 301 --affinity 4,5
+qm start 301
 ```
 
 > **Erwartung:** Dieser Gast ist drastisch langsamer (Faktor ~30–40 bei I/O,
 > vgl. Dummy-Daten). Das ist kein Fehler, sondern der zu quantifizierende
-> Emulations-Overhead. Der Boot dauert spürbar länger.
+> Emulations-Overhead. Der Boot dauert spürbar länger — hier ~45 s (vs. ~10 s
+> bei KVM); `systemd-detect-virt` im Gast meldet `qemu`.
 >
 > **UI-Alternative:** VM → `Options` → `KVM hardware virtualization` → `No`.
 
 ---
 
-## 5. Opfer 2 — LXC-Container (Para-Virtualisierung), ID 202
+## 5. Opfer 2 — LXC-Container (Para-Virtualisierung), ID 302
 
 ```bash
-pct create 202 local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst \
-  --hostname victim-lxc --memory 2048 --cores 2 --rootfs local-lvm:8 \
-  --net0 name=eth0,bridge=vmbr0,ip=192.168.178.202/24,gw=192.168.178.1 --ostype debian \
-  --ssh-public-keys ~/.ssh/id_ed25519.pub --unprivileged 1
+pct create 302 local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst \
+  --hostname victim-lxc --memory 2048 --cores 2 --rootfs local-zfs:8 \
+  --net0 name=eth0,bridge=vmbr0,ip=192.168.178.212/24,gw=192.168.178.1 --ostype debian \
+  --nameserver 192.168.178.55 \
+  --ssh-public-keys ~/.ssh/authorized_keys --unprivileged 1
 # CPU-Pinning für Container: cpuset in die Config schreiben
-echo 'lxc.cgroup2.cpuset.cpus: 4,5' >> /etc/pve/lxc/202.conf
-pct start 202
+echo 'lxc.cgroup2.cpuset.cpus: 4,5' >> /etc/pve/lxc/302.conf
+pct start 302
 ```
 
 > LXC ist streng genommen OS-Level-Virtualisierung; im Projekt wird sie gemäß
@@ -158,19 +192,20 @@ pct start 202
 
 ---
 
-## 6. Angreifer — LXC-Container, ID 200
+## 6. Angreifer — LXC-Container, ID 300
 
 Container gewählt, weil der nahezu native Cache-Zugriff die stärkste, am besten
 reproduzierbare LLC-Eviction erzeugt (maximiert die Chance, dass der PoC einen
 messbaren Effekt zeigt).
 
 ```bash
-pct create 200 local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst \
-  --hostname attacker --memory 2048 --cores 2 --rootfs local-lvm:8 \
-  --net0 name=eth0,bridge=vmbr0,ip=192.168.178.200/24,gw=192.168.178.1 --ostype debian \
-  --ssh-public-keys ~/.ssh/id_ed25519.pub --unprivileged 1
-echo 'lxc.cgroup2.cpuset.cpus: 4,5' >> /etc/pve/lxc/200.conf
-pct start 200
+pct create 300 local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst \
+  --hostname attacker --memory 2048 --cores 2 --rootfs local-zfs:8 \
+  --net0 name=eth0,bridge=vmbr0,ip=192.168.178.210/24,gw=192.168.178.1 --ostype debian \
+  --nameserver 192.168.178.55 \
+  --ssh-public-keys ~/.ssh/authorized_keys --unprivileged 1
+echo 'lxc.cgroup2.cpuset.cpus: 4,5' >> /etc/pve/lxc/300.conf
+pct start 300
 ```
 
 > **Strikteres SMT-Co-Pinning (optional):** Angreifer auf Thread `4`, aktives
@@ -187,13 +222,13 @@ Orchestrator später automatisch per `--install`. Vorab nur sicherstellen, dass
 **SSH erreichbar** ist (Henne-Ei: das kann das Skript nicht selbst leisten):
 
 1. **IP-Adressen** sind durch das statische Schema bereits festgelegt
-   (`.200`–`.203`, letztes Oktett = ID). Diese Adressen müssen **außerhalb des
-   Fritz!Box-DHCP-Pools** liegen — ggf. den DHCP-Bereich entsprechend einschränken,
-   um Kollisionen zu vermeiden. Gegenprüfen (Host-seitig):
+   (`.210`–`.213`, letzte Ziffer der IP = letzte Ziffer der ID). Diese Adressen
+   müssen **außerhalb des Fritz!Box-DHCP-Pools** liegen — ggf. den DHCP-Bereich
+   entsprechend einschränken, um Kollisionen zu vermeiden. Gegenprüfen (Host-seitig):
 
    ```bash
-   qm guest cmd 201 network-get-interfaces   # VMs (Guest-Agent nötig)
-   pct exec 202 -- ip -4 addr show eth0       # Container
+   qm guest cmd 301 network-get-interfaces   # VMs (Guest-Agent nötig)
+   pct exec 302 -- ip -4 addr show eth0       # Container
    ```
 
 2. **SSH-Login testen** (vom Control-Node):
@@ -202,14 +237,14 @@ Orchestrator später automatisch per `--install`. Vorab nur sicherstellen, dass
    ssh root@<IP-des-Gasts> true && echo "SSH ok"
    ```
 
-   - Cloud-Image-VMs (201/203): Key + `root`-Login sind via cloud-init bereits
+   - Cloud-Image-VMs (301/303): Key + `root`-Login sind via cloud-init bereits
      gesetzt.
-   - LXC-Container (200/202): `--ssh-public-keys` hat den Key hinterlegt;
+   - LXC-Container (300/302): `--ssh-public-keys` hat den Key hinterlegt;
      `openssh-server` ist im Debian-Standard-Template enthalten und aktiv.
 
 3. **Diese IPs in [`../experiments/config.env`](../experiments/config.env)
    eintragen** — pro Fallback-Lauf wird `VICTIM_HOST` auf das jeweilige Opfer
-   gesetzt, `ATTACKER_HOST` bleibt konstant auf dem Angreifer (200).
+   gesetzt, `ATTACKER_HOST` bleibt konstant auf dem Angreifer (300).
 
 ---
 
@@ -219,23 +254,25 @@ Auf dem Host prüfen, dass alle Instanzen auf `4,5` laufen:
 
 ```bash
 # VMs
-qm config 201 | grep affinity
-qm config 203 | grep affinity
+qm config 301 | grep affinity
+qm config 303 | grep affinity
 # Container
-grep cpuset /etc/pve/lxc/200.conf /etc/pve/lxc/202.conf
+grep cpuset /etc/pve/lxc/300.conf /etc/pve/lxc/302.conf
 ```
 
-Optional unter Last gegenprüfen (Host): `ps -eLo pid,psr,comm | grep -E 'kvm|stress'`
-zeigt, auf welchen logischen CPUs (`PSR`) die Threads tatsächlich laufen.
+Innerhalb der Gäste bestätigt `nproc`=2 und (bei Containern)
+`cat /sys/fs/cgroup/cpuset.cpus.effective` → `4-5` das Pinning. Optional unter
+Last gegenprüfen (Host): `ps -eLo pid,psr,comm | grep -E 'kvm|stress'` zeigt, auf
+welchen logischen CPUs (`PSR`) die Threads tatsächlich laufen.
 
 ---
 
 ## 9. Anschluss an die Experimente
 
-- **PoC:** `ATTACKER_HOST=`200, `VICTIM_HOST=`203 (KVM) in `config.env`, dann
-  `./run_experiment.sh --install --deploy-only` (einmalig), danach
-  `./run_experiment.sh` → `results/poc_summary.csv`.
-- **Fallback:** `./run_fallback.sh` testet die drei Opfer (201/202/203)
+- **PoC:** `ATTACKER_HOST=`192.168.178.210, `VICTIM_HOST=`192.168.178.213 (KVM,
+  303) in `config.env`, dann `./run_experiment.sh --install --deploy-only`
+  (einmalig), danach `./run_experiment.sh` → `results/poc_summary.csv`.
+- **Fallback:** `./run_fallback.sh` testet die drei Opfer (301/302/303)
   sequenziell unter konstanter Störlast → `results/fallback_summary.csv`
   (Schema `Virtualisierung;CPU_Base;CPU_NN;...;Lat_NN`).
 
@@ -244,9 +281,9 @@ zeigt, auf welchen logischen CPUs (`PSR`) die Threads tatsächlich laufen.
 ## 10. Aufräumen
 
 ```bash
-qm stop 201 203;  pct stop 200 202
-qm destroy 201 --purge;  qm destroy 203 --purge
-pct destroy 200 --purge; pct destroy 202 --purge
+qm stop 301 303;  pct stop 300 302
+qm destroy 301 --purge;  qm destroy 303 --purge
+pct destroy 300 --purge; pct destroy 302 --purge
 ```
 
 Anschließend Host-Determinismus zurücksetzen — siehe [`PoC.md`](PoC.md),
