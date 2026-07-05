@@ -1,7 +1,10 @@
-# Rohdaten je Lauf (von run_experiment.sh / run_fallback.sh erzeugt) — nicht versionieren
-data/
+# Rohdaten je Lauf (baseline_raw/noisy_raw + Gast-Logs): NICHT versionieren
+# (können pro Lauf groß werden; die Aggregate genügen für Historie/Reproduktion).
+data/**/*_raw.csv
+data/**/*.log
 
-# Die Aggregat-CSVs poc_summary.csv und fallback_summary.csv werden bewusst
-# GETRACKT (mit Platzhalterwerten vorbelegt): das Paper liest sie zur
-# Compile-Zeit, sie müssen also im Checkout liegen. Echte Messläufe
-# überschreiben sie.
+# Bewusst GETRACKT (Ergebnis-Historie, siehe ../../notes/Ergebnis-Historie.md):
+#  - poc_summary.csv, fallback_summary.csv (kanonisch; Paper liest sie zur
+#    Compile-Zeit; mit Platzhaltern vorbelegt, echte Läufe überschreiben sie).
+#  - data/<lauf>/summary.csv + meta.txt  (Aggregat + Metadaten je Lauf).
+#  - history/*.csv                       (append-only Vergleichs-Index).

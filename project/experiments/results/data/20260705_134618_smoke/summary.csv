@@ -1,0 +1,4 @@
+Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms
+Baseline;11352.5450;9014.4650;188563.7872;0.1285
+NoisyNeighbor;8753.5650;5024.2200;71333.5333;0.4199
+Delta-Prozent;-22.89;-44.26;-62.17;226.77

@@ -1,0 +1,23 @@
+timestamp      = 2026-07-05 13:47:57 CEST
+script         = poc
+profile        = smoke
+label          = 
+git_commit     = c4d4739
+repeats        = 2
+host           = 192.168.178.50
+det_governor   = performance
+det_no_turbo   = 0
+det_max_cstate = 9
+attacker_host  = 192.168.178.210
+# --- Benchmark-/Last-Parameter ---
+SYSBENCH_CPU_PRIME = 5000
+SYSBENCH_TIME = 5
+SYSBENCH_MEM_TOTAL = 2G
+FIO_SIZE = 128M
+FIO_RUNTIME = 5
+FIO_IODEPTH = 16
+TASKSET_CPU = 
+ATTACKER_CACHE_WORKERS = 2
+ATTACKER_CACHE_LEVEL = 3
+ATTACKER_HDD_WORKERS = 1
+ATTACKER_HDD_BYTES = 256M

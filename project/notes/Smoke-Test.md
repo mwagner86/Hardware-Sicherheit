@@ -105,16 +105,17 @@ Konkret prüfen:
 - **`jq` fehlt auf dem Opfer.** Dann nutzt [`roles/victim_benchmark.sh:81`](../experiments/roles/victim_benchmark.sh#L81)
   einen grep-Fallback für fio-JSON (ungenauer) und der Preflight `warn`t nur.
   Für saubere Latenz-Perzentile `--install` laufen lassen (installiert `jq` mit).
-- **fio `--direct=1` + `libaio` im unprivilegierten LXC (202).** O_DIRECT/AIO
+- **fio `--direct=1` + `libaio` im unprivilegierten LXC (302).** O_DIRECT/AIO
   kann je nach Storage-Backend im Container scheitern. Genau so ein Fund ist der
   Sinn des Smoke-Tests: bricht fio dort ab, fällt es hier auf — *bevor* du Stunden
-  in den echten Lauf steckst. (Auf der KVM-VM 203 unkritisch.)
+  in den echten Lauf steckst. (Auf der KVM-VM 303 unkritisch.) **Verifiziert am
+  2026-07-05: auf diesem ZFS-Backend läuft fio im LXC sauber durch** (s. Abschnitt 6).
 - **Governor-Warnung im Preflight** ([`run_experiment.sh:70`](../experiments/run_experiment.sh#L70))
   ist hier **erwartet und harmlos** — der Determinismus steht ja noch nicht. Sie
   `die`t nicht.
 - **Restlast des Angreifers.** `attacker_stop` ist als EXIT-Trap idempotent
   hinterlegt; nach einem Abbruch trotzdem kurz gegenprüfen:
-  `ssh root@192.168.178.200 'pgrep -a stress-ng'` (sollte leer sein).
+  `ssh root@192.168.178.210 'pgrep -a stress-ng'` (sollte leer sein).
 
 ---
 
@@ -128,12 +129,42 @@ Nach grünem Smoke-Test:
    starten (bzw. Autostart).
 2. Pinning erneut verifizieren ([`VM-Deployment.md`](VM-Deployment.md) Abschnitt 8).
 3. Echte Läufe **ohne** `--config smoke.env` (nutzt dann
-   [`config.env`](../experiments/config.env) mit vollen Parametern):
+   [`config.env`](../experiments/config.env) mit vollen Parametern). Mit `--label`
+   die Bedingung kennzeichnen (Historie/Vergleich, siehe
+   [`Ergebnis-Historie.md`](Ergebnis-Historie.md)):
 
    ```bash
-   ./run_experiment.sh           # PoC  -> results/poc_summary.csv
-   ./run_fallback.sh             # alle drei Opfer -> results/fallback_summary.csv
+   # vor dem Determinismus (Baseline):
+   ./run_experiment.sh --label nodeterm    # PoC  -> results/poc_summary.csv + Historie
+   ./run_fallback.sh   --label nodeterm    # alle drei Opfer -> fallback_summary.csv + Historie
+   # nach dem Determinismus:
+   ./run_experiment.sh --label determ
+   ./run_fallback.sh   --label determ
    ```
 
 `smoke.env` bleibt als Profil liegen und kann jederzeit erneut für reine
 Mechanik-Checks genutzt werden.
+
+---
+
+## 6. Durchführung & Ergebnis (2026-07-05)
+
+**Smoke-Test grün** — alle drei Aufrufe Exit 0, Pipeline end-to-end validiert
+(Deploy, Benchmark-Aufrufe, fio/jq-Parsing, Median/Delta, CSV-Schreiben).
+
+- **SSH-Auth:** dedizierter, passphrase-loser Key `~/.ssh/nn_experiment` auf allen
+  vier Gästen (Orchestrator ohne Agent/Passphrase, siehe
+  [`VM-Deployment.md`](VM-Deployment.md)).
+- **fio im unprivilegierten LXC (302):** **läuft** — der befürchtete
+  O_DIRECT/`libaio`-Stolperstein tritt auf dem ZFS-Backend **nicht** auf. LXC
+  lieferte saubere IOPS.
+- **Determinismus-Zustand beim Smoke:** Host-Snapshot `governor=performance`,
+  `no_turbo=0`, `max_cstate=9` → **ohne** BIOS/Host-Determinismus (erwartet;
+  in `meta.txt`/Historie festgehalten).
+- **Ergebnisse** liegen in der Historie (nicht als Messung zu werten — Smoke):
+  `results/history/poc_runs.csv`, `results/history/fallback_runs.csv`; Rohdaten
+  unter `results/data/<ts>_smoke/` bzw. `fallback_<ts>_smoke/`.
+
+Nur zur Mechanik-Illustration (verrauscht, ohne Determinismus): PoC-IOPS unter
+Störlast ~ −62 %, Fallback-IOPS LXC ~ −52 % / KVM ~ −63 %. Die **belastbaren**
+Zahlen entstehen erst in den echten Läufen (Abschnitt 5).

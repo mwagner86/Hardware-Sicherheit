@@ -13,7 +13,10 @@
 # (direkt einsetzbar in das gruppierte Balkendiagramm, vgl. assets/mock_fallback.tex)
 #
 # Nutzung:
-#   ./run_fallback.sh [--config DATEI] [--install] [--no-deploy]
+#   ./run_fallback.sh [--config DATEI] [--label TEXT] [--install] [--no-deploy]
+#
+# --label kennzeichnet den Lauf in Verzeichnisname, meta.txt und Historie-Index
+# (z. B. "determ" / "nodeterm" für den BIOS-Determinismus-Vergleich).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,15 +27,18 @@ source "${SCRIPT_DIR}/lib/common.sh"
 CONFIG_FILE="${SCRIPT_DIR}/config.env"
 DO_DEPLOY=1
 DO_INSTALL=0
+LABEL=""                          # frei wählbar (z. B. Determinismus-Zustand)
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --config)    CONFIG_FILE="$2"; shift 2 ;;
+        --label)     LABEL="$2"; shift 2 ;;
         --no-deploy) DO_DEPLOY=0; shift ;;
         --install)   DO_INSTALL=1; shift ;;
         -h|--help)   grep '^#' "$0" | sed 's/^# \?//'; exit 0 ;;
         *)           die "Unbekanntes Argument: $1" ;;
     esac
 done
+PROFILE="$(basename "${CONFIG_FILE}" .env)"   # smoke|config|demo
 
 [[ -f "${CONFIG_FILE}" ]] || die "Konfiguration nicht gefunden: ${CONFIG_FILE}"
 # shellcheck source=config.env
@@ -75,9 +81,17 @@ if [[ "${DO_DEPLOY}" -eq 1 ]]; then
 fi
 
 TS="$(date +%Y%m%d_%H%M%S)"
-DATA_DIR="${SCRIPT_DIR}/results/data/fallback_${TS}"
+RUN_ID="fallback_${TS}_${PROFILE}${LABEL:+_${LABEL}}"
+DATA_DIR="${SCRIPT_DIR}/results/data/${RUN_ID}"
 mkdir -p "${DATA_DIR}"
 log "Datenverzeichnis: ${DATA_DIR}"
+
+# Determinismus-Schnappschuss + meta.txt einmal pro Lauf (gilt für alle Opfer).
+DET="$(host_determinism)"; IFS=';' read -r DET_GOV DET_TURBO DET_CST <<< "${DET}"
+write_run_meta "${DATA_DIR}" "fallback" "${PROFILE}" "${LABEL}" "${DET}"
+GIT="$(run_git_commit)"
+FB_HISTORY="${SCRIPT_DIR}/results/history/fallback_runs.csv"
+FB_HEADER="timestamp;label;profile;git;repeats;det_gov;det_no_turbo;det_max_cstate;victim;cpu_delta;mem_delta;iops_delta;lat_delta;datadir"
 
 cleanup() { attacker_stop "${ATTACKER_USER}" "${ATTACKER_HOST}"; }
 trap cleanup EXIT
@@ -106,6 +120,10 @@ for entry in "${FALLBACK_VICTIMS[@]}"; do
     latB="$(col_median "${vdir}/baseline_raw.csv" 5)"; latN="$(col_median "${vdir}/noisy_raw.csv" 5)"
     echo "${label};${cpuB};${cpuN};${ramB};${ramN};${ioB};${ioN};${latB};${latN}" >> "${SUMMARY}"
     log "[${label}] fertig: IOPS ${ioB} -> ${ioN} ($(delta_pct "${ioB}" "${ioN}")%)"
+
+    # Historie: eine Zeile je Opfer (nie überschrieben).
+    history_append "${FB_HISTORY}" "${FB_HEADER}" \
+        "${TS};${LABEL};${PROFILE};${GIT};${REPEATS};${DET_GOV};${DET_TURBO};${DET_CST};${label};$(delta_pct "${cpuB}" "${cpuN}");$(delta_pct "${ramB}" "${ramN}");$(delta_pct "${ioB}" "${ioN}");$(delta_pct "${latB}" "${latN}");results/data/${RUN_ID}"
 done
 
 # Kanonische Fallback-CSV fürs Paper-Diagramm ablegen.
@@ -115,3 +133,4 @@ log "Fertig. Aggregat:"
 cat "${SUMMARY}" >&2
 log "Rohdaten je Opfer unter: ${DATA_DIR}"
 log "Paper-Diagramm-Daten: ${SCRIPT_DIR}/results/fallback_summary.csv"
+log "Historie ergänzt: ${FB_HISTORY}"

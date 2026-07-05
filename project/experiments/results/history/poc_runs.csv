@@ -1,0 +1,2 @@
+timestamp;label;profile;git;repeats;det_gov;det_no_turbo;det_max_cstate;cpu_delta;mem_delta;iops_delta;lat_delta;datadir
+20260705_134618;;smoke;c4d4739;2;performance;0;9;-22.89;-44.26;-62.17;226.77;results/data/20260705_134618_smoke

@@ -88,3 +88,56 @@ attacker_start() {
 attacker_stop() {
     rssh "$1" "$2" "${RENV} ${REMOTE_DIR}/attacker_load.sh stop" >/dev/null || true
 }
+
+# --- Historie & Metadaten (Ergebnis-Historie.md) ----------------------------
+
+# Kurzer git-Commit des Repos ("n/a", falls kein git).
+run_git_commit() { git -C "${SCRIPT_DIR}" rev-parse --short HEAD 2>/dev/null || echo "n/a"; }
+
+# Determinismus-Schnappschuss vom Proxmox-Host. Gibt ";"-getrennt zurück:
+#   governor(P-Core 4);no_turbo;max_cstate   (Felder "n/a", wenn nicht lesbar).
+# Objektiv statt auf korrektes Labeln angewiesen (mit/ohne BIOS-Determinismus).
+host_determinism() {
+    [[ -n "${HOST_HOST:-}" ]] || { echo "n/a;n/a;n/a"; return; }
+    rssh "${HOST_USER:-root}" "${HOST_HOST}" '
+        g=$(cat /sys/devices/system/cpu/cpu4/cpufreq/scaling_governor 2>/dev/null || echo n/a)
+        t=$(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null || echo n/a)
+        c=$(cat /sys/module/intel_idle/parameters/max_cstate 2>/dev/null || echo n/a)
+        printf "%s;%s;%s" "$g" "$t" "$c"' 2>/dev/null || echo "n/a;n/a;n/a"
+}
+
+# Schreibt eine selbsterklärende meta.txt in ein Run-Verzeichnis.
+# Args: <datadir> <script> <profile> <label> <det="gov;turbo;cstate">
+write_run_meta() {
+    local dir="$1" script="$2" profile="$3" label="$4" det="$5"
+    local gov="${det%%;*}" rest="${det#*;}"
+    {
+        echo "timestamp      = $(date '+%Y-%m-%d %H:%M:%S %Z')"
+        echo "script         = ${script}"
+        echo "profile        = ${profile}"
+        echo "label          = ${label:-}"
+        echo "git_commit     = $(run_git_commit)"
+        echo "repeats        = ${REPEATS}"
+        echo "host           = ${HOST_HOST:-n/a}"
+        echo "det_governor   = ${gov}"
+        echo "det_no_turbo   = ${rest%%;*}"
+        echo "det_max_cstate = ${rest#*;}"
+        echo "attacker_host  = ${ATTACKER_HOST}"
+        echo "# --- Benchmark-/Last-Parameter ---"
+        local v
+        for v in SYSBENCH_CPU_PRIME SYSBENCH_TIME SYSBENCH_MEM_TOTAL \
+                 FIO_SIZE FIO_RUNTIME FIO_IODEPTH TASKSET_CPU \
+                 ATTACKER_CACHE_WORKERS ATTACKER_CACHE_LEVEL ATTACKER_HDD_WORKERS ATTACKER_HDD_BYTES; do
+            echo "${v} = ${!v:-}"
+        done
+    } > "${dir}/meta.txt"
+}
+
+# Hängt eine Zeile an eine Index-CSV; legt sie mit Header an, falls neu (nie
+# überschrieben). Args: <indexfile> <header> <row>
+history_append() {
+    local f="$1" header="$2" row="$3"
+    mkdir -p "$(dirname "$f")"
+    [[ -f "$f" ]] || echo "${header}" > "$f"
+    echo "${row}" >> "$f"
+}

@@ -9,7 +9,10 @@
 #   5. Aggregation: Mediane + Delta -> data/<ts>/ und poc_summary.csv
 #
 # Nutzung:
-#   ./run_experiment.sh [--config DATEI] [--deploy-only] [--install] [--no-deploy]
+#   ./run_experiment.sh [--config DATEI] [--label TEXT] [--deploy-only] [--install] [--no-deploy]
+#
+# --label kennzeichnet den Lauf in Verzeichnisname, meta.txt und Historie-Index
+# (z. B. "determ" / "nodeterm" für den BIOS-Determinismus-Vergleich).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,9 +24,11 @@ CONFIG_FILE="${SCRIPT_DIR}/config.env"
 DO_DEPLOY=1
 DEPLOY_ONLY=0
 DO_INSTALL=0
+LABEL=""                          # frei wählbar (z. B. Determinismus-Zustand)
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --config)      CONFIG_FILE="$2"; shift 2 ;;
+        --label)       LABEL="$2"; shift 2 ;;
         --deploy-only) DEPLOY_ONLY=1; shift ;;
         --no-deploy)   DO_DEPLOY=0; shift ;;
         --install)     DO_INSTALL=1; shift ;;
@@ -31,6 +36,7 @@ while [[ $# -gt 0 ]]; do
         *)             die "Unbekanntes Argument: $1" ;;
     esac
 done
+PROFILE="$(basename "${CONFIG_FILE}" .env)"   # smoke|config|demo
 
 [[ -f "${CONFIG_FILE}" ]] || die "Konfiguration nicht gefunden: ${CONFIG_FILE}"
 # shellcheck source=config.env
@@ -84,7 +90,8 @@ if [[ "${DEPLOY_ONLY}" -eq 1 ]]; then
 fi
 
 TS="$(date +%Y%m%d_%H%M%S)"
-DATA_DIR="${SCRIPT_DIR}/results/data/${TS}"
+RUN_ID="${TS}_${PROFILE}${LABEL:+_${LABEL}}"   # sprechend: <ts>_<profil>[_<label>]
+DATA_DIR="${SCRIPT_DIR}/results/data/${RUN_ID}"
 mkdir -p "${DATA_DIR}"
 log "Datenverzeichnis: ${DATA_DIR}"
 
@@ -122,7 +129,15 @@ SUMMARY="${DATA_DIR}/summary.csv"
 
 cp "${SUMMARY}" "${SCRIPT_DIR}/results/poc_summary.csv"
 
+# --- Metadaten + Historie (nie überschrieben) -------------------------------
+DET="$(host_determinism)"; IFS=';' read -r DET_GOV DET_TURBO DET_CST <<< "${DET}"
+write_run_meta "${DATA_DIR}" "poc" "${PROFILE}" "${LABEL}" "${DET}"
+history_append "${SCRIPT_DIR}/results/history/poc_runs.csv" \
+    "timestamp;label;profile;git;repeats;det_gov;det_no_turbo;det_max_cstate;cpu_delta;mem_delta;iops_delta;lat_delta;datadir" \
+    "${TS};${LABEL};${PROFILE};$(run_git_commit);${REPEATS};${DET_GOV};${DET_TURBO};${DET_CST};$(delta_pct "${B[2]}" "${N[2]}");$(delta_pct "${B[3]}" "${N[3]}");$(delta_pct "${B[4]}" "${N[4]}");$(delta_pct "${B[5]}" "${N[5]}");results/data/${RUN_ID}"
+
 log "Fertig. Ergebnis:"
 cat "${SUMMARY}" >&2
 log "Roh- und Aggregatdaten unter: ${DATA_DIR}"
 log "Paper-Tabelle aktualisiert: ${SCRIPT_DIR}/results/poc_summary.csv"
+log "Historie ergänzt: ${SCRIPT_DIR}/results/history/poc_runs.csv"

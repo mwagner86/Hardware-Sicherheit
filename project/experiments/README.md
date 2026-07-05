@@ -20,10 +20,14 @@ experiments/
 ├── roles/                # werden auf die GÄSTE deployed und dort ausgeführt
 │   ├── victim_benchmark.sh   # Opfer: sysbench (cpu+mem) + fio
 │   └── attacker_load.sh      # Angreifer: stress-ng cache(L3)+hdd
-├── results/              # ERGEBNISSE
-│   ├── poc_summary.csv       # PoC-Aggregat (Paper-Tabelle) — getrackt, Platzhalter
-│   ├── fallback_summary.csv  # Fallback-Aggregat (Paper-Diagramm) — getrackt, Platzhalter
-│   └── data/                 # Rohdaten + Gast-Logs je Lauf (gitignored)
+├── results/              # ERGEBNISSE (Historie: ../notes/Ergebnis-Historie.md)
+│   ├── poc_summary.csv       # kanonisches PoC-Aggregat (Paper-Tabelle) — getrackt, Platzhalter
+│   ├── fallback_summary.csv  # kanonisches Fallback-Aggregat (Paper-Diagramm) — getrackt, Platzhalter
+│   ├── history/              # append-only Vergleichs-Index je Lauf — getrackt
+│   │   ├── poc_runs.csv
+│   │   └── fallback_runs.csv
+│   └── data/<TS>_<profil>[_<label>]/   # je Lauf: summary.csv + meta.txt (getrackt),
+│                                       #          *_raw.csv + *.log (gitignored)
 └── legacy/               # eingefroren, NUR für das abgegebene Exposé
     ├── summary.csv           # Dummy-CSV, die expose_hardware_security.tex liest
     └── generate_dummy_data.sh
@@ -100,7 +104,11 @@ Fällen konstant.
 
 Die beiden `results/`-Aggregate sind mit **Platzhalterwerten** vorbelegt und
 werden **getrackt** (das Paper liest sie zur Compile-Zeit). Echte Messläufe
-überschreiben sie; die Rohdaten unter `results/data/` sind gitignored.
+überschreiben sie. Zusätzlich historisiert jeder Lauf nach
+`results/data/<TS>_<profil>[_<label>]/` (`summary.csv` + `meta.txt` getrackt,
+Rohdaten `*_raw.csv`/`*.log` gitignored) und ergänzt den Vergleichs-Index unter
+`results/history/`. Läufe per **`--label`** kennzeichnen (`nodeterm`/`determ`);
+Details: [`../notes/Ergebnis-Historie.md`](../notes/Ergebnis-Historie.md).
 
 ## Host-Determinismus (zwingend, host-seitig)
 

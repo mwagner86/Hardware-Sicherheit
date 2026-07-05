@@ -172,6 +172,17 @@ Aggregation = **Median** über `REPEATS` Läufe. Alle Skripte: `bash -n` + `shel
 Beide `results/`-Aggregate sind mit **Platzhalterwerten** vorbelegt und werden
 getrackt (Paper liest sie zur Compile-Zeit); echte Läufe überschreiben sie.
 
+**Ergebnis-Historie (Methodik: `project/notes/Ergebnis-Historie.md`):** Die
+kanonischen `*_summary.csv` bleiben der „aktuelle" Stand fürs Paper. Daneben
+historisiert **jeder Lauf** unter `results/data/<TS>_<profil>[_<label>]/` mit
+`summary.csv` + selbsterklärender `meta.txt` (Determinismus-Snapshot vom Host:
+governor/no_turbo/max_cstate, git-Commit, Parameter). Append-only Vergleichs-Index:
+`results/history/{poc,fallback}_runs.csv`. Neu: **`--label TEXT`** (beide Run-Skripte)
+kennzeichnet die Bedingung — Konvention `nodeterm`/`determ` für den
+BIOS-Determinismus-Vergleich (Smoke: kein Label). `results/.gitignore` trackt
+Aggregate/meta/Index, ignoriert Rohdaten (`*_raw.csv`, `*.log`). Determinismus-
+Snapshot braucht `HOST_HOST` in der `*.env` (nn_experiment-Key auch auf dem Host).
+
 **Diagramm-Design (entschieden):** gruppierte Balken, Baseline vs. Noisy Neighbor,
 ein Diagramm je Metrik. Mock: `assets/mock_fallback.{tex,csv,png}`.
 
