@@ -9,18 +9,23 @@ Orchestrierungs-Infrastruktur.
 
 ## Methodik
 
-Zweistufiger Ansatz zur Bewertung der Hardware-Isolation:
+Im Zentrum steht der **Noisy-Neighbor-Effekt** selbst: die Arbeit behandelt
+konkret die aktive Ressourcen-Interferenz. Reine Benchmarks **ohne** diesen
+Effekt (Paradigmen-Leistungsvergleich) treten dahinter zurück.
 
-1. **PoC (primär):** Angreifer- und Opfer-Gast werden host-seitig per
-   CPU-Affinity auf **denselben physischen P-Core** gepinnt. Der Angreifer fährt
-   mit `stress-ng` eine deterministische Störlast (L3-Cache-Eviction + I/O), das
-   Opfer misst parallel mit `sysbench` (CPU/RAM) und `fio` (IOPS/Latenz). Als
+1. **PoC (primär, erfolgreich):** Angreifer- und Opfer-Gast werden host-seitig
+   per CPU-Affinity auf **denselben physischen P-Core** gepinnt. Der Angreifer
+   fährt mit `stress-ng` eine deterministische Störlast (L3-Cache-Eviction + I/O),
+   das Opfer misst parallel mit `sysbench` (CPU/RAM) und `fio` (IOPS/Latenz). Als
    PoC-Opfer dient die **KVM**-Instanz; das QEMU-Opfer ist nicht PoC-tauglich
-   (Emulation verschluckt den Effekt).
-2. **Fallback:** Vergleichendes Benchmarking der drei Virtualisierungs-Paradigmen
-   — Emulation (**QEMU**, `--kvm 0`), Para-Virtualisierung (**LXC**) und
-   Hardware-Virtualisierung (**KVM**, `--cpu host`) — **sequenziell** unter
-   identischer, konstanter Angreifer-Störlast.
+   (Emulation verschluckt den Effekt). Der Effekt ist eindeutig messbar — der
+   erste echte Lauf zeigt IOPS −48 % und p95-Latenz +407 % unter Störlast.
+2. **Paradigmen-Vergleich (zu den Akten gelegt):** Das vergleichende Benchmarking
+   der drei Virtualisierungs-Paradigmen — Emulation (**QEMU**, `--kvm 0`),
+   Para-Virtualisierung (**LXC**) und Hardware-Virtualisierung (**KVM**,
+   `--cpu host`) — war als Rückfallebene für den Fall gedacht, dass kein Effekt
+   messbar ist. Da der PoC eindeutig greift, wird es **nicht weiter verfolgt**;
+   die Suite (`run_fallback.sh`) bleibt lauffähig für eine optionale Einordnung.
 
 Vor jeder Messreihe wird der Host deterministisch konfiguriert (C-States
 deaktiviert, Turbo Boost aus, Governor `performance`); siehe
@@ -62,8 +67,9 @@ Getrennt nach **wo etwas läuft** (Details + Verzeichnisbaum in
 [project/experiments/README.md](project/experiments/README.md)):
 
 - **Control-Node** (Top-Level + `lib/`): `run_experiment.sh` (PoC →
-  `results/poc_summary.csv`), `run_fallback.sh` (Fallback, 3 Opfer sequenziell →
-  `results/fallback_summary.csv`), `config.env`/`smoke.env`, `lib/{common,orchestrator}.sh`.
+  `results/poc_summary.csv`), `run_fallback.sh` (Paradigmen-Vergleich, 3 Opfer
+  sequenziell → `results/fallback_summary.csv`; zu den Akten gelegt, s. Methodik),
+  `config.env`/`smoke.env`, `lib/{common,orchestrator}.sh`.
 - **`roles/`** (auf die Gäste deployed): `victim_benchmark.sh` (Opfer:
   `sysbench`+`fio`), `attacker_load.sh` (Angreifer: `stress-ng`-Störlast).
 - **`results/`**: Aggregat-CSVs (getrackt, Platzhalter) + `data/` (Rohdaten, gitignored).

@@ -106,10 +106,12 @@ Das finale Paper (`main.tex`) liest stattdessen `results/poc_summary.csv` (s. u.
 
 ## Methodik
 
-**Zweistufiger Ansatz:**
+**Fokus: der Noisy-Neighbor-Effekt (PoC).** Das Paper behandelt konkret den
+aktiven Interferenz-Effekt; reine Benchmarks **ohne** diesen Effekt treten in den
+Hintergrund.
 
-1. **PoC (primär):** Zwei Debian-Instanzen (Attacker & Victim) per CPU-Pinning auf denselben physischen P-Core fixiert. Attacker läuft `stress-ng --cache 2 --cache-level 3`, Victim misst mit `sysbench` und `fio`.
-2. **Fallback:** Falls keine messbaren Interferenzen entstehen — systematischer Leistungsvergleich QEMU (Emulation) vs. LXC (Para-Virtualisierung) vs. KVM (Hardware-Virtualisierung).
+1. **PoC (primär, erfolgreich):** Zwei Debian-Instanzen (Attacker & Victim) per CPU-Pinning auf denselben physischen P-Core fixiert. Attacker läuft `stress-ng --cache 2 --cache-level 3`, Victim misst mit `sysbench` und `fio`. Der Effekt ist eindeutig messbar (erster echter Lauf `nodeterm`: CPU −21 %, RAM −45 %, IOPS −48 %, p95-Latenz +407 %).
+2. **~~Fallback~~ (zu den Akten gelegt):** Der systematische Paradigmen-Leistungsvergleich QEMU/LXC/KVM war als Rückfallebene gedacht, falls kein Effekt messbar wäre. Da der PoC greift, wird er **nicht weiter verfolgt** — höchstens ergänzende Einordnung, nicht Kern der Arbeit. Code (`run_fallback.sh`) bleibt lauffähig.
 
 **Host-Konfiguration (zwingend vor Messungen):**
 
