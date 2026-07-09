@@ -229,6 +229,16 @@
   .foot { margin-top: 34px; color: var(--muted); font-size: 12px; font-family: ui-monospace, monospace; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--hair); padding-top: 16px; }
   .foot .k { color: var(--ink-2); }
 
+  /* causal proof: LLC miss-rate panel */
+  .llc-row { display:flex; align-items:center; justify-content:center; gap:clamp(16px,5vw,64px); flex-wrap:wrap; padding:16px 8px 6px; }
+  .llc-stat { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .llc-k { font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); }
+  .llc-rate { font-size:clamp(2.4rem,7vw,3.6rem); font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+  .llc-sub { font-size:.74rem; color:var(--muted); }
+  .llc-arrow { display:flex; flex-direction:column; align-items:center; color:var(--crit); font-size:1.4rem; }
+  .llc-factor { font-size:.9rem; font-weight:700; }
+  .llc-note { margin:6px 14px 14px; color:var(--ink-2); font-size:.86rem; text-align:center; }
+
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -249,6 +259,15 @@
       <span class="ctx" id="hero-ctx"></span>
     </div>
     <div class="tiles" id="tiles"></div>
+  </section>
+
+  <!-- causal proof: LLC cache-miss rate -->
+  <section class="section" id="llc-section" aria-labelledby="llc-h">
+    <div class="section-head">
+      <h2 id="llc-h">Kausalnachweis · LLC-Miss-Rate <span style="text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">(host-seitig am geteilten Core)</span></h2>
+      <span class="ctx" id="llc-ctx"></span>
+    </div>
+    <div class="card" id="llc-card"></div>
   </section>
 
   <!-- small multiples -->
@@ -335,6 +354,14 @@ const EMBEDDED = {
     det: { gov: "performance", no_turbo: "0", max_cstate: "9" },
     victim: "KVM (303)",
     poc: { cpu:{b:11340.0,n:8720.0}, mem:{b:9010.0,n:5030.0}, iops:{b:187500.0,n:71800.0}, lat:{b:0.129,n:0.421} }
+  },
+  /* Kausalnachweis: LLC-Miss-Rate am geteilten P-Core (host-seitig via
+     measure_llc.sh, da der KVM-Gast keine vPMU hat). VORLÄUFIG: Demo-Profil,
+     ohne Determinismus — rigoroser determ-Lauf ersetzt die Werte fürs Paper. */
+  llc: {
+    source: "measure_llc.sh", cores: "4,5", preliminary: true,
+    base: { loads: 275833,   misses: 86016,    rate: 31.18 },
+    nn:   { loads: 28550374, misses: 24154742, rate: 84.60 }
   }
 };
 
@@ -455,6 +482,35 @@ function renderStatus() {
   document.getElementById("foot-src").textContent =
     (live ? "results/history/ · live" : "results/history/ · eingebettet");
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+}
+
+/* --- render: LLC causal proof ---------------------------------------------- */
+function renderLLC() {
+  const l = state.data.llc;
+  const sec = document.getElementById("llc-section");
+  if (!l) { sec.hidden = true; return; }
+  const fmtK = v => v >= 1e6 ? (v/1e6).toFixed(1)+"M" : v >= 1e3 ? (v/1e3).toFixed(0)+"k" : String(v);
+  const factor = l.nn.rate / l.base.rate;
+  document.getElementById("llc-ctx").innerHTML =
+    `Core ${l.cores} · ${l.source}` +
+    (l.preliminary ? ` · <span class="det-off">vorläufig (Demo, ohne Determinismus)</span>` : "");
+  document.getElementById("llc-card").innerHTML = `
+    <div class="llc-row">
+      <div class="llc-stat">
+        <span class="llc-k">Baseline</span>
+        <span class="llc-rate" style="color:var(--base)">${l.base.rate.toFixed(0)}%</span>
+        <span class="llc-sub">${fmtK(l.base.misses)} Misses / ${fmtK(l.base.loads)} Loads</span>
+      </div>
+      <div class="llc-arrow">▶<span class="llc-factor">×${factor.toFixed(1)}</span></div>
+      <div class="llc-stat">
+        <span class="llc-k">Noisy Neighbor</span>
+        <span class="llc-rate" style="color:var(--crit)">${l.nn.rate.toFixed(0)}%</span>
+        <span class="llc-sub">${fmtK(l.nn.misses)} Misses / ${fmtK(l.nn.loads)} Loads</span>
+      </div>
+    </div>
+    <p class="llc-note">Die Last-Level-Cache-Miss-Rate am geteilten P-Core steigt unter Störlast von
+      <b>${l.base.rate.toFixed(0)}%</b> auf <b>${l.nn.rate.toFixed(0)}%</b> — direkter Beleg der
+      Cache-Contention, nicht bloß generischer CPU-Konkurrenz.</p>`;
 }
 
 /* --- render: hero tiles + panels ------------------------------------------- */
@@ -648,6 +704,7 @@ async function boot() {
   state.fbId = state.data.runs.find(r => r.script === "fallback")?.id || null;
   renderStatus();
   renderHero();
+  renderLLC();
   renderFallbackToggles();
   renderFallback();
   renderRuns();

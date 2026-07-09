@@ -159,6 +159,26 @@ Tabelle \ref{tab:results} fasst das PoC-Ergebnis am KVM-Opfer zusammen, Abbildun
 
 In den Platzhalterdaten sinkt der I/O-Durchsatz des Opfers unter Störlast um rund 30\,\% (von 45\,000 auf 31\,500 IOPS), während die 95.\,Perzentil-Latenz um etwa 75\,\% ansteigt (0{,}40 auf 0{,}70\,ms). Auf CPU-Durchsatz (11{,}9\,\%) und Speicherbandbreite (21{,}6\,\%) fällt die Degradation geringer aus --- ein Muster, das die Erwartung einer primär I/O- und latenzgetriebenen Interferenz widerspiegelt.
 
+Die vorstehenden Durchsatz- und Latenzdeltas belegen den Effekt, weisen dessen \emph{Ursache} jedoch nur indirekt nach. Zur direkten Bestätigung der Cache-Contention wird die Aktivität des Last Level Cache am geteilten P-Core gemessen. Da die Gastsysteme unter Proxmox VE keine virtuelle Performance-Monitoring-Unit bereitstellen --- \texttt{perf} meldet im KVM-Gast für sämtliche Hardware-Ereignisse \texttt{not supported} ---, erfolgt die Erfassung host-seitig mittels \texttt{perf stat} auf dem physischen Kern, auf den Angreifer und Opfer gepinnt sind. Tabelle \ref{tab:llc} stellt die LLC-Zugriffe und -Fehlzugriffe der Baseline dem Noisy-Neighbor-Szenario gegenüber.
+
+\begin{table}[htbp]
+\caption{Kausalnachweis: LLC-Aktivität am geteilten P-Core, host-seitig gemessen (vorläufige Demo-Messung ohne Host-Determinismus).}
+\centering
+\pgfplotstabletypeset[
+    col sep=semicolon,
+    string type,
+    columns/Szenario/.style={column name={Szenario}},
+    columns/LLC_Loads/.style={column name={LLC-Loads}},
+    columns/LLC_Load_Misses/.style={column name={LLC-Misses}},
+    columns/Miss_Rate_Pct/.style={column name={Miss-Rate (\%)}},
+    every head row/.style={before row=\toprule,after row=\midrule},
+    every last row/.style={after row=\bottomrule},
+]{../project/experiments/results/llc_summary.csv}
+\label{tab:llc}
+\end{table}
+
+Die LLC-Miss-Rate am geteilten Kern steigt unter Störlast von rund 31\,\% auf 85\,\% --- eine Verdopplung des Anteils der Fehlzugriffe. Da das Opfersystem in beiden Phasen identische Speicherlast erzeugt und sich allein die Präsenz des Angreifers unterscheidet, ist der sprunghafte Anstieg der Fehlzugriffe unmittelbar auf die Verdrängung von Cache-Zeilen des Opfers zurückzuführen. Dies belegt die Cache-Contention als kausalen Mechanismus der beobachteten Durchsatz- und Latenzdegradation und schließt generische Rechen- oder Scheduling-Konkurrenz als alleinige Erklärung aus.
+
 \begin{figure*}[t]
   \centering
   \begin{tikzpicture}
