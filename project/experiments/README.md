@@ -31,6 +31,7 @@ gepinnt (siehe [`../notes/PoC.md`](../notes/PoC.md)).
 experiments/
 ├── run_experiment.sh     # Control-Node: PoC-Orchestrator     → results/poc_summary.csv
 ├── run_fallback.sh       # Control-Node: Fallback-Orchestrator → results/fallback_summary.csv
+├── measure_llc.sh        # Control-Node: host-seitige LLC-Miss-Messung → results/llc_summary.csv
 ├── config.env            # SSH-Ziele + Versuchsparameter (voller Lauf)
 ├── smoke.env             # dito, verkürzt — reine Funktionsprüfung (../notes/Smoke-Test.md)
 ├── demo.env              # dito, minimal (REPEATS=1, nur KVM) — Live-Demo im Vortrag
@@ -77,6 +78,11 @@ selbst. Voraussetzung: SSH-Key-Auth zu allen Gästen (kein Passwort-Prompt).
 ./run_experiment.sh --no-deploy        # Skripte schon ausgerollt
 ./run_experiment.sh --config smoke.env # Smoke-Test-Profil (kurze Läufe)
 ./run_experiment.sh --config demo.env  # Live-Demo: REPEATS=1, nur KVM (~30–45 s)
+
+# Kausalnachweis Cache-Contention: LLC-Miss-Rate am geteilten Core (host-seitig,
+# da der KVM-Gast keine vPMU hat). Erststart mit --install (perf auf dem Host).
+./measure_llc.sh --install             # perf auf dem Host installieren
+./measure_llc.sh --label determ        # Baseline vs. NN → results/llc_summary.csv
 ```
 
 Welches Opfer der PoC nutzt, steht in `VICTIM_HOST`; die drei Fallback-Opfer in
@@ -120,6 +126,7 @@ Fällen konstant.
 | --- | --- | --- | --- |
 | `results/poc_summary.csv` | `run_experiment.sh` | `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms` | `paper/main.tex` (Tabelle) |
 | `results/fallback_summary.csv` | `run_fallback.sh` | `Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN` | gruppiertes Balkendiagramm (vgl. `assets/mock_fallback.tex`) |
+| `results/llc_summary.csv` | `measure_llc.sh` | `Szenario;LLC_Loads;LLC_Load_Misses;Miss_Rate_Pct` | Kausalnachweis (host-seitig, fürs Paper vorgesehen) |
 | `legacy/summary.csv` | `legacy/generate_dummy_data.sh` | `Virtualisierung;Baseline;NoisyNeighbor` | **abgegebenes** Exposé — eingefroren |
 
 Die beiden `results/`-Aggregate sind mit **Platzhalterwerten** vorbelegt und

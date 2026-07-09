@@ -87,6 +87,25 @@ Die folgenden Schritte erzwingen eine deterministische Hardware-Basis durch Deak
    
 3. Führe den `sysbench`-Befehl auf dem Victim-System erneut aus, während die Störlast aktiv ist. Das resultierende Delta der Metriken (Operations pro Sekunde, Latenz) quantifiziert die Interferenz.
 
+## 5b. Kausalnachweis der Cache-Contention (LLC-Miss-Rate, host-seitig)
+
+Die Durchsatz-/Latenz-Deltas aus Abschnitt 5 belegen den Effekt, aber nur *indirekt* — sie zeigen nicht, dass wirklich der **Last Level Cache** die Ursache ist (und nicht generische CPU-/Scheduling-Konkurrenz). Dieser Nachweis erfolgt über die LLC-Miss-Rate direkt am geteilten Core.
+
+**Zwingender Befund (Machbarkeit):** Im **KVM-Gast ist keine vPMU verfügbar** — `perf stat` liefert dort durchweg `<not supported>`, sogar für `cycles`/`instructions` (Proxmox reicht dem VM standardmäßig keine Performance-Counter durch). Eine Messung *im* Opfer ist damit unmöglich. Gemessen wird deshalb **auf dem Proxmox-Host** mit `perf stat -C` auf dem physischen P-Core, auf den Angreifer und Opfer gepinnt sind — das erfasst die Contention direkt an der geteilten Ressource.
+
+Automatisiert im Skript [`../experiments/measure_llc.sh`](../experiments/measure_llc.sh) (Control-Node): das Opfer erzeugt in beiden Phasen identische Speicherlast, der Host misst je Phase `LLC-loads`/`LLC-load-misses`.
+
+```bash
+# einmalig: perf auf dem Host installieren
+./measure_llc.sh --config config.env --install
+# Messung (Baseline vs. Noisy Neighbor) → results/llc_summary.csv
+./measure_llc.sh --config config.env --label determ
+```
+
+Erster Demo-Lauf (kurzes Fenster, ohne Determinismus — **noch nicht** die Paper-Zahlen): LLC-Miss-Rate am geteilten Core **31 % → 85 %** unter Störlast (`LLC-load-misses` 86 k → 24,2 Mio.). Das ist der harte „es ist wirklich der Cache"-Beleg.
+
+> **Fürs Paper vorgesehen:** Diese host-seitige LLC-Messung soll als *Kausalnachweis* in die Hausarbeit aufgenommen werden (eigene kleine Tabelle/Absatz im Ergebnisteil, Datenquelle `results/llc_summary.csv`). Vor Übernahme ein rigoroser Lauf mit BIOS-Determinismus (`--label determ`) statt der Demo-Werte.
+
 ## 6. Wiederherstellung des Ursprungszustands
 
 Nach Abschluss der Datenerhebung muss die deterministische Fixierung des Hosts aufgehoben werden.

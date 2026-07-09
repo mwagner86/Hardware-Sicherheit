@@ -1,0 +1,4 @@
+Szenario;LLC_Loads;LLC_Load_Misses;Miss_Rate_Pct
+Baseline;275833;86016;31.18
+NoisyNeighbor;28550374;24154742;84.60
+Delta-Prozent;10250.60;27981.68;171.33
