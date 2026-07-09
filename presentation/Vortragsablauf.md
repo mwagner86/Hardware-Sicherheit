@@ -8,6 +8,18 @@ Verzeichnis [`project/experiments/`](../project/experiments/).
 Doppelklick im Browser öffnen (offline, keine Abhängigkeit). Zeigt den echten PoC
 + Paradigmen-Vergleich; Button **„＋ Live-Lauf einblenden"** für die Demo.
 
+> **⚠️ Dashboard ≠ Live-Lauf — die beiden sind NICHT gekoppelt.** Das
+> `dashboard.html` ist bewusst statisch/eingebettet (offline, Doppelklick, kein
+> Server). Der Button **„＋ Live-Lauf einblenden"** blendet einen **fest
+> vorverdrahteten** Lauf ein (`pending`-Block in `dashboard.html`) — hardcodierte
+> Zahlen, live ist daran nur der **Zeitstempel** (= jetzt). Die echte
+> CSV-Anbindung (`fetch('/api/runs')`) ist absichtlich auskommentiert (Variante B).
+> **Konsequenz:** Der Terminal-Lauf erzeugt **echte** Daten auf der Platte (CSV,
+> Historie, Datenverzeichnis) — der Dashboard-Button „updated" aber nur
+> **kosmetisch** und zeigt immer dieselben eingebetteten Demo-Werte, egal was der
+> Lauf tatsächlich gemessen hat. Fürs Publikum unsichtbar und legitim inszeniert;
+> nur du als Vortragende:r solltest wissen, dass sie nicht verkoppelt sind.
+
 ---
 
 ## 0. Zwei Datensorten — nicht verwechseln
@@ -49,6 +61,50 @@ for ip in 210 213; do ssh -o BatchMode=yes -o ConnectTimeout=5 \
 
 > Host-Determinismus ist für die Demo **nicht** nötig (die Live-Zahlen zählen
 > nicht). Der rigorose PoC lief bewusst „nodeterm" — das steht so im Dashboard.
+
+---
+
+## 1b. Rehearsal — manueller Probelauf mit Verifikation
+
+Wie der echte Demo-Lauf, nur dass du hinterher prüfst, dass wirklich Daten
+entstanden sind, und danach sauber zurücksetzt. Alles im
+`project/experiments/`-Verzeichnis.
+
+```bash
+cd project/experiments
+
+# 1) Erreichbarkeit (optional)
+for ip in 210 213; do ssh -o BatchMode=yes -o ConnectTimeout=5 \
+  -i ~/.ssh/nn_experiment -o IdentitiesOnly=yes root@192.168.178.$ip true \
+  && echo ".$ip ok" || echo ".$ip FEHLT"; done
+
+# 2) Der Live-Lauf (~30–45 s) — der eigentliche Demo-Befehl
+./run_experiment.sh --config demo.env --no-deploy
+
+# 3) Prüfen, dass ECHTE Daten entstanden sind (das echte "Update")
+cat results/poc_summary.csv                  # frisch überschrieben
+tail -n 2 results/history/poc_runs.csv       # neuer Historien-Eintrag
+ls -td results/data/*_demo* | head -1        # neues Datenverzeichnis
+```
+
+**Dashboard prüfen** (Browser): `dashboard.html` öffnen → Button **„＋ Live-Lauf
+einblenden"**. Neuer Lauf ploppt oben rein (Puls + Toast). Zeigt die
+**eingebetteten** Demo-Werte, nicht die aus Schritt 2 — siehe Warnung ganz oben.
+
+### Nach dem Rehearsal aufräumen
+
+Der Lauf verändert getrackte Dateien und legt ein neues Verzeichnis an. So setzt
+du sauber zurück (vom Repo-Root aus):
+
+```bash
+git checkout project/experiments/results/poc_summary.csv \
+             project/experiments/results/history/poc_runs.csv
+git clean -fd project/experiments/results/data/    # entfernt das Demo-Datenverzeichnis
+ssh -i ~/.ssh/nn_experiment root@192.168.178.210 'pgrep -a stress-ng'  # sollte leer sein
+```
+
+Willst du den Demo-Stand behalten, lass das Aufräumen weg — fürs Paper zählt der
+`config/nodeterm`-Lauf, nicht `poc_summary.csv`.
 
 ---
 
