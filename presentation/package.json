@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "slidev --open",
+    "dev:lan": "slidev --remote",
     "build": "slidev build --base ./",
     "export": "slidev export --output dist/Praesentation-Noisy-Neighbor.pdf"
   },
