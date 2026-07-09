@@ -94,12 +94,12 @@ einblenden"**. Neuer Lauf ploppt oben rein (Puls + Toast). Zeigt die
 ### Nach dem Rehearsal aufräumen
 
 Der Lauf verändert getrackte Dateien und legt ein neues Verzeichnis an. So setzt
-du sauber zurück (vom Repo-Root aus):
+du sauber zurück — direkt aus `project/experiments/` (wo du nach der Demo stehst;
+die Pfade sind relativ zu diesem Verzeichnis):
 
 ```bash
-git checkout project/experiments/results/poc_summary.csv \
-             project/experiments/results/history/poc_runs.csv
-git clean -fd project/experiments/results/data/    # entfernt das Demo-Datenverzeichnis
+git checkout results/poc_summary.csv results/history/poc_runs.csv
+git clean -fd results/data/                          # entfernt das Demo-Datenverzeichnis
 ssh -i ~/.ssh/nn_experiment root@192.168.178.210 'pgrep -a stress-ng'  # sollte leer sein
 ```
 
