@@ -81,7 +81,7 @@ for ip in 210 213; do ssh -o BatchMode=yes -o ConnectTimeout=5 \
 # 2) Der Live-Lauf (~30–45 s) — der eigentliche Demo-Befehl
 ./run_experiment.sh --config demo.env --no-deploy
 
-# 3) Prüfen, dass ECHTE Daten entstanden sind (das echte "Update")
+# 3) Prüfen, dass ECHTE Daten entstanden sind
 cat results/poc_summary.csv                  # frisch überschrieben
 tail -n 2 results/history/poc_runs.csv       # neuer Historien-Eintrag
 ls -td results/data/*_demo* | head -1        # neues Datenverzeichnis
