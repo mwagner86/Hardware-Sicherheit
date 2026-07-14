@@ -76,16 +76,18 @@ V Diskussion · VI Fazit. → Struktur in Deckung bringen:
 ### E. Betreuer-Feedback einarbeiten (Zwischenabgaben)
 Aus den benoteten Bewertungen (`project/notes/Bewertungen/`); Details in den
 Memories `paper-einleitung-revision`, `writing-style-guidance`, `expose-feedback`.
-- [ ] **Einleitung überarbeiten** (Schwerpunkt Schreibstil): gerügte Formulierungen
-      ersetzen (`main.tex:72,74` — noch alte Prosa mit „PoC"/„Rückfallebene");
-      „fundamentales Defizit", „manifestiert sich", „unautorisierte Degradation",
-      „Sättigung des LLC" → „Auslastung des LLC" usw.
-- [ ] **Höher abstrahieren:** konkrete Technologienamen aus der Einleitung nehmen
-      (Proxmox VE, Raptor Lake, RDT/CAT, QEMU/LXC/KVM) — gehören in Abschnitt III.
-- [ ] **Fallback-Framing** aus der Einleitung entfernen (Konzept ist obsolet, s. o.).
-- [ ] Schreibstil-Prinzipien auf **das gesamte Paper** anwenden (keine überhöhten
-      Adjektive/Floskeln, klare Kernaussage pro Satz).
+- [x] **Einleitung überarbeitet** (2026-07-14): alle gerügten Formulierungen
+      ersetzt („fundamentales Defizit", „erhebliches Gefährdungspotenzial",
+      „manifestiert sich", „unautorisierte Degradation", unklarer Messansatz-Satz,
+      „bereinigtes Fundament"); „Sättigung des LLC" entfernt. Baut grün (3 S.).
+- [x] **Höher abstrahiert:** konkrete Technologienamen aus der Einleitung entfernt
+      (Proxmox VE, Raptor Lake, RDT/CAT, QEMU/LXC/KVM, C-States/Turbo/Governor,
+      Debian, CPU-Affinity) — gehören in Abschnitt III.
+- [x] **Fallback-Framing** aus der Einleitung entfernt; Paradigmen-Vergleich jetzt
+      als integraler erster Teil dargestellt (Pflichtkern 3.4), NN als Aufbau darauf.
+- [x] „Noisy Neighbor" in der Einleitung **explizit** definiert (nicht in Klammern).
+- [ ] Schreibstil-Prinzipien auf **das restliche Paper** anwenden (keine überhöhten
+      Adjektive/Floskeln, klare Kernaussage pro Satz) — beim Schreiben von II/III/V/VI.
 - [ ] **DOIs** im Literaturverzeichnis ergänzen (wo möglich).
-- [ ] „Noisy Neighbor" **explizit einführen** (nicht nur beiläufig in Klammern).
 - [ ] Abb. 2 Datenlabels „1.2" statt „1,200" (Achse skaliert mit 10^4) → weniger
       Überlappung; ggf. mit `nodes near coords`-Entzerrung (Abschnitt B) zusammen.
