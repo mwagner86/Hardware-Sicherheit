@@ -3,7 +3,7 @@
 Ziel dieses Durchlaufs ist **ausschließlich die Funktionsprüfung** der Mess-Suite
 — SSH-Key-Auth, Deploy nach `REMOTE_DIR`, Benchmark-Aufruf auf den Gästen,
 fio/`jq`-Parsing, Median/Delta-Aggregation und das CSV-Schreiben. Er läuft
-**bewusst ohne** den Host-Determinismus aus [`PoC.md`](PoC.md) (C-States, Turbo,
+**bewusst ohne** den Host-Determinismus aus [`Interferenz-Experiment.md`](Interferenz-Experiment.md) (C-States, Turbo,
 Governor) und liefert daher **keine belastbaren Zahlen**.
 
 > **Reihenfolge:** erst hier die Mechanik grün bekommen → dann BIOS/Bootloader
@@ -12,7 +12,7 @@ Governor) und liefert daher **keine belastbaren Zahlen**.
 Profil: [`../experiments/smoke.env`](../experiments/smoke.env) (kurze Läufe,
 `REPEATS=2`, nur schnelle Opfer). Für die Live-Demo im Vortrag gibt es zusätzlich
 [`../experiments/demo.env`](../experiments/demo.env) (noch minimaler: `REPEATS=1`,
-nur KVM-Opfer, ~30–45 s; PoC-only via `run_experiment.sh`).
+nur KVM-Opfer, ~30–45 s; PoC-only via `run_interference.sh`).
 
 ---
 
@@ -51,13 +51,13 @@ Alles vom **Control-Node** aus, im Verzeichnis [`../experiments/`](../experiment
 cd project/experiments
 
 # (a) Einmalig: Werkzeuge auf den Gästen installieren + Skripte ausrollen
-./run_experiment.sh --config smoke.env --install --deploy-only
+./run_interference.sh --config smoke.env --install --deploy-only
 
 # (b) PoC-Mechanik prüfen (Angreifer 300 + KVM-Opfer 303)
-./run_experiment.sh --config smoke.env
+./run_interference.sh --config smoke.env
 
 # (c) Fallback-Mechanik prüfen (LXC 302 + KVM 303, sequenziell)
-./run_fallback.sh --config smoke.env
+./run_paradigms.sh --config smoke.env
 ```
 
 Erwartete Dauer: jeweils ~1–2 min (mit den Kurz-Parametern aus `smoke.env`).
@@ -75,10 +75,10 @@ das Parsing funktioniert.)
 echo "exit: $?"            # muss 0 sein
 
 # PoC: 3 Zeilen (Baseline / NoisyNeighbor / Delta-Prozent), keine leeren Felder
-cat results/poc_summary.csv
+cat results/interference_summary.csv
 
 # Fallback: Header + je eine Zeile pro Opfer (LXC, KVM)
-cat results/fallback_summary.csv
+cat results/paradigms_summary.csv
 
 # Rohdaten je Phase: Header + REPEATS(=2) Datenzeilen
 ls -1 results/data/*/ | tail
@@ -90,8 +90,8 @@ Konkret prüfen:
 | --- | --- |
 | Exit-Code aller drei Aufrufe | `0` |
 | `results/data/<ts>/baseline_raw.csv` / `noisy_raw.csv` | Header + **2** Datenzeilen, alle Spalten gefüllt |
-| `results/poc_summary.csv` | 3 Zeilen, Schema `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms` |
-| `results/fallback_summary.csv` | Header + 2 Opfer-Zeilen, Schema `Virtualisierung;CPU_Base;CPU_NN;...;Lat_NN` |
+| `results/interference_summary.csv` | 3 Zeilen, Schema `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms` |
+| `results/paradigms_summary.csv` | Header + 2 Opfer-Zeilen, Schema `Virtualisierung;CPU_Base;CPU_NN;...;Lat_NN` |
 | Werte | numerisch, **kein** `NaN`, IOPS/Events > 0 |
 
 > Die absoluten Zahlen und das `Delta-Prozent` sind hier **bedeutungslos** (ohne
@@ -110,7 +110,7 @@ Konkret prüfen:
   Sinn des Smoke-Tests: bricht fio dort ab, fällt es hier auf — *bevor* du Stunden
   in den echten Lauf steckst. (Auf der KVM-VM 303 unkritisch.) **Verifiziert am
   2026-07-05: auf diesem ZFS-Backend läuft fio im LXC sauber durch** (s. Abschnitt 6).
-- **Governor-Warnung im Preflight** ([`run_experiment.sh:70`](../experiments/run_experiment.sh#L70))
+- **Governor-Warnung im Preflight** ([`run_interference.sh:70`](../experiments/run_interference.sh#L70))
   ist hier **erwartet und harmlos** — der Determinismus steht ja noch nicht. Sie
   `die`t nicht.
 - **Restlast des Angreifers.** `attacker_stop` ist als EXIT-Trap idempotent
@@ -123,7 +123,7 @@ Konkret prüfen:
 
 Nach grünem Smoke-Test:
 
-1. Host-Determinismus herstellen — [`PoC.md`](PoC.md) Abschnitt 1–2 (GRUB-Kernel-
+1. Host-Determinismus herstellen — [`Interferenz-Experiment.md`](Interferenz-Experiment.md) Abschnitt 1–2 (GRUB-Kernel-
    cmdline + `reboot`, danach Turbo aus / Governor `performance`). Der Reboot
    stoppt die Gäste kurz; ihre Definitionen überleben — anschließend wieder
    starten (bzw. Autostart).
@@ -135,11 +135,11 @@ Nach grünem Smoke-Test:
 
    ```bash
    # vor dem Determinismus (Baseline):
-   ./run_experiment.sh --label nodeterm    # PoC  -> results/poc_summary.csv + Historie
-   ./run_fallback.sh   --label nodeterm    # alle drei Opfer -> fallback_summary.csv + Historie
+   ./run_interference.sh --label nodeterm    # PoC  -> results/interference_summary.csv + Historie
+   ./run_paradigms.sh   --label nodeterm    # alle drei Opfer -> paradigms_summary.csv + Historie
    # nach dem Determinismus:
-   ./run_experiment.sh --label determ
-   ./run_fallback.sh   --label determ
+   ./run_interference.sh --label determ
+   ./run_paradigms.sh   --label determ
    ```
 
 `smoke.env` bleibt als Profil liegen und kann jederzeit erneut für reine
@@ -162,7 +162,7 @@ Mechanik-Checks genutzt werden.
   `no_turbo=0`, `max_cstate=9` → **ohne** BIOS/Host-Determinismus (erwartet;
   in `meta.txt`/Historie festgehalten).
 - **Ergebnisse** liegen in der Historie (nicht als Messung zu werten — Smoke):
-  `results/history/poc_runs.csv`, `results/history/fallback_runs.csv`; Rohdaten
+  `results/history/interference_runs.csv`, `results/history/paradigms_runs.csv`; Rohdaten
   unter `results/data/<ts>_smoke/` bzw. `fallback_<ts>_smoke/`.
 
 Nur zur Mechanik-Illustration (verrauscht, ohne Determinismus): PoC-IOPS unter

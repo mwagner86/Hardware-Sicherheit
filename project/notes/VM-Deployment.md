@@ -2,7 +2,7 @@
 
 Dieses Dokument beschreibt Schritt für Schritt, wie die Gastsysteme für den
 Noisy-Neighbor-PoC und die Fallback-Strategie unter **Proxmox VE** (Intel Raptor
-Lake) aufgesetzt werden. Es ergänzt [`PoC.md`](PoC.md) (Host-Determinismus) und
+Lake) aufgesetzt werden. Es ergänzt [`Interferenz-Experiment.md`](Interferenz-Experiment.md) (Host-Determinismus) und
 die Experiment-Suite unter [`../experiments/`](../experiments/).
 
 ---
@@ -52,7 +52,7 @@ Störquelle** — saubere Variation einer einzigen Variable (Opfer-Virtualisieru
 ## 1. Voraussetzungen auf dem Host
 
 1. **Host-Determinismus** ist konfiguriert (C-States aus, Turbo aus, Governor
-   `performance`) — siehe [`PoC.md`](PoC.md), Abschnitt 1–2. Zwingend vor jeder
+   `performance`) — siehe [`Interferenz-Experiment.md`](Interferenz-Experiment.md), Abschnitt 1–2. Zwingend vor jeder
    Messung.
 
 2. **P-Core identifizieren.** Auf der hybriden Raptor-Lake-Architektur haben nur
@@ -211,7 +211,7 @@ pct start 300
 > **Strikteres SMT-Co-Pinning (optional):** Angreifer auf Thread `4`, aktives
 > Opfer auf Thread `5` desselben physischen Kerns legen (`cpuset.cpus: 4` bzw.
 > `--affinity 5`). Erzwingt echte gleichzeitige Ausführung auf einem Kern statt
-> Zeitscheiben. Für den Einstieg genügt `4,5` für alle (gemäß [`PoC.md`](PoC.md)).
+> Zeitscheiben. Für den Einstieg genügt `4,5` für alle (gemäß [`Interferenz-Experiment.md`](Interferenz-Experiment.md)).
 
 ---
 
@@ -270,10 +270,10 @@ welchen logischen CPUs (`PSR`) die Threads tatsächlich laufen.
 ## 9. Anschluss an die Experimente
 
 - **PoC:** `ATTACKER_HOST=`192.168.178.210, `VICTIM_HOST=`192.168.178.213 (KVM,
-  303) in `config.env`, dann `./run_experiment.sh --install --deploy-only`
-  (einmalig), danach `./run_experiment.sh` → `results/poc_summary.csv`.
-- **Fallback:** `./run_fallback.sh` testet die drei Opfer (301/302/303)
-  sequenziell unter konstanter Störlast → `results/fallback_summary.csv`
+  303) in `config.env`, dann `./run_interference.sh --install --deploy-only`
+  (einmalig), danach `./run_interference.sh` → `results/interference_summary.csv`.
+- **Fallback:** `./run_paradigms.sh` testet die drei Opfer (301/302/303)
+  sequenziell unter konstanter Störlast → `results/paradigms_summary.csv`
   (Schema `Virtualisierung;CPU_Base;CPU_NN;...;Lat_NN`).
 
 ---
@@ -286,5 +286,5 @@ qm destroy 301 --purge;  qm destroy 303 --purge
 pct destroy 300 --purge; pct destroy 302 --purge
 ```
 
-Anschließend Host-Determinismus zurücksetzen — siehe [`PoC.md`](PoC.md),
+Anschließend Host-Determinismus zurücksetzen — siehe [`Interferenz-Experiment.md`](Interferenz-Experiment.md),
 Abschnitt 6.

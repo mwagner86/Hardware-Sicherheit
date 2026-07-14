@@ -83,7 +83,7 @@ Der Build nutzt `latexmk -pdf -interaction=nonstopmode -file-line-error -synctex
 
 * **Bilder:** `\graphicspath{{../assets/}}` — alle Grafiken liegen in `/assets/`
 * **Bibliographie:** `\bibliography{../project/expose/references_expose}` — die `.bib`-Datei liegt im Exposé-Verzeichnis
-* **CSV-Daten:** `pgfplotstable` liest `../project/experiments/results/poc_summary.csv` direkt zur Kompilierzeit und rendert daraus die Ergebnis-Tabelle. (Das abgegebene Exposé liest separat `legacy/summary.csv`.)
+* **CSV-Daten:** `pgfplotstable` liest `../project/experiments/results/interference_summary.csv` direkt zur Kompilierzeit und rendert daraus die Ergebnis-Tabelle. (Das abgegebene Exposé liest separat `legacy/summary.csv`.)
 
 ### CSV-Datenformat (`project/experiments/legacy/summary.csv`)
 
@@ -97,7 +97,7 @@ KVM;45000;31500
 LXC;52000;20800
 ```
 
-Das finale Paper (`main.tex`) liest stattdessen `results/poc_summary.csv` (s. u.).
+Das finale Paper (`main.tex`) liest stattdessen `results/interference_summary.csv` (s. u.).
 
 ### Bibliographie-Hierarchie
 
@@ -106,12 +106,12 @@ Das finale Paper (`main.tex`) liest stattdessen `results/poc_summary.csv` (s. u.
 
 ## Methodik
 
-**Fokus: der Noisy-Neighbor-Effekt (PoC).** Das Paper behandelt konkret den
+**Fokus: der Noisy-Neighbor-Effekt (Interferenz-Experiment).** Das Paper behandelt konkret den
 aktiven Interferenz-Effekt; reine Benchmarks **ohne** diesen Effekt treten in den
 Hintergrund.
 
-1. **PoC (primär, erfolgreich):** Zwei Debian-Instanzen (Attacker & Victim) per CPU-Pinning auf denselben physischen P-Core fixiert. Attacker läuft `stress-ng --cache 2 --cache-level 3`, Victim misst mit `sysbench` und `fio`. Der Effekt ist eindeutig messbar (erster echter Lauf `nodeterm`: CPU −21 %, RAM −45 %, IOPS −48 %, p95-Latenz +407 %).
-2. **~~Fallback~~ (zu den Akten gelegt):** Der systematische Paradigmen-Leistungsvergleich QEMU/LXC/KVM war als Rückfallebene gedacht, falls kein Effekt messbar wäre. Da der PoC greift, wird er **nicht weiter verfolgt** — höchstens ergänzende Einordnung, nicht Kern der Arbeit. Code (`run_fallback.sh`) bleibt lauffähig.
+1. **Interferenz-Experiment (primär, erfolgreich):** Zwei Debian-Instanzen (Attacker & Victim) per CPU-Pinning auf denselben physischen P-Core fixiert. Attacker läuft `stress-ng --cache 2 --cache-level 3`, Victim misst mit `sysbench` und `fio`. Der Effekt ist eindeutig messbar (erster echter Lauf `nodeterm`: CPU −21 %, RAM −45 %, IOPS −48 %, p95-Latenz +407 %).
+2. **Paradigmen-Vergleich (ergänzende Einordnung):** Der systematische Leistungsvergleich der Virtualisierungsparadigmen QEMU/LXC/KVM fließt als **eigenständige Einordnung** ins Paper ein (nicht Kern der Arbeit — der bleibt das Interferenz-Experiment). Das früher als „Fallback" gedachte Konzept ist **obsolet**, seit das Interferenz-Experiment greift. Die alten Namen „PoC" und „Fallback" sind projektweit gestrichen — sowohl im Paper-Fließtext als auch in den Artefakt-Namen: Skripte/CSVs heißen jetzt `run_interference.sh`/`interference_summary.csv` bzw. `run_paradigms.sh`/`paradigms_summary.csv` (Env-Array `PARADIGM_VICTIMS`, Historie `{interference,paradigms}_runs.csv`, Abbildung `fig:paradigms`, Mock `mock_paradigms.*`).
 
 **Host-Konfiguration (zwingend vor Messungen):**
 
@@ -140,19 +140,20 @@ Topologie-Diagramm (Präsentation): `Experiment-Topologie.canvas`.
 | Opfer | Para-Virt. | LXC | 302 | `192.168.178.212` |
 | Opfer | HW-Virt. | KVM-VM `--cpu host` | 303 | `192.168.178.213` |
 
-Host: Proxmox `pve` @ `192.168.178.50` (i7-13700, Storage `local-zfs`). PoC nutzt KVM-Opfer (303);
-QEMU-Opfer ist NICHT PoC-tauglich (Emulation verschluckt den Effekt). Fallback
-läuft **sequenziell** über alle drei Opfer → konstanter Angreifer.
+Host: Proxmox `pve` @ `192.168.178.50` (i7-13700, Storage `local-zfs`). Das Interferenz-Experiment nutzt KVM-Opfer (303);
+QEMU-Opfer ist NICHT dafür tauglich (Emulation verschluckt den Effekt). Der
+Paradigmen-Vergleich (`run_paradigms.sh`) läuft **sequenziell** über alle drei
+Opfer → konstanter Angreifer.
 
 ### Struktur (`project/experiments/`)
 
 Getrennt nach **wo etwas läuft** (Verzeichnisbaum: `project/experiments/README.md`):
 
 - **Control-Node** (Top-Level + `lib/`):
-  - `run_experiment.sh` — PoC (Angreifer + 1 Opfer) → `results/poc_summary.csv`
-  - `run_fallback.sh` — Fallback (3 Opfer) → `results/fallback_summary.csv`
+  - `run_interference.sh` — Interferenz-Experiment (Angreifer + 1 Opfer) → `results/interference_summary.csv`
+  - `run_paradigms.sh` — Paradigmen-Vergleich (3 Opfer) → `results/paradigms_summary.csv`
   - `lib/common.sh` (Logging/Median/Delta), `lib/orchestrator.sh` (SSH/Deploy/Collect, geteilt)
-  - `config.env` — SSH-Ziele, `REPEATS`, Benchmark-/Last-Parameter, `FALLBACK_VICTIMS`
+  - `config.env` — SSH-Ziele, `REPEATS`, Benchmark-/Last-Parameter, `PARADIGM_VICTIMS`
   - `smoke.env` — verkürztes Profil für die reine Funktionsprüfung (`project/notes/Smoke-Test.md`)
   - `demo.env` — Minimal-Profil (`REPEATS=1`, nur KVM) für die Live-Demo im Vortrag
 - **`roles/`** (auf die Gäste deployed, dort ausgeführt):
@@ -161,15 +162,15 @@ Getrennt nach **wo etwas läuft** (Verzeichnisbaum: `project/experiments/README.
 - **`results/`** — Aggregat-CSVs (getrackt, Platzhalter) + `data/` (Rohdaten, gitignored)
 - **`legacy/`** — `summary.csv` + `generate_dummy_data.sh`, **nur** fürs abgegebene Exposé (eingefroren)
 
-Erststart: `./run_experiment.sh --install --deploy-only` (installiert sysbench/fio/jq
+Erststart: `./run_interference.sh --install --deploy-only` (installiert sysbench/fio/jq
 bzw. stress-ng auf den Gästen). SSH-Key-Auth muss vorab stehen (Henne-Ei).
 Aggregation = **Median** über `REPEATS` Läufe. Alle Skripte: `bash -n` + `shellcheck -x` sauber.
 
 ### Drei CSV-Schemata (NICHT vermischen!)
 
 - `legacy/summary.csv` — Legacy-Dummy (`legacy/generate_dummy_data.sh`), `Virtualisierung;Baseline;NoisyNeighbor`, vom **abgegebenen Exposé** gelesen → unberührt lassen.
-- `results/poc_summary.csv` — PoC, `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms`. Zeilen: `Baseline`, `NoisyNeighbor`, `Delta-Prozent` (Bindestrich, kein `_` — wegen `string type` im LaTeX-Typeset). Gelesen von `paper/main.tex`.
-- `results/fallback_summary.csv` — Fallback, `Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN`.
+- `results/interference_summary.csv` — Interferenz-Experiment, `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms`. Zeilen: `Baseline`, `NoisyNeighbor`, `Delta-Prozent` (Bindestrich, kein `_` — wegen `string type` im LaTeX-Typeset). Gelesen von `paper/main.tex`.
+- `results/paradigms_summary.csv` — Paradigmen-Vergleich, `Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN`.
 
 Beide `results/`-Aggregate sind mit **Platzhalterwerten** vorbelegt und werden
 getrackt (Paper liest sie zur Compile-Zeit); echte Läufe überschreiben sie.
@@ -179,14 +180,14 @@ kanonischen `*_summary.csv` bleiben der „aktuelle" Stand fürs Paper. Daneben
 historisiert **jeder Lauf** unter `results/data/<TS>_<profil>[_<label>]/` mit
 `summary.csv` + selbsterklärender `meta.txt` (Determinismus-Snapshot vom Host:
 governor/no_turbo/max_cstate, git-Commit, Parameter). Append-only Vergleichs-Index:
-`results/history/{poc,fallback}_runs.csv`. Neu: **`--label TEXT`** (beide Run-Skripte)
+`results/history/{interference,paradigms}_runs.csv`. Neu: **`--label TEXT`** (beide Run-Skripte)
 kennzeichnet die Bedingung — Konvention `nodeterm`/`determ` für den
 BIOS-Determinismus-Vergleich (Smoke: kein Label). `results/.gitignore` trackt
 Aggregate/meta/Index, ignoriert Rohdaten (`*_raw.csv`, `*.log`). Determinismus-
 Snapshot braucht `HOST_HOST` in der `*.env` (nn_experiment-Key auch auf dem Host).
 
 **Diagramm-Design (entschieden):** gruppierte Balken, Baseline vs. Noisy Neighbor,
-ein Diagramm je Metrik. Mock: `assets/mock_fallback.{tex,csv,png}`.
+ein Diagramm je Metrik. Mock: `assets/mock_paradigms.{tex,csv,png}`.
 
 ### Paper-Stand `main.tex` (Stand: 2026-06-27)
 
@@ -201,25 +202,28 @@ gerendertes PDF (`pdftoppm`/`convert`-Crops).
   Ressourcen-Interferenzen in virtualisierten Umgebungen". Maßgebliche Einleitungs-Basis
   ist `paper/einleitungen/einleitung_zweite_version.tex` — **NICHT** die Markdown-Fassung
   `Einleitung.md` (= ältere erste Version).
-- **Einleitung:** aus der zweiten Version übernommen; Methodik-Framing geschärft
-  (**PoC = primär**, Paradigmen-Vergleich = **Rückfallebene**, falls kein Effekt messbar).
+- **Einleitung:** aus der zweiten Version übernommen (**Interferenz-Experiment = primär**).
   Zitate `koh2007analysis`, `ge2018survey`, `nist2014hypervisor` (alle in
   `references_expose.bib`). Die kaputten `intelvtx`/`kvmsecurity` sind raus → Bib baut.
+  **Achtung:** Die zweite Version rahmt den Paradigmen-Vergleich noch als
+  „Fallback/Rückfallebene" — das ist **obsolet** (das Interferenz-Experiment greift). Bei der finalen
+  Überarbeitung wird der Begriff „Fallback" gestrichen und der Vergleich als
+  eigenständige Einordnung geführt.
 - **Abbildung 1** (`fig:setup`, Methodik): Testumgebungs-Topologie als **reines TikZ**
   (kein externes Bild), nachgebaut aus `Experiment-Topologie.canvas`. Control-Node →SSH→
   Host (P-Core 4,5, LLC) mit Angreifer + 3 Opfern, rote Contention-Pfeile.
-- **Abbildung 2** (`fig:fallback`, Ergebnisse): gruppierte Balken, 4 Metriken, `figure*`,
-  liest `results/fallback_summary.csv`; **eine** gemeinsame Legende (blau=Baseline,
-  orange=Noisy Neighbor). Makro `\metricplot` in der Präambel (adaptiert aus `mock_fallback.tex`).
-- **Tabelle I** (`tab:results`): PoC-Median aus `results/poc_summary.csv`, Spalten mit
+- **Abbildung 2** (`fig:paradigms`, Ergebnisse): gruppierte Balken, 4 Metriken, `figure*`,
+  liest `results/paradigms_summary.csv`; **eine** gemeinsame Legende (blau=Baseline,
+  orange=Noisy Neighbor). Makro `\metricplot` in der Präambel (adaptiert aus `mock_paradigms.tex`).
+- **Tabelle I** (`tab:results`): Median des Interferenz-Experiments aus `results/interference_summary.csv`, Spalten mit
   sauberen Anzeigenamen.
 - Ergebnis-Abschnitt mit **Platzhalter-Hinweis** + interpretierender Prosa zu den
   Mock-Werten (klar als Arbeitshypothese markiert, nicht als Messung).
 
 **Sobald echte Messwerte da sind — nächste Schritte:**
 
-1. `./run_experiment.sh` + `./run_fallback.sh` laufen lassen → überschreiben die
-   Platzhalter in `results/poc_summary.csv` / `results/fallback_summary.csv`.
+1. `./run_interference.sh` + `./run_paradigms.sh` laufen lassen → überschreiben die
+   Platzhalter in `results/interference_summary.csv` / `results/paradigms_summary.csv`.
    `make paper` zieht die Zahlen automatisch in Tabelle I + Abbildung 2.
 2. **Platzhalter-Hinweis** im Ergebnis-Abschnitt entfernen und die Prosa an die realen
    Deltas anpassen (aktuell auf Mock-Werte getextet).
@@ -238,8 +242,10 @@ gerendertes PDF (`pdftoppm`/`convert`-Crops).
 
 ## Präsentation (`presentation/`)
 
-Slidev-Deck zum experimentellen Teil (~15 min), lokal hostbar + **PDF-exportierbar**
-(harte Abgabe-Anforderung). Node 18+ nötig.
+Slidev-Deck zum experimentellen Teil, lokal hostbar + **PDF-exportierbar**
+(harte Abgabe-Anforderung). Node 18+ nötig. **Zeitrahmen (Aufgabenstellung):
+insgesamt 10 min für Vortrag + technische Demo + Fragen** — Deck entsprechend
+knapp halten.
 
 ```bash
 cd presentation
@@ -251,11 +257,11 @@ npm run export   # PDF (braucht playwright-chromium; siehe presentation/README.m
 
 - **Folien:** `slides.md` (eine Datei, `---`-getrennt, Speaker-Notes je Folie).
   Inhalt: Motivation/Themenwahl, Hintergrund, Homeserver, Topologie (Mermaid),
-  Methodik, Codebasis (echte Snippets), Ergebnis-**Platzhalter** (PoC-Tabelle +
-  Fallback-Bild).
-- **Platzhalter ersetzen:** Fotos → `public/img/homeserver/server.jpg`; Fallback-
-  Diagramm → `public/img/mock_fallback.png` überschreiben; PoC-Tabelle aus
-  `results/poc_summary.csv`.
+  Methodik, Codebasis (echte Snippets), Ergebnis-**Platzhalter** (Tabelle des Interferenz-Experiments +
+  Paradigmen-Vergleich-Bild).
+- **Platzhalter ersetzen:** Fotos → `public/img/homeserver/server.jpg`;
+  Paradigmen-Vergleich-Diagramm → `public/img/mock_paradigms.png` überschreiben;
+  Tabelle des Interferenz-Experiments aus `results/interference_summary.csv`.
 - **Farbschema:** SentinelOne-inspiriert (Dark-Mode, Primär `#6B0AEA`, Magenta
   `#FF2D7E`). Zentral in `presentation/style.css`. **Wichtig:** Slidev merged
   KEINE `uno.config.ts` — die `s1`-Akzentklassen (`border-s1`, `bg-s1/10`,

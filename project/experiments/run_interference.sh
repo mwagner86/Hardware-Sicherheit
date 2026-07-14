@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# run_experiment.sh — PoC-Orchestrator, läuft auf dem CONTROL-NODE (Laptop).
+# run_interference.sh — Interferenz-Experiment-Orchestrator, läuft auf dem CONTROL-NODE (Laptop).
 #
-# Noisy-Neighbor-PoC: ein Angreifer + ein Opfer auf demselben P-Core.
+# Noisy-Neighbor-Experiment: ein Angreifer + ein Opfer auf demselben P-Core.
 #   1. Preflight  : Erreichbarkeit + Werkzeuge auf beiden Gästen prüfen
 #   2. Deploy     : Skripte nach REMOTE_DIR auf Angreifer & Opfer kopieren
 #   3. Baseline   : Opfer-Benchmark N-mal OHNE Störlast
 #   4. NoisyNeighbor : Störlast starten, Opfer-Benchmark N-mal, Störlast stoppen
-#   5. Aggregation: Mediane + Delta -> data/<ts>/ und poc_summary.csv
+#   5. Aggregation: Mediane + Delta -> data/<ts>/ und interference_summary.csv
 #
 # Nutzung:
-#   ./run_experiment.sh [--config DATEI] [--label TEXT] [--deploy-only] [--install] [--no-deploy]
+#   ./run_interference.sh [--config DATEI] [--label TEXT] [--deploy-only] [--install] [--no-deploy]
 #
 # --label kennzeichnet den Lauf in Verzeichnisname, meta.txt und Historie-Index
 # (z. B. "determ" / "nodeterm" für den BIOS-Determinismus-Vergleich).
@@ -127,17 +127,17 @@ SUMMARY="${DATA_DIR}/summary.csv"
         "$(delta_pct "${B[5]}" "${N[5]}")"
 } > "${SUMMARY}"
 
-cp "${SUMMARY}" "${SCRIPT_DIR}/results/poc_summary.csv"
+cp "${SUMMARY}" "${SCRIPT_DIR}/results/interference_summary.csv"
 
 # --- Metadaten + Historie (nie überschrieben) -------------------------------
 DET="$(host_determinism)"; IFS=';' read -r DET_GOV DET_TURBO DET_CST <<< "${DET}"
-write_run_meta "${DATA_DIR}" "poc" "${PROFILE}" "${LABEL}" "${DET}"
-history_append "${SCRIPT_DIR}/results/history/poc_runs.csv" \
+write_run_meta "${DATA_DIR}" "interference" "${PROFILE}" "${LABEL}" "${DET}"
+history_append "${SCRIPT_DIR}/results/history/interference_runs.csv" \
     "timestamp;label;profile;git;repeats;det_gov;det_no_turbo;det_max_cstate;cpu_delta;mem_delta;iops_delta;lat_delta;datadir" \
     "${TS};${LABEL};${PROFILE};$(run_git_commit);${REPEATS};${DET_GOV};${DET_TURBO};${DET_CST};$(delta_pct "${B[2]}" "${N[2]}");$(delta_pct "${B[3]}" "${N[3]}");$(delta_pct "${B[4]}" "${N[4]}");$(delta_pct "${B[5]}" "${N[5]}");results/data/${RUN_ID}"
 
 log "Fertig. Ergebnis:"
 cat "${SUMMARY}" >&2
 log "Roh- und Aggregatdaten unter: ${DATA_DIR}"
-log "Paper-Tabelle aktualisiert: ${SCRIPT_DIR}/results/poc_summary.csv"
-log "Historie ergänzt: ${SCRIPT_DIR}/results/history/poc_runs.csv"
+log "Paper-Tabelle aktualisiert: ${SCRIPT_DIR}/results/interference_summary.csv"
+log "Historie ergänzt: ${SCRIPT_DIR}/results/history/interference_runs.csv"

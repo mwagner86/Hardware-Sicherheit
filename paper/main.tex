@@ -21,9 +21,9 @@
 % --- TikZ (Topologie-Diagramm) ---
 \usetikzlibrary{fit, backgrounds, positioning, arrows.meta, calc}
 
-% --- Fallback-Diagramm: gruppierte Balken je Metrik aus der (Platzhalter-)CSV ---
+% --- Paradigmen-Vergleich-Diagramm: gruppierte Balken je Metrik aus der (Platzhalter-)CSV ---
 % Schema: Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN
-\pgfplotstableread[col sep=semicolon]{../project/experiments/results/fallback_summary.csv}\fallbackdata
+\pgfplotstableread[col sep=semicolon]{../project/experiments/results/paradigms_summary.csv}\paradigmsdata
 % #1=Titel #2=ylabel #3=Spalte Baseline #4=Spalte NoisyNeighbor #5=ymax
 \newcommand{\metricplot}[5]{%
 \begin{axis}[
@@ -39,8 +39,8 @@
     x tick label style={font=\small},
     title style={font=\small\bfseries},
 ]
-\addplot[fill=blue!55, draw=blue!55!black] table [x=Virtualisierung, y=#3] {\fallbackdata};
-\addplot[fill=orange!70, draw=orange!70!black] table [x=Virtualisierung, y=#4] {\fallbackdata};
+\addplot[fill=blue!55, draw=blue!55!black] table [x=Virtualisierung, y=#3] {\paradigmsdata};
+\addplot[fill=orange!70, draw=orange!70!black] table [x=Virtualisierung, y=#4] {\paradigmsdata};
 \end{axis}}
 
 \begin{document}
@@ -99,11 +99,11 @@ Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illu
    \emph{konstante Störquelle}};
 
 \node[guest, right=14mm of att.north east, anchor=north west] (vq)
-  {\textbf{Opfer 1} -- QEMU 301\\ Emulation \emph{(nur Fallback)}};
+  {\textbf{Opfer 1} -- QEMU 301\\ Emulation \emph{(nur Paradigmen-Vergleich)}};
 \node[guest, below=2.5mm of vq] (vl)
   {\textbf{Opfer 2} -- LXC 302\\ Para-Virtualisierung};
 \node[guest, below=2.5mm of vl, fill=green!9, draw=green!45!black] (vk)
-  {\textbf{Opfer 3} -- KVM 303\\ HW-Virt.\ \emph{(PoC-Hauptopfer)}};
+  {\textbf{Opfer 3} -- KVM 303\\ HW-Virt.\ \emph{(Hauptopfer)}};
 
 % --- Ressourcen-Contention (geteilter LLC + I/O) ---
 \draw[cont] (att.east|-vq) -- (vq.west);
@@ -131,17 +131,17 @@ Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illu
 \node[font=\scriptsize\itshape, text=blue!55!black, align=left, anchor=west]
   at ($(ctrl.east)+(0.3,0)$) {SSH (Key-Auth)\\ alle 4 Gäste};
 \end{tikzpicture}
-\caption{Schematischer Aufbau der Testumgebung. Der Control-Node orchestriert die vier auf denselben physischen P-Core (CPU 4,5) gepinnten Gäste über SSH und misst nicht selbst. Der Angreifer (LXC 300) sättigt den geteilten Last Level Cache; die drei Opfer (QEMU/LXC/KVM) werden sequenziell vermessen, wobei nur das KVM-Opfer als PoC-Hauptopfer dient. Rote Pfeile markieren die Ressourcen-Contention über LLC und I/O.}
+\caption{Schematischer Aufbau der Testumgebung. Der Control-Node orchestriert die vier auf denselben physischen P-Core (CPU 4,5) gepinnten Gäste über SSH und misst nicht selbst. Der Angreifer (LXC 300) sättigt den geteilten Last Level Cache; die drei Opfer (QEMU/LXC/KVM) werden sequenziell vermessen, wobei nur das KVM-Opfer als Hauptopfer des Interferenz-Experiments dient. Rote Pfeile markieren die Ressourcen-Contention über LLC und I/O.}
 \label{fig:setup}
 \end{figure}
 
 \section{Ergebnisse}
 \textit{Hinweis: Die in diesem Abschnitt gezeigten Werte sind Platzhalter auf Basis hypothetischer Mock-Daten; die realen Messungen am Proxmox-Host stehen noch aus. Tabelle und Diagramm werden zur Kompilierzeit automatisch aus den CSV-Dateien der Mess-Suite erzeugt und ersetzen sich nach der Datenerhebung selbsttätig.}
 
-Tabelle \ref{tab:results} fasst das PoC-Ergebnis am KVM-Opfer zusammen, Abbildung \ref{fig:fallback} den Fallback-Vergleich der drei Virtualisierungsparadigmen.
+Tabelle \ref{tab:results} fasst das Ergebnis des Interferenz-Experiments am KVM-Opfer zusammen, Abbildung \ref{fig:paradigms} den Paradigmen-Vergleich der drei Virtualisierungsparadigmen.
 
 \begin{table}[htbp]
-\caption{PoC am KVM-Opfer: Median je Metrik, Baseline gegen Noisy Neighbor (Platzhalterwerte).}
+\caption{Interferenz-Experiment am KVM-Opfer: Median je Metrik, Baseline gegen Noisy Neighbor (Platzhalterwerte).}
 \centering
 \pgfplotstabletypeset[
     col sep=semicolon, 
@@ -153,7 +153,7 @@ Tabelle \ref{tab:results} fasst das PoC-Ergebnis am KVM-Opfer zusammen, Abbildun
     columns/Latenz_p95_ms/.style={column name={Latenz p95 (ms)}},
     every head row/.style={before row=\toprule,after row=\midrule},
     every last row/.style={after row=\bottomrule},
-]{../project/experiments/results/poc_summary.csv}
+]{../project/experiments/results/interference_summary.csv}
 \label{tab:results}
 \end{table}
 
@@ -203,8 +203,8 @@ Die LLC-Miss-Rate am geteilten Kern steigt unter Störlast von rund 31\,\% auf 8
           inner sep=0pt, anchor=west] (ln) at ($(lbt.east)+(6mm,0)$) {};
     \node[anchor=west, font=\footnotesize] at ($(ln.east)+(1.3mm,0)$) {Noisy Neighbor};
   \end{tikzpicture}
-  \caption{Fallback-Vergleich (Platzhalter/Mock-Daten): gruppierte Balken je Metrik, Baseline gegen Noisy Neighbor, für QEMU (Emulation), KVM (Hardware-Virtualisierung) und LXC (Para-Virtualisierung).}
-  \label{fig:fallback}
+  \caption{Paradigmen-Vergleich (Platzhalter/Mock-Daten): gruppierte Balken je Metrik, Baseline gegen Noisy Neighbor, für QEMU (Emulation), KVM (Hardware-Virtualisierung) und LXC (Para-Virtualisierung).}
+  \label{fig:paradigms}
 \end{figure*}
 
 Im Mock-Szenario zeigt LXC die stärkste relative Degradation beim zufälligen Schreib-I/O (Einbruch um rund 60\,\%) und damit die schwächste Performance-Isolation, gefolgt von KVM (etwa 30\,\%); die reine Emulation (QEMU) bewegt sich auf durchweg niedrigem absolutem Niveau und zeigt entsprechend nur geringe relative Veränderung. Diese hypothetische Tendenz ist die zu prüfende Arbeitshypothese, nicht das Messergebnis.

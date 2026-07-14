@@ -48,10 +48,10 @@ for ip in 210 213; do ssh -o BatchMode=yes -o ConnectTimeout=5 \
   && echo ".$ip ok" || echo ".$ip FEHLT"; done
 
 # b) Werkzeuge + Skripte ausrollen (nimmt apt aus der Live-Demo raus)
-./run_experiment.sh --config demo.env --install --deploy-only
+./run_interference.sh --config demo.env --install --deploy-only
 
 # c) Ein stiller Probelauf, damit der Host-Key-Trust & alles sitzt
-./run_experiment.sh --config demo.env --no-deploy
+./run_interference.sh --config demo.env --no-deploy
 ```
 
 - **Dashboard** in einem Browser-Tab öffnen (Beamer-tauglich, dunkel).
@@ -79,11 +79,11 @@ for ip in 210 213; do ssh -o BatchMode=yes -o ConnectTimeout=5 \
   && echo ".$ip ok" || echo ".$ip FEHLT"; done
 
 # 2) Der Live-Lauf (~30–45 s) — der eigentliche Demo-Befehl
-./run_experiment.sh --config demo.env --no-deploy
+./run_interference.sh --config demo.env --no-deploy
 
 # 3) Prüfen, dass ECHTE Daten entstanden sind
-cat results/poc_summary.csv                  # frisch überschrieben
-tail -n 2 results/history/poc_runs.csv       # neuer Historien-Eintrag
+cat results/interference_summary.csv                  # frisch überschrieben
+tail -n 2 results/history/interference_runs.csv       # neuer Historien-Eintrag
 ls -td results/data/*_demo* | head -1        # neues Datenverzeichnis
 ```
 
@@ -98,13 +98,13 @@ du sauber zurück — direkt aus `project/experiments/` (wo du nach der Demo ste
 die Pfade sind relativ zu diesem Verzeichnis):
 
 ```bash
-git checkout results/poc_summary.csv results/history/poc_runs.csv
+git checkout results/interference_summary.csv results/history/interference_runs.csv
 git clean -fd results/data/                          # entfernt das Demo-Datenverzeichnis
 ssh -i ~/.ssh/nn_experiment root@192.168.178.210 'pgrep -a stress-ng'  # sollte leer sein
 ```
 
 Willst du den Demo-Stand behalten, lass das Aufräumen weg — fürs Paper zählt der
-`config/nodeterm`-Lauf, nicht `poc_summary.csv`.
+`config/nodeterm`-Lauf, nicht `interference_summary.csv`.
 
 ---
 
@@ -116,7 +116,7 @@ Willst du den Demo-Stand behalten, lass das Aufräumen weg — fürs Paper zähl
 
 ```bash
 # LIVE (~30–45 s): Baseline → Störlast → erneut messen → Delta → CSV
-./run_experiment.sh --config demo.env --no-deploy
+./run_interference.sh --config demo.env --no-deploy
 ```
 
 Während es läuft, die Log-Zeilen mitlesen: `Baseline Lauf 1/1` → `Störlast

@@ -47,8 +47,8 @@ Die Code-Basis ist wie folgt strukturiert, um eine saubere Trennung zwischen Exp
 │   └── ieee-template/         # Offizielle IEEE-Stil-Dateien und Klassen
 └── project/                   # Projektbegleitende Unterlagen & Experimente
     ├── experiments/           # Mess-Suite (Control-Node) — s. experiments/README.md
-    │   ├── run_experiment.sh  # PoC-Orchestrator      → results/poc_summary.csv
-    │   ├── run_fallback.sh    # Fallback-Orchestrator → results/fallback_summary.csv
+    │   ├── run_interference.sh  # PoC-Orchestrator      → results/interference_summary.csv
+    │   ├── run_paradigms.sh    # Fallback-Orchestrator → results/paradigms_summary.csv
     │   ├── lib/               # geteilte Logik (common.sh, orchestrator.sh)
     │   ├── roles/             # auf Gäste deployed (victim_benchmark.sh, attacker_load.sh)
     │   ├── results/           # Aggregat-CSVs (getrackt) + data/ (Rohdaten, gitignored)
@@ -58,7 +58,7 @@ Die Code-Basis ist wie folgt strukturiert, um eine saubere Trennung zwischen Exp
     │   └── references_expose.bib
     └── notes/                 # Arbeitsnotizen und Anleitungen
         ├── Aufgabenstellung.md # Offizielle Prüfungsanforderungen
-        ├── PoC.md             # Anleitung zur Testumgebung
+        ├── Interferenz-Experiment.md             # Anleitung zur Testumgebung
         ├── literatur_bezugswege.md # Dokumentation der Quellenzugänge
         └── notes.md           # Allgemeine Projektnotizen
 ```

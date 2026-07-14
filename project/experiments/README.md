@@ -3,7 +3,7 @@
 Automatisierte Messung mikroarchitektonischer Ressourcen-Interferenzen zwischen
 einem **Angreifer-** und einem **Opfer-Gast** unter Proxmox VE (Intel Raptor Lake).
 Beide Gäste sind host-seitig per CPU-Affinity auf **denselben physischen P-Core**
-gepinnt (siehe [`../notes/PoC.md`](../notes/PoC.md)).
+gepinnt (siehe [`../notes/Interferenz-Experiment.md`](../notes/Interferenz-Experiment.md)).
 
 ## Status (2026-07-05)
 
@@ -11,26 +11,26 @@ gepinnt (siehe [`../notes/PoC.md`](../notes/PoC.md)).
   10 Wiederholungen) weist den Effekt eindeutig nach: **CPU −21 %, RAM −45 %,
   IOPS −48 %, p95-Latenz +407 %** (KVM-Opfer unter konstanter L3-Störlast).
   Rohdaten unter `results/data/20260705_141654_config_nodeterm/`, Vergleichs-Index
-  in `results/history/poc_runs.csv`.
+  in `results/history/interference_runs.csv`.
 - **Codebasis komplett, Benchmarks sauber und orchestrierbar.** Pipeline läuft
   vom Control-Node durch (SSH → Deploy → Messen → Median → CSV); Werte sind
   reproduzierbar und für das Paper verwendbar.
 - **Determinismus-Lauf steht noch aus.** Die finalen Zahlen fürs IEEE-Paper
   liefert ein Lauf mit BIOS-Determinismus (Label `determ`). Bis dahin bleibt die
-  kanonische `results/poc_summary.csv` bewusst auf **Platzhalterwerten** — der
+  kanonische `results/interference_summary.csv` bewusst auf **Platzhalterwerten** — der
   `nodeterm`-Lauf validiert Methodik und Pipeline, ersetzt aber die Paper-Zahlen
   noch nicht.
 - **Fallback zu den Akten gelegt.** Da der PoC eindeutig greift, ist der
   3-Paradigmen-Vergleich (QEMU/LXC/KVM) **nicht mehr Rückfallebene**, sondern
-  höchstens ergänzende Einordnung. `run_fallback.sh` bleibt lauffähig (ein
+  höchstens ergänzende Einordnung. `run_paradigms.sh` bleibt lauffähig (ein
   `nodeterm`-Lauf existiert bereits), wird aber nicht weiter verfolgt.
 
 ## Verzeichnisstruktur
 
 ```text
 experiments/
-├── run_experiment.sh     # Control-Node: PoC-Orchestrator     → results/poc_summary.csv
-├── run_fallback.sh       # Control-Node: Fallback-Orchestrator → results/fallback_summary.csv
+├── run_interference.sh     # Control-Node: PoC-Orchestrator     → results/interference_summary.csv
+├── run_paradigms.sh       # Control-Node: Fallback-Orchestrator → results/paradigms_summary.csv
 ├── measure_llc.sh        # Control-Node: host-seitige LLC-Miss-Messung → results/llc_summary.csv
 ├── config.env            # SSH-Ziele + Versuchsparameter (voller Lauf)
 ├── smoke.env             # dito, verkürzt — reine Funktionsprüfung (../notes/Smoke-Test.md)
@@ -42,11 +42,11 @@ experiments/
 │   ├── victim_benchmark.sh   # Opfer: sysbench (cpu+mem) + fio
 │   └── attacker_load.sh      # Angreifer: stress-ng cache(L3)+hdd
 ├── results/              # ERGEBNISSE (Historie: ../notes/Ergebnis-Historie.md)
-│   ├── poc_summary.csv       # kanonisches PoC-Aggregat (Paper-Tabelle) — getrackt, Platzhalter
-│   ├── fallback_summary.csv  # kanonisches Fallback-Aggregat (Paper-Diagramm) — getrackt, Platzhalter
+│   ├── interference_summary.csv       # kanonisches PoC-Aggregat (Paper-Tabelle) — getrackt, Platzhalter
+│   ├── paradigms_summary.csv  # kanonisches Fallback-Aggregat (Paper-Diagramm) — getrackt, Platzhalter
 │   ├── history/              # append-only Vergleichs-Index je Lauf — getrackt
-│   │   ├── poc_runs.csv
-│   │   └── fallback_runs.csv
+│   │   ├── interference_runs.csv
+│   │   └── paradigms_runs.csv
 │   └── data/<TS>_<profil>[_<label>]/   # je Lauf: summary.csv + meta.txt (getrackt),
 │                                       #          *_raw.csv + *.log (gitignored)
 └── legacy/               # eingefroren, NUR für das abgegebene Exposé
@@ -62,22 +62,22 @@ selbst. Voraussetzung: SSH-Key-Auth zu allen Gästen (kein Passwort-Prompt).
 ## Nutzung
 
 ```bash
-# 1. config.env anpassen (ATTACKER_HOST / VICTIM_HOST / FALLBACK_VICTIMS)
+# 1. config.env anpassen (ATTACKER_HOST / VICTIM_HOST / PARADIGM_VICTIMS)
 
 # 2. Werkzeuge einmalig auf den Gästen installieren + Skripte ausrollen
-./run_experiment.sh --install --deploy-only
+./run_interference.sh --install --deploy-only
 
-# 3. PoC: Angreifer + 1 Opfer  → results/poc_summary.csv
-./run_experiment.sh
+# 3. PoC: Angreifer + 1 Opfer  → results/interference_summary.csv
+./run_interference.sh
 
 # 4. Fallback (zu den Akten gelegt, s. Status): 3 Opfer (QEMU/LXC/KVM) sequenziell
-./run_fallback.sh --install        # erster Lauf installiert auf allen Opfern
-./run_fallback.sh                  # weitere Läufe
+./run_paradigms.sh --install        # erster Lauf installiert auf allen Opfern
+./run_paradigms.sh                  # weitere Läufe
 
 # Weitere Optionen
-./run_experiment.sh --no-deploy        # Skripte schon ausgerollt
-./run_experiment.sh --config smoke.env # Smoke-Test-Profil (kurze Läufe)
-./run_experiment.sh --config demo.env  # Live-Demo: REPEATS=1, nur KVM (~30–45 s)
+./run_interference.sh --no-deploy        # Skripte schon ausgerollt
+./run_interference.sh --config smoke.env # Smoke-Test-Profil (kurze Läufe)
+./run_interference.sh --config demo.env  # Live-Demo: REPEATS=1, nur KVM (~30–45 s)
 
 # Kausalnachweis Cache-Contention: LLC-Miss-Rate am geteilten Core (host-seitig,
 # da der KVM-Gast keine vPMU hat). Erststart mit --install (perf auf dem Host).
@@ -86,7 +86,7 @@ selbst. Voraussetzung: SSH-Key-Auth zu allen Gästen (kein Passwort-Prompt).
 ```
 
 Welches Opfer der PoC nutzt, steht in `VICTIM_HOST`; die drei Fallback-Opfer in
-`FALLBACK_VICTIMS` (`config.env`). Der Angreifer (`ATTACKER_HOST`) ist in beiden
+`PARADIGM_VICTIMS` (`config.env`). Der Angreifer (`ATTACKER_HOST`) ist in beiden
 Fällen konstant.
 
 > **Vor dem ersten echten Lauf:** Pipeline mit dem Smoke-Test-Profil prüfen —
@@ -124,8 +124,8 @@ Fällen konstant.
 
 | Datei | Erzeuger | Schema | gelesen von |
 | --- | --- | --- | --- |
-| `results/poc_summary.csv` | `run_experiment.sh` | `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms` | `paper/main.tex` (Tabelle) |
-| `results/fallback_summary.csv` | `run_fallback.sh` | `Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN` | gruppiertes Balkendiagramm (vgl. `assets/mock_fallback.tex`) |
+| `results/interference_summary.csv` | `run_interference.sh` | `Szenario;CPU_Events_per_sec;Memory_MiBps;IOPS_Random_Write;Latenz_p95_ms` | `paper/main.tex` (Tabelle) |
+| `results/paradigms_summary.csv` | `run_paradigms.sh` | `Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN` | gruppiertes Balkendiagramm (vgl. `assets/mock_paradigms.tex`) |
 | `results/llc_summary.csv` | `measure_llc.sh` | `Szenario;LLC_Loads;LLC_Load_Misses;Miss_Rate_Pct` | Kausalnachweis (host-seitig, fürs Paper vorgesehen) |
 | `legacy/summary.csv` | `legacy/generate_dummy_data.sh` | `Virtualisierung;Baseline;NoisyNeighbor` | **abgegebenes** Exposé — eingefroren |
 
@@ -140,5 +140,5 @@ Details: [`../notes/Ergebnis-Historie.md`](../notes/Ergebnis-Historie.md).
 ## Host-Determinismus (zwingend, host-seitig)
 
 Vor Messungen auf dem Proxmox-Host: C-States deaktivieren, Turbo Boost aus,
-Governor `performance` (siehe [`../notes/PoC.md`](../notes/PoC.md)). Im Gast ist
-das oft nicht sichtbar — `run_experiment.sh` warnt nur best-effort.
+Governor `performance` (siehe [`../notes/Interferenz-Experiment.md`](../notes/Interferenz-Experiment.md)). Im Gast ist
+das oft nicht sichtbar — `run_interference.sh` warnt nur best-effort.

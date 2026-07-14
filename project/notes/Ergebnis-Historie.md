@@ -14,9 +14,9 @@ war einem Lauf nicht anzusehen, **unter welchen Bedingungen** er entstand
 
 | Ebene | Ort | Zweck | git |
 | --- | --- | --- | --- |
-| **Kanonisch (aktuell)** | `results/poc_summary.csv`, `results/fallback_summary.csv` | „promoteter" Stand, den **das Paper zur Compile-Zeit liest** | getrackt |
+| **Kanonisch (aktuell)** | `results/interference_summary.csv`, `results/paradigms_summary.csv` | „promoteter" Stand, den **das Paper zur Compile-Zeit liest** | getrackt |
 | **Pro Lauf** | `results/data/<RUN_ID>/` | `summary.csv` (Aggregat) + `meta.txt` (Metadaten) + Rohdaten | Aggregat+meta getrackt, Rohdaten ignoriert |
-| **Index (Vergleich)** | `results/history/poc_runs.csv`, `fallback_runs.csv` | **append-only**, eine Zeile je Lauf/Opfer mit Kern-Deltas | getrackt |
+| **Index (Vergleich)** | `results/history/interference_runs.csv`, `paradigms_runs.csv` | **append-only**, eine Zeile je Lauf/Opfer mit Kern-Deltas | getrackt |
 
 Die kanonischen CSVs werden weiter überschrieben — das ist gewollt (das Paper
 braucht **einen** aktuellen Stand). Die **Historie** liegt daneben und bleibt
@@ -62,8 +62,8 @@ So ist im Nachhinein zweifelsfrei belegt, ob ein Lauf im Determinismus-Modus lie
 Der Index ist eine `;`-CSV — direkt tabellarisch lesbar:
 
 ```bash
-column -t -s';' results/history/poc_runs.csv
-column -t -s';' results/history/fallback_runs.csv
+column -t -s';' results/history/interference_runs.csv
+column -t -s';' results/history/paradigms_runs.csv
 ```
 
 Spalten (PoC): `timestamp;label;profile;git;repeats;det_gov;det_no_turbo;det_max_cstate;cpu_delta;mem_delta;iops_delta;lat_delta;datadir`.
@@ -72,11 +72,11 @@ Fallback identisch, plus Spalte `victim` (eine Zeile je Opfer).
 ## Determinismus-Vergleich (der geplante Ablauf)
 
 1. **Ohne Determinismus** (BIOS/Host noch nicht angefasst):
-   `./run_experiment.sh --config config.env --label nodeterm`
-2. BIOS + Host-Determinismus setzen (siehe [Proxmox-Klickanleitung.md](Proxmox-Klickanleitung.md) Teil A+G, [PoC.md](PoC.md)).
+   `./run_interference.sh --config config.env --label nodeterm`
+2. BIOS + Host-Determinismus setzen (siehe [Proxmox-Klickanleitung.md](Proxmox-Klickanleitung.md) Teil A+G, [Interferenz-Experiment.md](Interferenz-Experiment.md)).
 3. **Mit Determinismus:**
-   `./run_experiment.sh --config config.env --label determ`
-4. Vergleich: `column -t -s';' results/history/poc_runs.csv` — die `det_*`-Spalten
+   `./run_interference.sh --config config.env --label determ`
+4. Vergleich: `column -t -s';' results/history/interference_runs.csv` — die `det_*`-Spalten
    belegen den Zustand, die Delta-Spalten zeigen den Effekt der Störlast je Bedingung.
 
 ## git-Politik

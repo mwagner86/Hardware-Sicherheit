@@ -4,7 +4,7 @@ Schritt-für-Schritt-Anleitung über die **Proxmox-Weboberfläche**
 (`https://192.168.178.50:8006`) und das **Server-BIOS**. Die reine CLI-Variante
 (`qm`/`pct`) und die methodische Begründung stehen in
 [`VM-Deployment.md`](VM-Deployment.md); der Host-Determinismus in
-[`PoC.md`](PoC.md).
+[`Interferenz-Experiment.md`](Interferenz-Experiment.md).
 
 > **Zielzustand:** 4 Instanzen, alle auf den physischen P-Core `4,5` gepinnt.
 >
@@ -31,7 +31,7 @@ BIOS-Version — notfalls die **Suchfunktion** (F-Taste/Lupe) nutzen. Nach jeder
 | **Intel VT-d** | **Enabled** | `Security → Virtualization` | IOMMU / saubere Isolation |
 | **Hyper-Threading** | **Enabled** | `Advanced → CPU Setup` | liefert die SMT-Geschwister `4,5` eines P-Cores (Pinning-Ziel!) |
 | **CPU C-States** (inkl. C1E) | **Disabled** | `Power` bzw. `Advanced → CPU Setup` | deterministische Latenz (keine Schlafzustände) |
-| **Intel Turbo Boost** | **Disabled** | `Advanced → CPU Setup` | feste Taktrate (alternativ per OS, s. PoC.md) |
+| **Intel Turbo Boost** | **Disabled** | `Advanced → CPU Setup` | feste Taktrate (alternativ per OS, s. Interferenz-Experiment.md) |
 
 ### A.2 Empfohlen (mehr Determinismus)
 
@@ -169,7 +169,7 @@ grep cpuset /etc/pve/lxc/300.conf /etc/pve/lxc/302.conf
 ## Teil G · Host-Determinismus (nach dem BIOS, vor den Messungen)
 
 Auch mit BIOS-Einstellungen müssen Governor und Turbo per OS gesetzt werden
-(volatil, siehe [`PoC.md`](PoC.md)). In der **Host-Shell**:
+(volatil, siehe [`Interferenz-Experiment.md`](Interferenz-Experiment.md)). In der **Host-Shell**:
 
 ```bash
 echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo
@@ -177,7 +177,7 @@ echo performance | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 ```
 
 Für die persistente C-State-Unterdrückung per Kernel-Parameter (`intel_idle...`)
-siehe [`PoC.md`](PoC.md), Abschnitt 2.
+siehe [`Interferenz-Experiment.md`](Interferenz-Experiment.md), Abschnitt 2.
 
 ---
 
@@ -188,7 +188,7 @@ dieses Schema gesetzt. Weiter mit:
 
 ```bash
 cd project/experiments
-./run_experiment.sh --install --deploy-only   # Werkzeuge + Skripte ausrollen
-./run_experiment.sh                            # PoC
-./run_fallback.sh --install                    # Fallback-Vergleich
+./run_interference.sh --install --deploy-only   # Werkzeuge + Skripte ausrollen
+./run_interference.sh                            # PoC
+./run_paradigms.sh --install                    # Fallback-Vergleich
 ```

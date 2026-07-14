@@ -25,11 +25,11 @@ Effekt (Paradigmen-Leistungsvergleich) treten dahinter zurück.
    Para-Virtualisierung (**LXC**) und Hardware-Virtualisierung (**KVM**,
    `--cpu host`) — war als Rückfallebene für den Fall gedacht, dass kein Effekt
    messbar ist. Da der PoC eindeutig greift, wird es **nicht weiter verfolgt**;
-   die Suite (`run_fallback.sh`) bleibt lauffähig für eine optionale Einordnung.
+   die Suite (`run_paradigms.sh`) bleibt lauffähig für eine optionale Einordnung.
 
 Vor jeder Messreihe wird der Host deterministisch konfiguriert (C-States
 deaktiviert, Turbo Boost aus, Governor `performance`); siehe
-[project/notes/PoC.md](project/notes/PoC.md).
+[project/notes/Interferenz-Experiment.md](project/notes/Interferenz-Experiment.md).
 
 ### VM-Topologie
 
@@ -53,7 +53,7 @@ Proxmox `pve` (i7-13700).
   (Orchestrierung vom Control-Node per SSH); Details in
   [project/experiments/README.md](project/experiments/README.md).
 - [project/notes/](project/notes/) — PoC-/Deployment-Anleitungen und
-  Recherche-Notizen ([PoC.md](project/notes/PoC.md),
+  Recherche-Notizen ([Interferenz-Experiment.md](project/notes/Interferenz-Experiment.md),
   [VM-Deployment.md](project/notes/VM-Deployment.md),
   [Proxmox-Klickanleitung.md](project/notes/Proxmox-Klickanleitung.md)).
 - [presentation/](presentation/) — Slidev-Deck zum experimentellen Teil
@@ -66,9 +66,9 @@ Proxmox `pve` (i7-13700).
 Getrennt nach **wo etwas läuft** (Details + Verzeichnisbaum in
 [project/experiments/README.md](project/experiments/README.md)):
 
-- **Control-Node** (Top-Level + `lib/`): `run_experiment.sh` (PoC →
-  `results/poc_summary.csv`), `run_fallback.sh` (Paradigmen-Vergleich, 3 Opfer
-  sequenziell → `results/fallback_summary.csv`; zu den Akten gelegt, s. Methodik),
+- **Control-Node** (Top-Level + `lib/`): `run_interference.sh` (PoC →
+  `results/interference_summary.csv`), `run_paradigms.sh` (Paradigmen-Vergleich, 3 Opfer
+  sequenziell → `results/paradigms_summary.csv`; zu den Akten gelegt, s. Methodik),
   `config.env`/`smoke.env`, `lib/{common,orchestrator}.sh`.
 - **`roles/`** (auf die Gäste deployed): `victim_benchmark.sh` (Opfer:
   `sysbench`+`fio`), `attacker_load.sh` (Angreifer: `stress-ng`-Störlast).
@@ -77,8 +77,8 @@ Getrennt nach **wo etwas läuft** (Details + Verzeichnisbaum in
   abgegebene Exposé.
 
 Drei CSV-Schemata werden **nicht** vermischt: `legacy/summary.csv` (Legacy-Dummy,
-vom abgegebenen Exposé gelesen), `results/poc_summary.csv` (PoC, gelesen von
-`paper/main.tex`) und `results/fallback_summary.csv` (Fallback, Quelle des
+vom abgegebenen Exposé gelesen), `results/interference_summary.csv` (PoC, gelesen von
+`paper/main.tex`) und `results/paradigms_summary.csv` (Fallback, Quelle des
 gruppierten Balkendiagramms).
 
 ## Build

@@ -4,7 +4,7 @@ data/**/*_raw.csv
 data/**/*.log
 
 # Bewusst GETRACKT (Ergebnis-Historie, siehe ../../notes/Ergebnis-Historie.md):
-#  - poc_summary.csv, fallback_summary.csv (kanonisch; Paper liest sie zur
+#  - interference_summary.csv, paradigms_summary.csv (kanonisch; Paper liest sie zur
 #    Compile-Zeit; mit Platzhaltern vorbelegt, echte Läufe überschreiben sie).
 #  - data/<lauf>/summary.csv + meta.txt  (Aggregat + Metadaten je Lauf).
 #  - history/*.csv                       (append-only Vergleichs-Index).

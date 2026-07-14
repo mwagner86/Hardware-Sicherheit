@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Gemeinsame Orchestrierungs-Helfer (laufen auf dem Control-Node).
-# Genutzt von run_experiment.sh (PoC) und run_fallback.sh (Fallback).
+# Genutzt von run_interference.sh (Interferenz-Experiment) und run_paradigms.sh (Paradigmen-Vergleich).
 #
 # Wird per `source` eingebunden, NACHDEM common.sh und config.env geladen sind.
 # Erwartet gesetzte Variablen: SCRIPT_DIR, SSH_OPTS, REMOTE_DIR, REPEATS sowie

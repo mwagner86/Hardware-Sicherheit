@@ -397,7 +397,7 @@ Der Versuchsaufbau
 
 ```mermaid {scale: 0.62}
 flowchart TB
-  CN["💻 Control-Node (Laptop)<br/>run_experiment.sh"]:::ctl
+  CN["💻 Control-Node (Laptop)<br/>run_interference.sh"]:::ctl
 
   subgraph HOST["Proxmox VE Host · pve · i7-13700"]
     subgraph PCORE["Physischer P-Core 4,5 · gemeinsamer L3-Cache (LLC)"]
@@ -539,8 +539,8 @@ Die Automatisierung
 
 ```mermaid {scale: 0.6}
 flowchart TB
-  RE[run_experiment.sh<br/>PoC] --> O
-  RF[run_fallback.sh<br/>Paradigmen-Vergleich] --> O
+  RE[run_interference.sh<br/>PoC] --> O
+  RF[run_paradigms.sh<br/>Paradigmen-Vergleich] --> O
   O[lib/orchestrator.sh<br/>SSH · Deploy · Collect]
   O --> VB[victim_benchmark.sh]
   O --> AL[attacker_load.sh]
@@ -552,8 +552,8 @@ flowchart TB
 <div class="text-sm">
 
 **Control-Node-Skripte**
-- `run_experiment.sh` — PoC-Orchestrierung
-- `run_fallback.sh` — 3-Paradigmen-Vergleich
+- `run_interference.sh` — PoC-Orchestrierung
+- `run_paradigms.sh` — 3-Paradigmen-Vergleich
 - `lib/orchestrator.sh` — geteilte SSH/Deploy-Logik
 
 **Gast-Skripte** (per SSH ausgerollt)
@@ -664,10 +664,10 @@ Es geht um <b>„es läuft echt"</b>, nicht um belastbare Zahlen.
 
 ```bash
 # vor dem Vortrag (einmalig): Werkzeuge + Skripte ausrollen
-./run_experiment.sh --config demo.env --install --deploy-only
+./run_interference.sh --config demo.env --install --deploy-only
 
 # LIVE — nur die Messung (~30–45 s)
-./run_experiment.sh --config demo.env --no-deploy
+./run_interference.sh --config demo.env --no-deploy
 ```
 
 <div grid="~ cols-2 gap-6" class="mt-6 text-sm">
@@ -743,7 +743,7 @@ offen = eigentlich Rauschquellen): Der Effekt dominiert das Rauschen klar.
 </div>
 
 <div class="mt-3 text-xs opacity-60">
-Quelle: <code>results/history/poc_runs.csv</code> · Lauf <code>config/nodeterm</code>, Median über 10 Läufe.
+Quelle: <code>results/history/interference_runs.csv</code> · Lauf <code>config/nodeterm</code>, Median über 10 Läufe.
 Der Determinismus-Lauf (feste Taktbasis) schärft die Werte fürs Paper nur nach.
 </div>
 
@@ -770,7 +770,7 @@ config/nodeterm · 10×
 </div>
 
 <div class="flex justify-center mt-1">
-  <img :src="base + 'img/real_fallback.png'" alt="Relativer Einbruch je Metrik: QEMU, LXC, KVM" class="h-[360px] rounded-lg shadow-lg" />
+  <img :src="base + 'img/real_paradigms.png'" alt="Relativer Einbruch je Metrik: QEMU, LXC, KVM" class="h-[360px] rounded-lg shadow-lg" />
 </div>
 
 <div class="mt-2 text-center text-sm opacity-75">

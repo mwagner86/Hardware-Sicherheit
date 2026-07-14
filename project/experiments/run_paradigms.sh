@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# run_fallback.sh — Fallback-Orchestrator, läuft auf dem CONTROL-NODE (Laptop).
+# run_paradigms.sh — Paradigmen-Vergleich-Orchestrator, läuft auf dem CONTROL-NODE (Laptop).
 #
 # Vergleicht die drei Virtualisierungs-Paradigmen (QEMU/LXC/KVM) unter
 # identischer, konstanter Angreifer-Störlast. Pro Opfer:
@@ -8,12 +8,12 @@
 # Da alle Instanzen auf demselben P-Core gepinnt sind und die Opfer SEQUENZIELL
 # getestet werden, ist zu jedem Zeitpunkt nur ein Opfer + der Angreifer aktiv.
 #
-# Ergebnis: fallback_summary.csv im Schema
+# Ergebnis: paradigms_summary.csv im Schema
 #   Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN
-# (direkt einsetzbar in das gruppierte Balkendiagramm, vgl. assets/mock_fallback.tex)
+# (direkt einsetzbar in das gruppierte Balkendiagramm, vgl. assets/mock_paradigms.tex)
 #
 # Nutzung:
-#   ./run_fallback.sh [--config DATEI] [--label TEXT] [--install] [--no-deploy]
+#   ./run_paradigms.sh [--config DATEI] [--label TEXT] [--install] [--no-deploy]
 #
 # --label kennzeichnet den Lauf in Verzeichnisname, meta.txt und Historie-Index
 # (z. B. "determ" / "nodeterm" für den BIOS-Determinismus-Vergleich).
@@ -46,13 +46,13 @@ source "${CONFIG_FILE}"
 # shellcheck source=lib/orchestrator.sh
 source "${SCRIPT_DIR}/lib/orchestrator.sh"
 
-[[ "${#FALLBACK_VICTIMS[@]}" -gt 0 ]] || die "FALLBACK_VICTIMS ist leer (config.env)"
+[[ "${#PARADIGM_VICTIMS[@]}" -gt 0 ]] || die "PARADIGM_VICTIMS ist leer (config.env)"
 RENV="$(remote_env)"
 
 a_ssh() { rssh "${ATTACKER_USER}" "${ATTACKER_HOST}" "$@"; }
 
 # --- 1) Preflight -----------------------------------------------------------
-log "Preflight: prüfe Angreifer + ${#FALLBACK_VICTIMS[@]} Opfer ..."
+log "Preflight: prüfe Angreifer + ${#PARADIGM_VICTIMS[@]} Opfer ..."
 a_ssh true || die "Angreifer (${ATTACKER_HOST}) nicht per SSH erreichbar"
 if [[ "${DO_INSTALL}" -eq 1 ]]; then
     a_ssh "apt-get update -qq && apt-get install -y -qq stress-ng" \
@@ -60,7 +60,7 @@ if [[ "${DO_INSTALL}" -eq 1 ]]; then
 fi
 a_ssh "command -v stress-ng >/dev/null" || die "Angreifer: stress-ng fehlt (--install nutzen)"
 
-for entry in "${FALLBACK_VICTIMS[@]}"; do
+for entry in "${PARADIGM_VICTIMS[@]}"; do
     label="${entry%%:*}"; host="${entry##*:}"
     rssh "${VICTIM_USER}" "${host}" true || die "Opfer ${label} (${host}) nicht erreichbar"
     if [[ "${DO_INSTALL}" -eq 1 ]]; then
@@ -75,32 +75,32 @@ done
 if [[ "${DO_DEPLOY}" -eq 1 ]]; then
     log "Deploy: Angreifer + alle Opfer ..."
     deploy_role attacker "${ATTACKER_USER}" "${ATTACKER_HOST}"
-    for entry in "${FALLBACK_VICTIMS[@]}"; do
+    for entry in "${PARADIGM_VICTIMS[@]}"; do
         deploy_role victim "${VICTIM_USER}" "${entry##*:}"
     done
 fi
 
 TS="$(date +%Y%m%d_%H%M%S)"
-RUN_ID="fallback_${TS}_${PROFILE}${LABEL:+_${LABEL}}"
+RUN_ID="paradigms_${TS}_${PROFILE}${LABEL:+_${LABEL}}"
 DATA_DIR="${SCRIPT_DIR}/results/data/${RUN_ID}"
 mkdir -p "${DATA_DIR}"
 log "Datenverzeichnis: ${DATA_DIR}"
 
 # Determinismus-Schnappschuss + meta.txt einmal pro Lauf (gilt für alle Opfer).
 DET="$(host_determinism)"; IFS=';' read -r DET_GOV DET_TURBO DET_CST <<< "${DET}"
-write_run_meta "${DATA_DIR}" "fallback" "${PROFILE}" "${LABEL}" "${DET}"
+write_run_meta "${DATA_DIR}" "paradigms" "${PROFILE}" "${LABEL}" "${DET}"
 GIT="$(run_git_commit)"
-FB_HISTORY="${SCRIPT_DIR}/results/history/fallback_runs.csv"
+FB_HISTORY="${SCRIPT_DIR}/results/history/paradigms_runs.csv"
 FB_HEADER="timestamp;label;profile;git;repeats;det_gov;det_no_turbo;det_max_cstate;victim;cpu_delta;mem_delta;iops_delta;lat_delta;datadir"
 
 cleanup() { attacker_stop "${ATTACKER_USER}" "${ATTACKER_HOST}"; }
 trap cleanup EXIT
 
-SUMMARY="${DATA_DIR}/fallback_summary.csv"
+SUMMARY="${DATA_DIR}/paradigms_summary.csv"
 echo "Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN" > "${SUMMARY}"
 
 # --- 3) Pro Opfer: Baseline + Noisy Neighbor -------------------------------
-for entry in "${FALLBACK_VICTIMS[@]}"; do
+for entry in "${PARADIGM_VICTIMS[@]}"; do
     label="${entry%%:*}"; host="${entry##*:}"
     vdir="${DATA_DIR}/${label}"; mkdir -p "${vdir}"
     log "=== Opfer ${label} (${host}) ==="
@@ -126,11 +126,11 @@ for entry in "${FALLBACK_VICTIMS[@]}"; do
         "${TS};${LABEL};${PROFILE};${GIT};${REPEATS};${DET_GOV};${DET_TURBO};${DET_CST};${label};$(delta_pct "${cpuB}" "${cpuN}");$(delta_pct "${ramB}" "${ramN}");$(delta_pct "${ioB}" "${ioN}");$(delta_pct "${latB}" "${latN}");results/data/${RUN_ID}"
 done
 
-# Kanonische Fallback-CSV fürs Paper-Diagramm ablegen.
-cp "${SUMMARY}" "${SCRIPT_DIR}/results/fallback_summary.csv"
+# Kanonische Paradigmen-Vergleich-CSV fürs Paper-Diagramm ablegen.
+cp "${SUMMARY}" "${SCRIPT_DIR}/results/paradigms_summary.csv"
 
 log "Fertig. Aggregat:"
 cat "${SUMMARY}" >&2
 log "Rohdaten je Opfer unter: ${DATA_DIR}"
-log "Paper-Diagramm-Daten: ${SCRIPT_DIR}/results/fallback_summary.csv"
+log "Paper-Diagramm-Daten: ${SCRIPT_DIR}/results/paradigms_summary.csv"
 log "Historie ergänzt: ${FB_HISTORY}"
