@@ -57,6 +57,10 @@ collect_phase() {
     local logf="${out%.csv}.log"
     echo "run;cpu_eps;mem_mibps;iops;lat_p95_ms" > "${out}"
     local i line cpu mem iops lat
+    # Warm-up (verworfen): Caches/JIT/Frequenz einschwingen lassen, bevor gemessen
+    # wird. Bei der NoisyNeighbor-Phase laeuft die Stoerlast dabei bereits.
+    log "[${label}] Warm-up (verworfen) ..."
+    victim_run "${u}" "${h}" >/dev/null 2>>"${logf}" || warn "[${label}] Warm-up fehlgeschlagen (ignoriert)"
     for i in $(seq 1 "${REPEATS}"); do
         log "[${label}] Lauf ${i}/${REPEATS} ..."
         line="$(victim_run "${u}" "${h}" 2>>"${logf}")"
@@ -71,6 +75,19 @@ collect_phase() {
 
 # Median einer 1-basierten Spalte aus einer ;-CSV mit Header. Args: <csv> <spalte>
 col_median() { tail -n +2 "$1" | cut -d';' -f"$2" | median; }
+col_min() { tail -n +2 "$1" | cut -d';' -f"$2" | sort -g | head -1; }
+col_max() { tail -n +2 "$1" | cut -d';' -f"$2" | sort -g | tail -1; }
+
+# Haengt die Streuung (Min/Median/Max je Metrik) einer Phasen-Roh-CSV an eine
+# Stats-CSV an. Args: <stats-csv> <phase> <roh-csv>
+append_phase_stats() {
+    local stats="$1" phase="$2" raw="$3" c
+    local -A names=([2]=CPU_Events_per_sec [3]=Memory_MiBps [4]=IOPS_Random_Write [5]=Latenz_p95_ms)
+    for c in 2 3 4 5; do
+        printf '%s;%s;%s;%s;%s\n' "${phase}" "${names[$c]}" \
+            "$(col_min "${raw}" "${c}")" "$(col_median "${raw}" "${c}")" "$(col_max "${raw}" "${c}")" >> "${stats}"
+    done
+}
 
 # Startet die Angreifer-Störlast. Bewusst OHNE knapp kalkuliertes Zeitbudget:
 # gestoppt wird immer explizit (attacker_stop bzw. EXIT-Trap); das 1h-Default-
@@ -106,6 +123,25 @@ host_determinism() {
         printf "%s;%s;%s" "$g" "$t" "$c"' 2>/dev/null || echo "n/a;n/a;n/a"
 }
 
+# Zusaetzlicher Determinismus-Schnappschuss (nicht-invasive Laufzeit-Pins vom
+# Mess-Kern 4). ";"-getrennt:
+#   scaling_min_khz;scaling_max_khz;uncore_min_khz;uncore_max_khz;deep_cstate_off(yes/no)
+host_determinism_extra() {
+    [[ -n "${HOST_HOST:-}" ]] || { echo "n/a;n/a;n/a;n/a;n/a"; return; }
+    rssh "${HOST_USER:-root}" "${HOST_HOST}" '
+        f=/sys/devices/system/cpu/cpu4/cpufreq; i=/sys/devices/system/cpu/cpu4/cpuidle
+        u=/sys/devices/system/cpu/intel_uncore_frequency/package_00_die_00
+        smin=$(cat $f/scaling_min_freq 2>/dev/null || echo n/a)
+        smax=$(cat $f/scaling_max_freq 2>/dev/null || echo n/a)
+        umin=$(cat $u/min_freq_khz 2>/dev/null || echo n/a)
+        umax=$(cat $u/max_freq_khz 2>/dev/null || echo n/a)
+        d2=$(cat $i/state2/disable 2>/dev/null || echo n/a)
+        d3=$(cat $i/state3/disable 2>/dev/null || echo n/a)
+        off="no"; [ "$d2" = "1" ] && [ "$d3" = "1" ] && off="yes"
+        printf "%s;%s;%s;%s;%s" "$smin" "$smax" "$umin" "$umax" "$off"' 2>/dev/null \
+        || echo "n/a;n/a;n/a;n/a;n/a"
+}
+
 # Schreibt eine selbsterklärende meta.txt in ein Run-Verzeichnis.
 # Args: <datadir> <script> <profile> <label> <det="gov;turbo;cstate">
 write_run_meta() {
@@ -122,6 +158,14 @@ write_run_meta() {
         echo "det_governor   = ${gov}"
         echo "det_no_turbo   = ${rest%%;*}"
         echo "det_max_cstate = ${rest#*;}"
+        local extra x_smin x_smax x_umin x_umax x_deepoff
+        extra="$(host_determinism_extra)"
+        IFS=';' read -r x_smin x_smax x_umin x_umax x_deepoff <<< "${extra}"
+        echo "det_freq_min_khz    = ${x_smin}"
+        echo "det_freq_max_khz    = ${x_smax}"
+        echo "det_uncore_min_khz  = ${x_umin}"
+        echo "det_uncore_max_khz  = ${x_umax}"
+        echo "det_deep_cstate_off = ${x_deepoff}"
         echo "attacker_host  = ${ATTACKER_HOST}"
         echo "# --- Benchmark-/Last-Parameter ---"
         local v

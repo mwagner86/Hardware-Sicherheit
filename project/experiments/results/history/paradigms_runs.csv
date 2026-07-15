@@ -4,3 +4,6 @@ timestamp;label;profile;git;repeats;det_gov;det_no_turbo;det_max_cstate;victim;c
 20260705_144712;nodeterm;config;b35c463;10;performance;0;9;QEMU;-53.38;-62.59;-68.45;421.09;results/data/fallback_20260705_144712_config_nodeterm
 20260705_144712;nodeterm;config;b35c463;10;performance;0;9;LXC;-19.30;-44.17;-32.54;271.68;results/data/fallback_20260705_144712_config_nodeterm
 20260705_144712;nodeterm;config;b35c463;10;performance;0;9;KVM;-22.32;-46.44;-58.15;466.32;results/data/fallback_20260705_144712_config_nodeterm
+20260715_122748;determ;config;c435e97;10;performance;0;9;QEMU;-54.39;-56.98;-60.26;284.69;results/data/paradigms_20260715_122748_config_determ
+20260715_122748;determ;config;c435e97;10;performance;0;9;LXC;-16.72;-42.46;-19.46;339.18;results/data/paradigms_20260715_122748_config_determ
+20260715_122748;determ;config;c435e97;10;performance;0;9;KVM;-18.33;-44.06;-59.85;452.94;results/data/paradigms_20260715_122748_config_determ

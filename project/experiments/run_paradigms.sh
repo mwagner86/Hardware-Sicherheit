@@ -121,6 +121,12 @@ for entry in "${PARADIGM_VICTIMS[@]}"; do
     echo "${label};${cpuB};${cpuN};${ramB};${ramN};${ioB};${ioN};${latB};${latN}" >> "${SUMMARY}"
     log "[${label}] fertig: IOPS ${ioB} -> ${ioN} ($(delta_pct "${ioB}" "${ioN}")%)"
 
+    # Streuung je Metrik/Phase (Min/Median/Max) für dieses Opfer.
+    STATS="${vdir}/stats.csv"
+    echo "Phase;Metrik;Min;Median;Max" > "${STATS}"
+    append_phase_stats "${STATS}" "Baseline"      "${vdir}/baseline_raw.csv"
+    append_phase_stats "${STATS}" "NoisyNeighbor" "${vdir}/noisy_raw.csv"
+
     # Historie: eine Zeile je Opfer (nie überschrieben).
     history_append "${FB_HISTORY}" "${FB_HEADER}" \
         "${TS};${LABEL};${PROFILE};${GIT};${REPEATS};${DET_GOV};${DET_TURBO};${DET_CST};${label};$(delta_pct "${cpuB}" "${cpuN}");$(delta_pct "${ramB}" "${ramN}");$(delta_pct "${ioB}" "${ioN}");$(delta_pct "${latB}" "${latN}");results/data/${RUN_ID}"

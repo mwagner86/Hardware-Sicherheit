@@ -1,0 +1,9 @@
+Phase;Metrik;Min;Median;Max
+Baseline;CPU_Events_per_sec;690.64;690.8400;691.06
+Baseline;Memory_MiBps;3697.85;3709.5800;3711.63
+Baseline;IOPS_Random_Write;36365.588186;60153.0312;62041.298623
+Baseline;Latenz_p95_ms;0.3133;0.3215;0.3461
+NoisyNeighbor;CPU_Events_per_sec;555.72;564.5600;570.21
+NoisyNeighbor;Memory_MiBps;2040.21;2094.8350;2173.89
+NoisyNeighbor;IOPS_Random_Write;20734.542182;24461.6346;26472.050932
+NoisyNeighbor;Latenz_p95_ms;1.6302;1.6794;1.7777

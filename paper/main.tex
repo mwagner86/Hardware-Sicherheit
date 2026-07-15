@@ -65,9 +65,9 @@ Virtualisierung abstrahiert physische Rechenhardware in logisch isolierte Ausfü
 
 Diese unvollständige Leistungsisolation begründet den sogenannten Noisy-Neighbor-Effekt: die Leistungsbeeinträchtigung eines Gastsystems durch die Ressourcennutzung eines anderen auf derselben Hardware. Ein Gastsystem unter hoher Last kann die Cache-Zeilen benachbarter Systeme verdrängen und so deren Durchsatz senken und deren Latenz erhöhen. Im Extremfall wirkt dieses Verhalten wie ein mikroarchitektonischer Denial-of-Service \cite{ge2018survey}. Empfehlungen wie die des National Institute of Standards and Technology (NIST) führen die Erschöpfung geteilter Plattformressourcen daher als Sicherheitsrisiko und fordern hardwaregestützte Isolationsmechanismen \cite{nist2014hypervisor}.
 
-Die grundsätzliche Anfälligkeit geteilter Ressourcen ist in der Literatur beschrieben. Weniger klar ist, wie wirksam die Gegenmaßnahmen aktueller Hardware sind: Moderne Prozessoren bieten dedizierte Mechanismen, um den Cache-Zugriff zwischen Gastsystemen aufzuteilen und zu begrenzen und den Effekt so einzudämmen. Ob diese Mechanismen unter praxisnahen Bedingungen eine hinreichende Isolation gewährleisten, ist bislang unzureichend belegt. Die vorliegende Arbeit untersucht daher, ob sich LLC-basierte Noisy-Neighbor-Interferenzen auf einer aktuellen Prozessorarchitektur unter einem produktiv eingesetzten Hypervisor als messbare Isolationsbrüche nachweisen lassen.
+Die grundsätzliche Anfälligkeit geteilter Ressourcen ist in der Literatur beschrieben. Weniger klar ist, wie wirksam die Gegenmaßnahmen aktueller Hardware sind: Moderne Prozessoren bieten dedizierte Mechanismen, um den Cache-Zugriff zwischen Gastsystemen aufzuteilen und zu begrenzen und den Effekt so einzudämmen. Ob diese Mechanismen unter praxisnahen Bedingungen eine hinreichende Isolation gewährleisten, ist bislang unzureichend belegt. Die vorliegende Arbeit untersucht daher, ob sich Noisy-Neighbor-Interferenzen auf einer aktuellen Prozessorarchitektur unter einem produktiv eingesetzten Hypervisor als messbare Isolationsbrüche nachweisen lassen.
 
-Die Untersuchung besteht aus zwei aufeinander bezogenen Teilen. Zunächst werden die drei grundlegenden Virtualisierungsansätze – Emulation, Para-Virtualisierung und hardwaregestützte Virtualisierung – unter reproduzierbaren Rechen- und I/O-Lasten verglichen, um ihre Leistungsfähigkeit und ihr Isolationsverhalten einzuordnen. Darauf aufbauend repliziert ein gezieltes Szenario den Noisy-Neighbor-Effekt: Ein störendes und ein gemessenes Gastsystem teilen sich denselben physischen Rechenkern, sodass die Konkurrenz um den gemeinsamen Cache und ihre Wirkung auf Durchsatz und Latenz quantifiziert werden können. Der genaue Versuchsaufbau und die eingesetzten Werkzeuge folgen in Abschnitt III.
+Die Untersuchung besteht aus zwei aufeinander bezogenen Teilen. Zunächst werden die drei grundlegenden Virtualisierungsansätze – Emulation, Para-Virtualisierung und hardwaregestützte Virtualisierung – unter reproduzierbaren Rechen- und I/O-Lasten verglichen, um ihre Leistungsfähigkeit und ihr Isolationsverhalten einzuordnen. Darauf aufbauend repliziert ein gezieltes Szenario den Noisy-Neighbor-Effekt: Ein störendes und ein gemessenes Gastsystem teilen sich denselben physischen Rechenkern und damit dessen gesamte Cache-Hierarchie bis zum Last Level Cache (LLC) sowie dessen Ausführungsressourcen. Die daraus erzwungene Ressourcenkonkurrenz und ihre Wirkung auf Durchsatz und Latenz werden quantifiziert; der geteilte LLC ist dabei ein wesentlicher, aber nicht der einzige Beitrag. Der genaue Versuchsaufbau und die eingesetzten Werkzeuge folgen in Abschnitt III.
 
 Der weitere Aufbau der Arbeit ist wie folgt: Abschnitt II fasst den Stand der Forschung zu mikroarchitektonischen Interferenzen und Virtualisierungskonzepten zusammen. Abschnitt III beschreibt den Versuchsaufbau sowie die Host- und Gastkonfiguration. Abschnitt IV stellt die Messergebnisse des Paradigmenvergleichs und des Noisy-Neighbor-Szenarios vor und wertet sie aus. Abschnitt V diskutiert die Ergebnisse im Kontext der Ausgangsfrage, bevor Abschnitt VI die Arbeit zusammenfasst und einen Ausblick gibt.
 
@@ -113,13 +113,13 @@ Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illu
 \begin{scope}[on background layer]
 \node[anchor=south, font=\scriptsize, text=black!75] (pcoreTitle)
   at ($(att.north)!0.5!(vq.north)+(0,3.5mm)$)
-  {Physischer P-Core $\cdot$ CPU 4,5 (SMT) $\cdot$ gemeinsamer L3-Cache (LLC)};
+  {Physischer P-Core $\cdot$ CPU 4,5 (SMT) $\cdot$ geteilte Caches L1--L3 (LLC)};
 \node[draw, dashed, rounded corners, inner sep=6pt,
       fit=(att)(vq)(vk)(pcoreTitle)] (pcore) {};
 \node[anchor=south, font=\scriptsize, align=center, text=black!75] (hostTitle)
   at ($(pcore.north)+(0,3mm)$)
   {\textbf{Proxmox VE Host} $\cdot$ \texttt{pve} $\cdot$ Intel i7-13700 (Raptor Lake)\\[-1pt]
-   Determinismus: C-States/Turbo aus, Governor \texttt{performance}};
+   Determinismus: Basistakt + Uncore gepinnt, tiefe C-States aus};
 \node[draw, rounded corners, inner sep=6pt,
       fit=(pcore)(hostTitle)] (host) {};
 \end{scope}
@@ -129,7 +129,7 @@ Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illu
 \node[font=\scriptsize\itshape, text=blue!55!black, align=left, anchor=west]
   at ($(ctrl.east)+(0.3,0)$) {SSH (Key-Auth)\\ alle 4 Gäste};
 \end{tikzpicture}
-\caption{Schematischer Aufbau der Testumgebung. Der Control-Node orchestriert die vier auf denselben physischen P-Core (CPU 4,5) gepinnten Gäste über SSH und misst nicht selbst. Der Angreifer (LXC 300) sättigt den geteilten Last Level Cache; die drei Opfer (QEMU/LXC/KVM) werden sequenziell vermessen, wobei nur das KVM-Opfer als Hauptopfer des Interferenz-Experiments dient. Rote Pfeile markieren die Ressourcen-Contention über LLC und I/O.}
+\caption{Schematischer Aufbau der Testumgebung. Der Control-Node orchestriert die vier auf denselben physischen P-Core (CPU 4,5) gepinnten Gäste über SSH und misst nicht selbst. Der Angreifer (LXC 300) belastet die gemeinsam genutzten Cache-Ebenen (bis zum LLC); die drei Opfer (QEMU/LXC/KVM) werden sequenziell vermessen, wobei nur das KVM-Opfer als Hauptopfer des Interferenz-Experiments dient. Rote Pfeile markieren die Ressourcen-Contention über die geteilten Cache-Ebenen und I/O.}
 \label{fig:setup}
 \end{figure}
 

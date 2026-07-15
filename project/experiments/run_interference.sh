@@ -129,6 +129,12 @@ SUMMARY="${DATA_DIR}/summary.csv"
 
 cp "${SUMMARY}" "${SCRIPT_DIR}/results/interference_summary.csv"
 
+# Streuung je Metrik/Phase (Min/Median/Max) für die Belastbarkeit der Zahlen.
+STATS="${DATA_DIR}/stats.csv"
+echo "Phase;Metrik;Min;Median;Max" > "${STATS}"
+append_phase_stats "${STATS}" "Baseline"      "${DATA_DIR}/baseline_raw.csv"
+append_phase_stats "${STATS}" "NoisyNeighbor" "${DATA_DIR}/noisy_raw.csv"
+
 # --- Metadaten + Historie (nie überschrieben) -------------------------------
 DET="$(host_determinism)"; IFS=';' read -r DET_GOV DET_TURBO DET_CST <<< "${DET}"
 write_run_meta "${DATA_DIR}" "interference" "${PROFILE}" "${LABEL}" "${DET}"
