@@ -82,7 +82,7 @@ Der Build nutzt `latexmk -pdf -interaction=nonstopmode -file-line-error -synctex
 `paper/main.tex` ist das Haupt-IEEE-Paper. Es referenziert Ressourcen mit relativen Pfaden:
 
 * **Bilder:** `\graphicspath{{../assets/}}` — alle Grafiken liegen in `/assets/`
-* **Bibliographie:** `\bibliography{../project/expose/references_expose}` — die `.bib`-Datei liegt im Exposé-Verzeichnis
+* **Bibliographie:** `\bibliography{references}` — `main.tex` nutzt `paper/references.bib` (konsolidierte Datenbank). Quell-PDFs liegen lokal (nicht versioniert) in `paper/HWQuellen/`.
 * **CSV-Daten:** `pgfplotstable` liest `../project/experiments/results/interference_summary.csv` direkt zur Kompilierzeit und rendert daraus die Ergebnis-Tabelle. (Das abgegebene Exposé liest separat `legacy/summary.csv`.)
 
 ### CSV-Datenformat (`project/experiments/legacy/summary.csv`)
@@ -101,8 +101,9 @@ Das finale Paper (`main.tex`) liest stattdessen `results/interference_summary.cs
 
 ### Bibliographie-Hierarchie
 
-* `project/expose/references_expose.bib` — primäre Literaturdatenbank (wird von `main.tex` und `expose_hardware_security.tex` verwendet)
-* `paper/references.bib` — konsolidierte Datenbank für das finale Paper (noch nicht aktiv eingebunden)
+* `paper/references.bib` — **aktive** Literaturdatenbank des finalen Papers (12 Einträge; von `main.tex` eingebunden). NIST-Key ist `nist2018hypervisor`.
+* `project/expose/references_expose.bib` — nur noch für das abgegebene Exposé (`expose_hardware_security.tex`); 3 Einträge, NIST-Key `nist2014hypervisor`.
+* Quell-PDFs zu den `references.bib`-Einträgen liegen lokal in `paper/HWQuellen/` (nicht versioniert). Beim Schreiben immer aus der Quelle belegen, keine erfundenen Claims.
 
 ## Methodik
 

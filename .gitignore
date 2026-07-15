@@ -336,3 +336,6 @@ project/experiments/bench_*/
 project/experiments/work/
 project/experiments/lib/work/
 # Aggregierte Messreihen unter data/ werden bewusst versioniert (Reproduzierbarkeit).
+
+# Lokale Literatur-Quellen (Quell-PDFs, nur lokal)
+paper/HWQuellen/
