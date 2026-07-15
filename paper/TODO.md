@@ -55,20 +55,17 @@
       (QEMU-Speicher/-IOPS-Labels überlappen leicht); Exposé-Tipp „1.2 statt 1200".
 
 ### C. Fehlende Abschnitte schreiben (die Einleitung verspricht sie, `main.tex:74`)
-Real vorhanden: I Einleitung · II Versuchsaufbau · III Ergebnisse.
-Versprochen: II Stand der Forschung · III Versuchsaufbau · IV Ergebnisse ·
-V Diskussion · VI Fazit. → Struktur in Deckung bringen:
-- [x] **Versuchsaufbau** geschrieben (2026-07-15): 3 Unterabschnitte — Hardware/
-      Topologie (i7-13700, 4 Instanzen, SMT-Kern 4/5, Paradigmen), Determinismus
-      (Basistakt-/Uncore-Pin, C2/C3 aus), Last/Messgrößen/Ablauf (sysbench/fio/
-      stress-ng, 2 Phasen, 10 Läufe + Warm-up, Median). Aktuell §II (wird §III,
-      sobald Stand der Forschung davor steht). Paper jetzt 4 Seiten.
-- [ ] **Stand der Forschung** (mikroarch. Interferenz-Vektoren,
-      Virtualisierungskonzepte, Intel RDT/CAT) — wird §II davor.
-- [ ] **Diskussion**: Implikationen im Kontext der Hypothese (greifen RDT/CAT?)
-- [ ] **Fazit** + Ausblick
-- [ ] Abschnittsnummerierung mit „Aufbau der Arbeit" (`main.tex:74`) abgleichen
-      (nach Stand der Forschung / Diskussion / Fazit fügt sich alles)
+Aktuell: I Einleitung · II Stand der Forschung · III Versuchsaufbau · IV Ergebnisse.
+Noch offen laut Einleitung: V Diskussion · VI Fazit.
+- [x] **Versuchsaufbau** (§III) geschrieben: Hardware/Topologie, Determinismus,
+      Last/Messgrößen/Ablauf.
+- [x] **Stand der Forschung** (§II) geschrieben (2026-07-16), **quellenbasiert**:
+      alle 12 PDFs in `paper/sources/` gelesen, jede Aussage belegt. Nummerierung
+      damit konsistent zur Einleitung (III Versuchsaufbau, IV Ergebnisse).
+- [ ] **V Diskussion**: Implikationen im Kontext der Hypothese (greifen RDT/CAT?);
+      KVM≫LXC-IOPS-Anomalie mit Lit. einordnen (li2017: Container nicht immer
+      I/O-stärker; nikounia2018: nicht nur LLC, auch Scheduling).
+- [ ] **VI Fazit** + Ausblick.
 
 ### D. Feinschliff
 - [ ] **Abstract** ausformulieren (aktuell generischer Platzhalter) — an Titel/Scope
