@@ -55,18 +55,20 @@
       (QEMU-Speicher/-IOPS-Labels überlappen leicht); Exposé-Tipp „1.2 statt 1200".
 
 ### C. Fehlende Abschnitte schreiben (die Einleitung verspricht sie, `main.tex:74`)
-Real vorhanden: I Einleitung · II Methodik/Benchmarking (Stub) · III Ergebnisse.
+Real vorhanden: I Einleitung · II Versuchsaufbau · III Ergebnisse.
 Versprochen: II Stand der Forschung · III Versuchsaufbau · IV Ergebnisse ·
 V Diskussion · VI Fazit. → Struktur in Deckung bringen:
-- [ ] **II Stand der Forschung** (mikroarch. Interferenz-Vektoren,
-      Virtualisierungskonzepte, Intel RDT/CAT)
-- [ ] **III Versuchsaufbau** ausbauen: konkretes 4-Instanz-Setup, CPU-Pinning,
-      Werkzeuge, Host-/Gast-Konfiguration — den „Methodik und Benchmarking"-Stub
-      (`main.tex:76`) hierzu ausbauen/umbenennen (diese Details bewusst NICHT in
-      der Einleitung)
-- [ ] **V Diskussion**: Implikationen im Kontext der Hypothese (greifen RDT/CAT?)
-- [ ] **VI Fazit** + Ausblick
+- [x] **Versuchsaufbau** geschrieben (2026-07-15): 3 Unterabschnitte — Hardware/
+      Topologie (i7-13700, 4 Instanzen, SMT-Kern 4/5, Paradigmen), Determinismus
+      (Basistakt-/Uncore-Pin, C2/C3 aus), Last/Messgrößen/Ablauf (sysbench/fio/
+      stress-ng, 2 Phasen, 10 Läufe + Warm-up, Median). Aktuell §II (wird §III,
+      sobald Stand der Forschung davor steht). Paper jetzt 4 Seiten.
+- [ ] **Stand der Forschung** (mikroarch. Interferenz-Vektoren,
+      Virtualisierungskonzepte, Intel RDT/CAT) — wird §II davor.
+- [ ] **Diskussion**: Implikationen im Kontext der Hypothese (greifen RDT/CAT?)
+- [ ] **Fazit** + Ausblick
 - [ ] Abschnittsnummerierung mit „Aufbau der Arbeit" (`main.tex:74`) abgleichen
+      (nach Stand der Forschung / Diskussion / Fazit fügt sich alles)
 
 ### D. Feinschliff
 - [ ] **Abstract** ausformulieren (aktuell generischer Platzhalter) — an Titel/Scope

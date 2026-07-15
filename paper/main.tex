@@ -71,8 +71,15 @@ Die Untersuchung besteht aus zwei aufeinander bezogenen Teilen. Zunächst werden
 
 Der weitere Aufbau der Arbeit ist wie folgt: Abschnitt II fasst den Stand der Forschung zu mikroarchitektonischen Interferenzen und Virtualisierungskonzepten zusammen. Abschnitt III beschreibt den Versuchsaufbau sowie die Host- und Gastkonfiguration. Abschnitt IV stellt die Messergebnisse des Paradigmenvergleichs und des Noisy-Neighbor-Szenarios vor und wertet sie aus. Abschnitt V diskutiert die Ergebnisse im Kontext der Ausgangsfrage, bevor Abschnitt VI die Arbeit zusammenfasst und einen Ausblick gibt.
 
-\section{Methodik und Benchmarking}
-Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illustriert den Testaufbau.
+\section{Versuchsaufbau}
+\label{sec:setup}
+
+\subsection{Hardware und Testtopologie}
+Alle Messungen laufen auf einem Server mit einem Intel Core i7-13700 (Raptor Lake) unter dem Hypervisor Proxmox VE. Der Prozessor besitzt eine hybride Topologie aus Performance- und Efficient-Kernen; als Datenträger dient ein ZFS-Pool. Auf dem Host laufen vier Debian-Gastsysteme, die Abbildung~\ref{fig:setup} zusammen mit der Messanordnung zeigt.
+
+Ein Gastsystem erzeugt als Angreifer die Störlast. Die übrigen drei sind Opfersysteme und stehen für je ein Virtualisierungsparadigma: eine QEMU-Instanz ohne Hardwarebeschleunigung für die reine Emulation, ein LXC-Container für die Para-Virtualisierung und eine KVM-Instanz mit durchgereichter CPU für die hardwaregestützte Virtualisierung. Das Interferenz-Experiment verwendet die KVM-Instanz als Opfer. Der Paradigmen-Vergleich misst alle drei Opfer nacheinander gegen denselben, konstanten Angreifer.
+
+Für die Contention ist das CPU-Pinning entscheidend. Der Angreifer und das jeweils gemessene Opfer sind host-seitig an dieselben zwei logischen CPUs (Nummer 4 und 5) gebunden. Diese beiden sind die SMT-Threads desselben physischen P-Kerns. Beide Gäste teilen sich damit die vollständige Cache-Hierarchie bis zum LLC sowie die Ausführungseinheiten dieses Kerns. Der Control-Node steuert die Läufe extern per SSH und führt selbst keine Last aus, um die Messung nicht zu verfälschen.
 
 \begin{figure}[t]
 \centering
@@ -132,6 +139,16 @@ Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illu
 \caption{Schematischer Aufbau der Testumgebung. Der Control-Node orchestriert die vier auf denselben physischen P-Core (CPU 4,5) gepinnten Gäste über SSH und misst nicht selbst. Der Angreifer (LXC 300) belastet die gemeinsam genutzten Cache-Ebenen (bis zum LLC); die drei Opfer (QEMU/LXC/KVM) werden sequenziell vermessen, wobei nur das KVM-Opfer als Hauptopfer des Interferenz-Experiments dient. Rote Pfeile markieren die Ressourcen-Contention über die geteilten Cache-Ebenen und I/O.}
 \label{fig:setup}
 \end{figure}
+
+\subsection{Determinismus der Messumgebung}
+Dynamische Hardware-Optimierungen erzeugen Messrauschen. Um es zu begrenzen, wird die Umgebung vor jedem Lauf in einen festen Zustand versetzt. Der Eingriff erfolgt zur Laufzeit über \texttt{sysfs}. Er benötigt weder eine BIOS-Änderung noch einen Neustart und ist vollständig reversibel.
+
+Für die beiden Mess-Kerne wird der CPU-Governor auf \texttt{performance} gesetzt und der Kerntakt auf den Basistakt von 2{,}1\,GHz fixiert. Damit entfällt der Turbo als Streuquelle. Zusätzlich wird der Uncore-Takt gepinnt, sodass auch die Frequenz von Ring und LLC konstant bleibt. Die tiefen C-States C2 und C3 werden auf beiden Kernen abgeschaltet, während der flache Zustand C1 aktiv bleibt und die Abwärme begrenzt. Der eingestellte Zustand wird für jeden Lauf protokolliert.
+
+\subsection{Last, Messgrößen und Ablauf}
+Das Opfer vermisst drei Dimensionen mit Standardwerkzeugen, jeweils einkernig. \texttt{sysbench} bestimmt die Rechenleistung (Primzahlen bis 20\,000 über 30\,s) in Ereignissen pro Sekunde sowie die schreibende Speicherbandbreite (10\,GiB in 1-KiB-Blöcken) in MiB/s. \texttt{fio} misst zufälliges 4-KiB-Schreiben (\texttt{libaio}, \texttt{direct=1}, iodepth~16, 30\,s) als IOPS und als 95.\,Perzentil-Latenz.
+
+Der Angreifer erzeugt seine Störlast mit \texttt{stress-ng}. Zwei Worker verdrängen gezielt Zeilen aus dem gemeinsamen Last Level Cache, ein weiterer belastet das I/O-Subsystem. Jedes Opfer durchläuft zwei Phasen. In der Baseline misst es ohne Störlast, im Noisy-Neighbor-Szenario bei laufendem Angreifer. Je Phase werden zehn Läufe gewertet; ein vorangestellter Warm-up-Lauf wird verworfen. Als Kennzahl dient der Median, die Streuung wird zusätzlich festgehalten.
 
 \section{Ergebnisse}
 Alle Tabellen- und Diagrammwerte sind Mediane aus je zehn Wiederholungen; die Messungen erfolgten bei fixiertem Kern- und Uncore-Takt sowie deaktivierten tiefen C-States, um Frequenz- und Idle-Schwankungen als Störquelle auszuschließen. Die Streuung über die Wiederholungen bleibt, von vereinzelten Ausreißern abgesehen, gering, weshalb der Median als robuste Lagekennzahl dient.
