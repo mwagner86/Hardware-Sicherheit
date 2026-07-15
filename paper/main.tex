@@ -14,6 +14,9 @@
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
 \pgfplotsset{compat=1.18}
+% Deutsche Zahlenformatierung fuer alle pgfplots/pgfplotstable-Ausgaben:
+% Dezimalkomma + schmales Leerzeichen als Tausendertrenner (konsistent mit dem Fliesstext).
+\pgfkeys{/pgf/number format/.cd, use comma, 1000 sep={\,}}
 
 % --- Pfaddefinitionen ---
 \graphicspath{{../assets/}}
@@ -161,7 +164,7 @@ Dynamische Hardware-Optimierungen erzeugen Messrauschen. Um es zu begrenzen, wir
 Für die beiden Mess-Kerne wird der CPU-Governor auf \texttt{performance} gesetzt und der Kerntakt auf den Basistakt von 2{,}1\,GHz fixiert. Damit entfällt der Turbo als Streuquelle. Zusätzlich wird der Uncore-Takt gepinnt, sodass auch die Frequenz von Ring und LLC konstant bleibt. Die tiefen C-States C2 und C3 werden auf beiden Kernen abgeschaltet, während der flache Zustand C1 aktiv bleibt und die Abwärme begrenzt. Der eingestellte Zustand wird für jeden Lauf protokolliert.
 
 \subsection{Last, Messgrößen und Ablauf}
-Das Opfer vermisst drei Dimensionen mit Standardwerkzeugen, jeweils einkernig. \texttt{sysbench} bestimmt die Rechenleistung (Primzahlen bis 20\,000 über 30\,s) in Ereignissen pro Sekunde sowie die schreibende Speicherbandbreite (10\,GiB in 1-KiB-Blöcken) in MiB/s. \texttt{fio} misst zufälliges 4-KiB-Schreiben (\texttt{libaio}, \texttt{direct=1}, iodepth~16, 30\,s) als IOPS und als 95.\,Perzentil-Latenz.
+Das Opfer vermisst drei Dimensionen mit Standardwerkzeugen, jeweils einkernig. \texttt{sysbench} bestimmt die Rechenleistung (Primzahlen bis 20\,000 über 30\,s) in Ereignissen pro Sekunde sowie die schreibende Speicherbandbreite (10\,GiB in 1-KiB-Blöcken) in MiB/s. \texttt{fio} misst zufälliges 4-KiB-Schreiben (\texttt{libaio}, \texttt{direct=1}, iodepth~16, 30\,s) als IOPS und als 95.-Perzentil-Latenz.
 
 Der Angreifer erzeugt seine Störlast mit \texttt{stress-ng}. Zwei Worker verdrängen gezielt Zeilen aus dem gemeinsamen Last Level Cache, ein weiterer belastet das I/O-Subsystem. Jedes Opfer durchläuft zwei Phasen. In der Baseline misst es ohne Störlast, im Noisy-Neighbor-Szenario bei laufendem Angreifer. Je Phase werden zehn Läufe gewertet; ein vorangestellter Warm-up-Lauf wird verworfen. Als Kennzahl dient der Median, die Streuung wird zusätzlich festgehalten.
 
@@ -188,7 +191,7 @@ Tabelle \ref{tab:results} fasst das Ergebnis des Interferenz-Experiments am KVM-
 \label{tab:results}
 \end{table}
 
-Unter Störlast bricht der zufällige Schreib-I/O des Opfers am stärksten ein: um rund 59\,\% (von etwa 60\,150 auf 24\,460 IOPS). Die 95.\,Perzentil-Latenz steigt zugleich auf mehr als das Fünffache (0{,}32 auf 1{,}68\,ms). Die Speicherbandbreite sinkt um rund 44\,\%, der CPU-Durchsatz mit rund 18\,\% am geringsten. I/O und Latenz sind also am deutlichsten betroffen, die CPU am wenigsten. Dieses Muster passt zu einer Interferenz, die vor allem über den geteilten Cache und das I/O-Subsystem wirkt.
+Unter Störlast bricht der zufällige Schreib-I/O des Opfers am stärksten ein: um rund 59\,\% (von etwa 60\,150 auf 24\,460 IOPS). Die 95.-Perzentil-Latenz steigt zugleich auf mehr als das Fünffache (0{,}32 auf 1{,}68\,ms). Die Speicherbandbreite sinkt um rund 44\,\%, der CPU-Durchsatz mit rund 18\,\% am geringsten. I/O und Latenz sind also am deutlichsten betroffen, die CPU am wenigsten. Dieses Muster passt zu einer Interferenz, die vor allem über den geteilten Cache und das I/O-Subsystem wirkt.
 
 Die vorstehenden Durchsatz- und Latenzdeltas belegen den Effekt, weisen dessen \emph{Ursache} jedoch nur indirekt nach. Zur direkten Bestätigung der Cache-Contention wird die Aktivität des Last Level Cache am geteilten P-Core gemessen. Die Gastsysteme unter Proxmox VE stellen dafür keine virtuelle Performance-Monitoring-Unit bereit. \texttt{perf} meldet im KVM-Gast für sämtliche Hardware-Ereignisse \texttt{not supported}. Die Erfassung erfolgt daher host-seitig mit \texttt{perf stat} auf dem physischen Kern, auf den Angreifer und Opfer gepinnt sind. Tabelle \ref{tab:llc} stellt die LLC-Zugriffe und -Fehlzugriffe der Baseline dem Noisy-Neighbor-Szenario gegenüber.
 
@@ -197,11 +200,10 @@ Die vorstehenden Durchsatz- und Latenzdeltas belegen den Effekt, weisen dessen \
 \centering
 \pgfplotstabletypeset[
     col sep=semicolon,
-    string type,
-    columns/Szenario/.style={column name={Szenario}},
-    columns/LLC_Loads/.style={column name={LLC-Loads}},
-    columns/LLC_Load_Misses/.style={column name={LLC-Misses}},
-    columns/Miss_Rate_Pct/.style={column name={Miss-Rate (\%)}},
+    columns/Szenario/.style={string type, column name={Szenario}},
+    columns/LLC_Loads/.style={column name={LLC-Loads}, fixed, precision=0},
+    columns/LLC_Load_Misses/.style={column name={LLC-Misses}, fixed, precision=0},
+    columns/Miss_Rate_Pct/.style={column name={Miss-Rate (\%)}, fixed, fixed zerofill, precision=2},
     every head row/.style={before row=\toprule,after row=\midrule},
     every last row/.style={after row=\bottomrule},
 ]{../project/experiments/results/llc_summary.csv}
@@ -242,10 +244,10 @@ Der Paradigmen-Vergleich (Abbildung \ref{fig:paradigms}) ordnet die drei Ansätz
 
 Beim zufälligen Schreib-I/O tritt eine Auffälligkeit hervor: KVM erreicht mit rund 55\,700 IOPS ein Vielfaches der etwa 10\,970 IOPS des LXC-Containers. Container erreichen gegenüber virtuellen Maschinen sonst meist gleiche oder bessere Leistung \cite{felter2015updated}, weshalb diese Ordnung zunächst überrascht. Sie ist mit hoher Wahrscheinlichkeit dem Speicherpfad geschuldet. Die virtuelle Festplatte der KVM-Instanz profitiert vom Writeback-Caching des Hypervisors, während der unprivilegierte Container mit \texttt{O\_DIRECT} unmittelbarer auf das ZFS-Backend schreibt. Dass containerbasierte Virtualisierung beim Speicher-I/O nicht durchgängig überlegen ist, berichten auch Li et al. \cite{li2017performance}. Die absoluten I/O-Werte sind daher nur eingeschränkt vergleichbar. Belastbar bleibt die \emph{relative} Degradation unter Störlast innerhalb jedes Paradigmas.
 
-Diese relative Betrachtung zeigt den Noisy-Neighbor-Effekt in allen drei Ansätzen: Der Schreib-I/O bricht bei QEMU und KVM um jeweils rund 60\,\% ein, beim LXC-Container mit rund 19\,\% deutlich weniger. Die 95.\,Perzentil-Latenz steigt durchgängig auf das rund Vier- bis Fünffache. Keiner der drei Ansätze unterbindet die mikroarchitektonische Interferenz vollständig.
+Diese relative Betrachtung zeigt den Noisy-Neighbor-Effekt in allen drei Ansätzen: Der Schreib-I/O bricht bei QEMU und KVM um jeweils rund 60\,\% ein, beim LXC-Container mit rund 19\,\% deutlich weniger. Die 95.-Perzentil-Latenz steigt durchgängig auf das rund Vier- bis Fünffache. Keiner der drei Ansätze unterbindet die mikroarchitektonische Interferenz vollständig.
 
 \section{Diskussion}
-Die Ausgangsfrage, ob eine aktuelle Prozessorarchitektur unter einem produktiv eingesetzten Hypervisor Noisy-Neighbor-Interferenzen zulässt, ist eindeutig zu bejahen. Ein einzelnes Störsystem senkt den Durchsatz des Opfers deutlich und vervielfacht dessen Latenz (Tabelle~\ref{tab:results}). Der Kausalnachweis (Tabelle~\ref{tab:llc}) belegt die ursächliche Beteiligung der Cache-Contention. Unter identischer Opfer-Last steigt allein durch die Präsenz des Angreifers die Fehlzugriffsrate am geteilten Kern deutlich. Generische Rechen- oder Scheduling-Konkurrenz scheidet damit als alleinige Erklärung aus. Die logische Isolation des Hypervisors bleibt auf mikroarchitektonischer Ebene unvollständig, wie es Koh et al. \cite{koh2007analysis} bereits allgemein beschrieben.
+Die Ausgangsfrage, ob eine aktuelle Prozessorarchitektur unter einem produktiv eingesetzten Hypervisor Noisy-Neighbor-Interferenzen zulässt, ist eindeutig zu bejahen. Ein einzelnes Störsystem senkt den Durchsatz des Opfers deutlich und vervielfacht dessen Latenz (Tabelle~\ref{tab:results}). Der Kausalnachweis (Tabelle~\ref{tab:llc}) belegt die ursächliche Beteiligung der Cache-Contention. Unter identischer Opfer-Last steigt allein durch die Präsenz des Angreifers die Fehlzugriffsrate am geteilten Kern deutlich. Generische Rechen- oder Scheduling-Konkurrenz scheidet damit als alleinige Erklärung aus. Die logische Isolation des Hypervisors bleibt auf mikroarchitektonischer Ebene unvollständig, wie es Koh et al. \cite{koh2007analysis} bereits allgemein beschrieben haben.
 
 Der Effekt ist jedoch nicht allein der LLC-Contention zuzuschreiben. Angreifer und Opfer teilen sich in diesem Aufbau die beiden SMT-Threads desselben physischen Kerns und damit zusätzlich die L1- und L2-Caches sowie die Ausführungseinheiten. Die gemessenen Beträge bilden daher eine konservative Obergrenze für eine eng geteilte Kern-Konfiguration ab und beziehen sich auf eine einzelne Hardware-Plattform. Dieser mehrschichtige Charakter der Interferenz deckt sich mit Nikounia und Mohammadi \cite{nikounia2018hypervisor}, die die Verlangsamung nicht allein der LLC-Contention, sondern auch dem Hypervisor-Scheduling und dem Speicher-Subsystem zuschreiben.
 
