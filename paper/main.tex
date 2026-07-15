@@ -21,7 +21,7 @@
 % --- TikZ (Topologie-Diagramm) ---
 \usetikzlibrary{fit, backgrounds, positioning, arrows.meta, calc}
 
-% --- Paradigmen-Vergleich-Diagramm: gruppierte Balken je Metrik aus der (Platzhalter-)CSV ---
+% --- Paradigmen-Vergleich-Diagramm: gruppierte Balken je Metrik aus der Mess-CSV ---
 % Schema: Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN
 \pgfplotstableread[col sep=semicolon]{../project/experiments/results/paradigms_summary.csv}\paradigmsdata
 % #1=Titel #2=ylabel #3=Spalte Baseline #4=Spalte NoisyNeighbor #5=ymax
@@ -87,7 +87,7 @@ Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illu
 ]
 % --- Control-Node ---
 \node[ctrl] (ctrl) {\textbf{Control-Node (Laptop)}\\[1pt]
-  \texttt{run\_experiment.sh} -- SSH-Orchestrierung\\
+  \texttt{run\_interference.sh} -- SSH-Orchestrierung\\
   Deploy $\cdot$ Baseline $\cdot$ Last $\cdot$ Messung $\cdot$ Aggregation};
 
 % --- Angreifer + Opfer (im P-Core) ---
@@ -134,28 +134,29 @@ Die Messungen wurden automatisiert durchgeführt. Abbildung \ref{fig:setup} illu
 \end{figure}
 
 \section{Ergebnisse}
-\textit{Hinweis: Die in diesem Abschnitt gezeigten Werte sind Platzhalter auf Basis hypothetischer Mock-Daten; die realen Messungen am Proxmox-Host stehen noch aus. Tabelle und Diagramm werden zur Kompilierzeit automatisch aus den CSV-Dateien der Mess-Suite erzeugt und ersetzen sich nach der Datenerhebung selbsttätig.}
+Alle Tabellen- und Diagrammwerte sind Mediane aus je zehn Wiederholungen; die Messungen erfolgten bei fixiertem Kern- und Uncore-Takt sowie deaktivierten tiefen C-States, um Frequenz- und Idle-Schwankungen als Störquelle auszuschließen. Die Streuung über die Wiederholungen bleibt, von vereinzelten Ausreißern abgesehen, gering, weshalb der Median als robuste Lagekennzahl dient.
 
 Tabelle \ref{tab:results} fasst das Ergebnis des Interferenz-Experiments am KVM-Opfer zusammen, Abbildung \ref{fig:paradigms} den Paradigmen-Vergleich der drei Virtualisierungsparadigmen.
 
 \begin{table}[htbp]
-\caption{Interferenz-Experiment am KVM-Opfer: Median je Metrik, Baseline gegen Noisy Neighbor (Platzhalterwerte).}
+\caption{Interferenz-Experiment am KVM-Opfer: Median je Metrik aus zehn Läufen, Baseline gegen Noisy Neighbor.}
 \centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}%
 \pgfplotstabletypeset[
-    col sep=semicolon, 
-    string type,
-    columns/Szenario/.style={column name={Szenario}},
-    columns/CPU_Events_per_sec/.style={column name={CPU (Events/s)}},
-    columns/Memory_MiBps/.style={column name={RAM (MiB/s)}},
-    columns/IOPS_Random_Write/.style={column name={I/O (IOPS)}},
-    columns/Latenz_p95_ms/.style={column name={Latenz p95 (ms)}},
+    col sep=semicolon,
+    columns/Szenario/.style={string type, column name={Szenario}},
+    columns/CPU_Events_per_sec/.style={column name={CPU (Ev./s)}, fixed, precision=0},
+    columns/Memory_MiBps/.style={column name={RAM (MiB/s)}, fixed, precision=0},
+    columns/IOPS_Random_Write/.style={column name={I/O (IOPS)}, fixed, precision=0},
+    columns/Latenz_p95_ms/.style={column name={Lat.\ p95 (ms)}, fixed, precision=2},
     every head row/.style={before row=\toprule,after row=\midrule},
     every last row/.style={after row=\bottomrule},
 ]{../project/experiments/results/interference_summary.csv}
 \label{tab:results}
 \end{table}
 
-In den Platzhalterdaten sinkt der I/O-Durchsatz des Opfers unter Störlast um rund 30\,\% (von 45\,000 auf 31\,500 IOPS), während die 95.\,Perzentil-Latenz um etwa 75\,\% ansteigt (0{,}40 auf 0{,}70\,ms). Auf CPU-Durchsatz (11{,}9\,\%) und Speicherbandbreite (21{,}6\,\%) fällt die Degradation geringer aus --- ein Muster, das die Erwartung einer primär I/O- und latenzgetriebenen Interferenz widerspiegelt.
+Unter Störlast bricht der zufällige Schreib-I/O des Opfers am stärksten ein: um rund 59\,\% (von etwa 60\,150 auf 24\,460 IOPS), begleitet von einem Anstieg der 95.\,Perzentil-Latenz auf mehr als das Fünffache (0{,}32 auf 1{,}68\,ms). Die Speicherbandbreite sinkt um rund 44\,\%, der CPU-Durchsatz mit rund 18\,\% am geringsten. Dieses Muster --- I/O und Latenz am deutlichsten, CPU am wenigsten betroffen --- deckt sich mit einer primär über den geteilten Cache und das I/O-Subsystem vermittelten Interferenz.
 
 Die vorstehenden Durchsatz- und Latenzdeltas belegen den Effekt, weisen dessen \emph{Ursache} jedoch nur indirekt nach. Zur direkten Bestätigung der Cache-Contention wird die Aktivität des Last Level Cache am geteilten P-Core gemessen. Da die Gastsysteme unter Proxmox VE keine virtuelle Performance-Monitoring-Unit bereitstellen --- \texttt{perf} meldet im KVM-Gast für sämtliche Hardware-Ereignisse \texttt{not supported} ---, erfolgt die Erfassung host-seitig mittels \texttt{perf stat} auf dem physischen Kern, auf den Angreifer und Opfer gepinnt sind. Tabelle \ref{tab:llc} stellt die LLC-Zugriffe und -Fehlzugriffe der Baseline dem Noisy-Neighbor-Szenario gegenüber.
 
@@ -181,16 +182,16 @@ Die LLC-Miss-Rate am geteilten Kern steigt unter Störlast von rund 31\,\% auf 8
   \centering
   \begin{tikzpicture}
     \begin{scope}[local bounding box=A]
-      \metricplot{CPU (sysbench)}{Events/s}{CPU_Base}{CPU_NN}{2700}
+      \metricplot{CPU (sysbench)}{Events/s}{CPU_Base}{CPU_NN}{800}
     \end{scope}
     \begin{scope}[xshift=8.2cm]
-      \metricplot{Speicher (sysbench)}{MiB/s}{RAM_Base}{RAM_NN}{16000}
+      \metricplot{Speicher (sysbench)}{MiB/s}{RAM_Base}{RAM_NN}{5200}
     \end{scope}
     \begin{scope}[yshift=-6cm]
-      \metricplot{I/O (fio 4K randwrite)}{IOPS}{IOPS_Base}{IOPS_NN}{65000}
+      \metricplot{I/O (fio 4K randwrite)}{IOPS}{IOPS_Base}{IOPS_NN}{60000}
     \end{scope}
     \begin{scope}[yshift=-6cm, xshift=8.2cm]
-      \metricplot{I/O-Latenz p95 (fio)}{ms}{Lat_Base}{Lat_NN}{1.2}
+      \metricplot{I/O-Latenz p95 (fio)}{ms}{Lat_Base}{Lat_NN}{28}
     \end{scope}
     % gemeinsame Legende (einmal, zentriert unter dem Raster)
     \coordinate (lg) at ($(current bounding box.south)+(-2.3,-0.3)$);
@@ -201,11 +202,15 @@ Die LLC-Miss-Rate am geteilten Kern steigt unter Störlast von rund 31\,\% auf 8
           inner sep=0pt, anchor=west] (ln) at ($(lbt.east)+(6mm,0)$) {};
     \node[anchor=west, font=\footnotesize] at ($(ln.east)+(1.3mm,0)$) {Noisy Neighbor};
   \end{tikzpicture}
-  \caption{Paradigmen-Vergleich (Platzhalter/Mock-Daten): gruppierte Balken je Metrik, Baseline gegen Noisy Neighbor, für QEMU (Emulation), KVM (Hardware-Virtualisierung) und LXC (Para-Virtualisierung).}
+  \caption{Paradigmen-Vergleich: gruppierte Balken je Metrik, Baseline gegen Noisy Neighbor, für QEMU (Emulation), KVM (Hardware-Virtualisierung) und LXC (Para-Virtualisierung).}
   \label{fig:paradigms}
 \end{figure*}
 
-Im Mock-Szenario zeigt LXC die stärkste relative Degradation beim zufälligen Schreib-I/O (Einbruch um rund 60\,\%) und damit die schwächste Performance-Isolation, gefolgt von KVM (etwa 30\,\%); die reine Emulation (QEMU) bewegt sich auf durchweg niedrigem absolutem Niveau und zeigt entsprechend nur geringe relative Veränderung. Diese hypothetische Tendenz ist die zu prüfende Arbeitshypothese, nicht das Messergebnis.
+Der Paradigmen-Vergleich (Abbildung \ref{fig:paradigms}) ordnet die drei Ansätze zunächst über ihre absolute Leistung ein. Die reine Emulation (QEMU) liegt in allen Metriken um etwa eine Größenordnung unter den beiden anderen Ansätzen --- der Preis der vollständigen Befehlsübersetzung. Para-Virtualisierung (LXC) und Hardware-Virtualisierung (KVM) erreichen bei CPU- und Speicherdurchsatz nahezu native, untereinander vergleichbare Werte.
+
+Beim zufälligen Schreib-I/O tritt eine Auffälligkeit hervor: KVM erreicht mit rund 55\,700 IOPS ein Vielfaches der etwa 10\,970 IOPS des LXC-Containers. Diese für Container untypische Ordnung ist mit hoher Wahrscheinlichkeit dem Speicherpfad geschuldet --- die virtuelle Festplatte der KVM-Instanz profitiert vom Writeback-Caching des Hypervisors, während der unprivilegierte Container mit \texttt{O\_DIRECT} unmittelbarer auf das ZFS-Backend schreibt. Die absoluten I/O-Werte der Paradigmen sind daher nur eingeschränkt direkt vergleichbar; belastbar bleibt die \emph{relative} Degradation unter Störlast innerhalb jedes Paradigmas.
+
+Diese relative Betrachtung zeigt den Noisy-Neighbor-Effekt in allen drei Ansätzen: Der Schreib-I/O bricht bei QEMU und KVM um jeweils rund 60\,\% ein, beim LXC-Container mit rund 19\,\% deutlich weniger; die 95.\,Perzentil-Latenz steigt durchgängig auf das rund Vier- bis Fünffache. Keiner der drei Ansätze unterbindet die mikroarchitektonische Interferenz vollständig.
 
 \bibliographystyle{IEEEtran}
 \bibliography{../project/expose/references_expose}

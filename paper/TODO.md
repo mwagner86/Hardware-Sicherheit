@@ -33,22 +33,26 @@
 ## Offene TODOs zur Finalisierung
 
 ### A. Echte Messdaten erheben (ersetzen die Platzhalter automatisch)
-- [ ] Host-Determinismus herstellen: C-States/Turbo aus, Governor `performance`
-      (siehe `project/notes/Interferenz-Experiment.md` §2)
-- [ ] `./run_interference.sh --label determ` → `interference_summary.csv` (echte Interferenz-Zahlen)
-- [ ] `./run_paradigms.sh --label determ` → `paradigms_summary.csv`
+- [x] **Nicht-invasiver Determinismus** (2026-07-15): `set_determinism.sh --on`
+      (Kerne 4/5 Basistakt-Pin, Uncore-Pin, tiefe C-States aus; Host danach `--off`).
+- [x] `./run_interference.sh --label determ` → `interference_summary.csv`
+      (CPU −18 %, RAM −44 %, IOPS −59 %, p95 +422 %).
+- [x] `./run_paradigms.sh --label determ` → `paradigms_summary.csv`.
 - [ ] `./measure_llc.sh --install` (einmalig) + `./measure_llc.sh --label determ`
-      → `llc_summary.csv` (rigoroser LLC-Lauf statt der Demo-Werte)
+      → `llc_summary.csv` (**noch offen** — Tab. II ist weiter Demo-Wert, korrekt so markiert)
 - [ ] Dashboard: `llc`-Block in `presentation/dashboard.html` auf die determ-Werte
       setzen + `preliminary:false`
 
 ### B. Platzhalter-Markierungen entfernen (nach A)
-- [ ] Hinweis-Absatz oben im Ergebnisteil entfernen (`main.tex:139`)
-- [ ] Prosa an die realen Deltas anpassen: Interferenz-Absatz (`main.tex:160`), LLC-Absatz,
-      Paradigmen-Vergleich-Absatz
-- [ ] Captions bereinigen: Tab. I „(Platzhalterwerte)" (`main.tex:144`),
-      Tab. II „(vorläufige Demo-Messung …)", Abb. 2 „(Platzhalter/Mock-Daten)"
-- [ ] Abb. 2: `nodes near coords` ggf. entzerren, falls Balken eng beieinanderliegen
+- [x] Hinweis-Absatz oben im Ergebnisteil entfernt (2026-07-15); Ergebnis-Prosa
+      (Interferenz + Paradigmen) auf reale Deltas umgeschrieben, inkl. ehrlichem
+      Absatz zur KVM≫LXC-IOPS-Auffälligkeit (Writeback-Cache vs. `O_DIRECT`).
+- [x] Captions Tab. I + Abb. 2 bereinigt; `ymax` je Metrik an reale Werte angepasst
+      (Latenz-Subplot lief sonst über: QEMU 26 ms). Tab. I kompakter (Overfull weg).
+- [ ] Tab. II bleibt „vorläufige Demo-Messung" bis `measure_llc.sh --label determ`
+      läuft (Abschnitt A).
+- [ ] Abb. 2: `nodes near coords` bei eng beieinanderliegenden Balken entzerren
+      (QEMU-Speicher/-IOPS-Labels überlappen leicht); Exposé-Tipp „1.2 statt 1200".
 
 ### C. Fehlende Abschnitte schreiben (die Einleitung verspricht sie, `main.tex:74`)
 Real vorhanden: I Einleitung · II Methodik/Benchmarking (Stub) · III Ergebnisse.
