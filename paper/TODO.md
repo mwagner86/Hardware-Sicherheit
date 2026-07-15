@@ -62,10 +62,10 @@ Noch offen laut Einleitung: V Diskussion · VI Fazit.
 - [x] **Stand der Forschung** (§II) geschrieben (2026-07-16), **quellenbasiert**:
       alle 12 PDFs in `paper/sources/` gelesen, jede Aussage belegt. Nummerierung
       damit konsistent zur Einleitung (III Versuchsaufbau, IV Ergebnisse).
-- [ ] **V Diskussion**: Implikationen im Kontext der Hypothese (greifen RDT/CAT?);
-      KVM≫LXC-IOPS-Anomalie mit Lit. einordnen (li2017: Container nicht immer
-      I/O-stärker; nikounia2018: nicht nur LLC, auch Scheduling).
-- [ ] **VI Fazit** + Ausblick.
+- [x] **V Diskussion** geschrieben (2026-07-16, quellenbasiert): Hypothese
+      bestätigt; SMT-Obergrenze-Caveat; CAT-Grenzen (veitch/danielsson/larsson);
+      Paradigmen nicht immun; KVM≫LXC + li2017/gajanin2025 eingeordnet.
+- [ ] **VI Fazit** + Ausblick (letzter fehlender Abschnitt).
 
 ### D. Feinschliff
 - [ ] **Abstract** ausformulieren (aktuell generischer Platzhalter) — an Titel/Scope
