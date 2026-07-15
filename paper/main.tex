@@ -25,17 +25,19 @@
 % Schema: Virtualisierung;CPU_Base;CPU_NN;RAM_Base;RAM_NN;IOPS_Base;IOPS_NN;Lat_Base;Lat_NN
 \pgfplotstableread[col sep=semicolon]{../project/experiments/results/paradigms_summary.csv}\paradigmsdata
 % #1=Titel #2=ylabel #3=Spalte Baseline #4=Spalte NoisyNeighbor #5=ymax
-\newcommand{\metricplot}[5]{%
+% #1=Titel #2=ylabel #3=Spalte Baseline #4=Spalte NoisyNeighbor #5=ymax #6=Nachkommastellen
+\newcommand{\metricplot}[6]{%
 \begin{axis}[
     title={#1},
-    ybar, bar width=9pt,
-    width=7.5cm, height=5cm,
-    enlarge x limits=0.30,
+    ybar, bar width=12pt,
+    width=7.6cm, height=5.6cm,
+    enlarge x limits=0.3,
     ylabel={#2}, ymin=0, ymax=#5,
     symbolic x coords={QEMU, KVM, LXC},
     xtick=data,
-    nodes near coords, nodes near coords align={vertical},
-    every node near coord/.append style={font=\tiny, /pgf/number format/fixed},
+    nodes near coords,
+    every node near coord/.append style={font=\scriptsize, rotate=90, anchor=west,
+        /pgf/number format/fixed, /pgf/number format/precision=#6},
     x tick label style={font=\small},
     title style={font=\small\bfseries},
 ]
@@ -212,16 +214,16 @@ Die LLC-Miss-Rate am geteilten Kern steigt unter Störlast von rund 34\,\% auf 6
   \centering
   \begin{tikzpicture}
     \begin{scope}[local bounding box=A]
-      \metricplot{CPU (sysbench)}{Events/s}{CPU_Base}{CPU_NN}{800}
+      \metricplot{CPU (sysbench)}{Events/s}{CPU_Base}{CPU_NN}{850}{0}
     \end{scope}
-    \begin{scope}[xshift=8.2cm]
-      \metricplot{Speicher (sysbench)}{MiB/s}{RAM_Base}{RAM_NN}{5200}
+    \begin{scope}[xshift=8.4cm]
+      \metricplot{Speicher (sysbench)}{MiB/s}{RAM_Base}{RAM_NN}{5800}{0}
     \end{scope}
-    \begin{scope}[yshift=-6cm]
-      \metricplot{I/O (fio 4K randwrite)}{IOPS}{IOPS_Base}{IOPS_NN}{60000}
+    \begin{scope}[yshift=-6.7cm]
+      \metricplot{I/O (fio 4K randwrite)}{IOPS}{IOPS_Base}{IOPS_NN}{70000}{0}
     \end{scope}
-    \begin{scope}[yshift=-6cm, xshift=8.2cm]
-      \metricplot{I/O-Latenz p95 (fio)}{ms}{Lat_Base}{Lat_NN}{28}
+    \begin{scope}[yshift=-6.7cm, xshift=8.4cm]
+      \metricplot{I/O-Latenz p95 (fio)}{ms}{Lat_Base}{Lat_NN}{33}{2}
     \end{scope}
     % gemeinsame Legende (einmal, zentriert unter dem Raster)
     \coordinate (lg) at ($(current bounding box.south)+(-2.3,-0.3)$);
