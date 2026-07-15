@@ -200,9 +200,9 @@ gerendertes PDF (`pdftoppm`/`convert`-Crops).
 **Fertig:**
 
 - **Titel:** „Der Noisy-Neighbor-Effekt: Eine Untersuchung mikroarchitektonischer
-  Ressourcen-Interferenzen in virtualisierten Umgebungen". Maßgebliche Einleitungs-Basis
-  ist `paper/einleitungen/einleitung_zweite_version.tex` — **NICHT** die Markdown-Fassung
-  `Einleitung.md` (= ältere erste Version).
+  Ressourcen-Interferenzen in virtualisierten Umgebungen". Die finale Einleitung steht
+  in `paper/main.tex`; `paper/einleitungen/einleitung_zweite_version.tex` ist die
+  eingefrorene (benotete) Zwischenabgabe.
 - **Einleitung:** aus der zweiten Version übernommen (**Interferenz-Experiment = primär**).
   Zitate `koh2007analysis`, `ge2018survey`, `nist2014hypervisor` (alle in
   `references_expose.bib`). Die kaputten `intelvtx`/`kvmsecurity` sind raus → Bib baut.
