@@ -9,11 +9,20 @@ der Arbeit". **Alle Daten real** (determ-Messläufe): Tab. I/II + Abb. 2 ziehen
 echte CSVs. Literatur: `paper/references.bib` (12 Quellen mit DOIs, PDFs in
 `paper/sources/`); jede zitierte Aussage aus der gelesenen Quelle belegt.
 
-**Verbleibender Feinschliff (kein Blocker):**
-- Gesamt-Korrekturlesen (Rechtschreibung/Zeichen), einmal ganz durch.
-- Abb. 2: `nodes near coords`-Labels bei QEMU/Speicher leicht entzerren (optional).
-- `HWQuellen/` (falscher Alt-Ordner) lokal löschen.
-- 6-Seiten-Limit im Auge behalten, falls noch etwas dazukommt.
+**Feinschliff erledigt (2026-07-16):**
+- [x] Zitat-Audit: alle 12 `\cite` inhaltlich gegen die gelesene Quelle geprüft — passen.
+- [x] Korrektur-Durchlauf: Grammatik („beschrieben haben"), „95.-Perzentil-Latenz"
+      vereinheitlicht.
+- [x] **Abb. 2 lesbar**: Integer-Labels (2 Dez. nur fio-Latenz), rotierte Labels,
+      größere Schrift/Balken/Headroom.
+- [x] Zahlenformat **projektweit deutsch** (Komma-Dezimal, schmales Tausender-
+      Leerzeichen) in Fließtext, Tab. I, Tab. II, Abb. 2.
+- [x] `HWQuellen/` gelöscht (Nutzer) + gitignore-Regel raus.
+
+**Optional/offen (kein Blocker):**
+- Tab.-Label „NoisyNeighbor" (aus CSV, ein Wort) ggf. zu „Noisy Neighbor" — nur
+  kosmetisch, käme aus den Skript-Daten.
+- 6-Seiten-Limit im Auge behalten (aktuell 5).
 
 ---
 
