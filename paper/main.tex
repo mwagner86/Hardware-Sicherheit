@@ -121,7 +121,7 @@ Für die Contention ist das CPU-Pinning entscheidend. Der Angreifer und das jewe
   {\textbf{Angreifer}\\ LXC 300\\[1pt] \texttt{stress-ng}\\ Cache-L3 $+$ I/O\\[1pt]
    \emph{konstante Störquelle}};
 
-\node[guest, right=14mm of att.north east, anchor=north west] (vq)
+\node[guest, right=20mm of att.north east, anchor=north west] (vq)
   {\textbf{Opfer 1} -- QEMU 301\\ Emulation \emph{(nur Paradigmen-Vergleich)}};
 \node[guest, below=2.5mm of vq] (vl)
   {\textbf{Opfer 2} -- LXC 302\\ Para-Virtualisierung};
@@ -131,7 +131,7 @@ Für die Contention ist das CPU-Pinning entscheidend. Der Angreifer und das jewe
 % --- Ressourcen-Contention (geteilter LLC + I/O) ---
 \draw[cont] (att.east|-vq) -- (vq.west);
 \draw[cont] (att.east|-vl) -- (vl.west)
-  node[midway, above=1pt, font=\scriptsize\itshape, text=red!70!black]{L3 (LLC) $+$ I/O};
+  node[midway, above=1pt, font=\scriptsize\itshape, text=red!70!black, fill=white, inner sep=1pt]{LLC $+$ I/O};
 \draw[cont] (att.east|-vk) -- (vk.west);
 
 % --- Container: P-Core und Host (Hintergrund), Titel jeweils oben eingefittet ---
