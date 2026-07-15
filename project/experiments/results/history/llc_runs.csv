@@ -1,0 +1,2 @@
+timestamp;label;profile;git;perf_cores;window_s;base_miss_pct;nn_miss_pct;miss_rate_delta;datadir
+20260715_142746;determ;config;83a718a;4,5;10;34.39;59.50;73.02;results/data/20260715_142746_config_llc_determ

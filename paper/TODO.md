@@ -38,8 +38,8 @@
 - [x] `./run_interference.sh --label determ` → `interference_summary.csv`
       (CPU −18 %, RAM −44 %, IOPS −59 %, p95 +422 %).
 - [x] `./run_paradigms.sh --label determ` → `paradigms_summary.csv`.
-- [ ] `./measure_llc.sh --install` (einmalig) + `./measure_llc.sh --label determ`
-      → `llc_summary.csv` (**noch offen** — Tab. II ist weiter Demo-Wert, korrekt so markiert)
+- [x] `./measure_llc.sh --label determ` (2026-07-15, unter Determinismus, 10-s-Fenster)
+      → `llc_summary.csv`: Miss-Rate 34,4 % → 59,5 %, LLC-Traffic ×27–48. Tab. II real.
 - [ ] Dashboard: `llc`-Block in `presentation/dashboard.html` auf die determ-Werte
       setzen + `preliminary:false`
 
@@ -49,8 +49,8 @@
       Absatz zur KVM≫LXC-IOPS-Auffälligkeit (Writeback-Cache vs. `O_DIRECT`).
 - [x] Captions Tab. I + Abb. 2 bereinigt; `ymax` je Metrik an reale Werte angepasst
       (Latenz-Subplot lief sonst über: QEMU 26 ms). Tab. I kompakter (Overfull weg).
-- [ ] Tab. II bleibt „vorläufige Demo-Messung" bis `measure_llc.sh --label determ`
-      läuft (Abschnitt A).
+- [x] Tab. II auf reale Determinismus-Messung umgestellt (2026-07-15): Caption
+      „10-Sekunden-Fenster", Prosa auf 34→60 % Miss-Rate + LLC-Traffic-Vervielfachung.
 - [ ] Abb. 2: `nodes near coords` bei eng beieinanderliegenden Balken entzerren
       (QEMU-Speicher/-IOPS-Labels überlappen leicht); Exposé-Tipp „1.2 statt 1200".
 
