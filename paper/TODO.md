@@ -1,6 +1,23 @@
 # Paper-Finalisierung — Stand & offene Punkte
 
-## Aktueller Stand (2026-07-09)
+## Stand 2026-07-16 — Paper strukturell VOLLSTÄNDIG
+
+`make paper` grün, **5 von max. 6 Seiten**, 0 undefined. Alle sechs Abschnitte
+(I Einleitung · II Stand der Forschung · III Versuchsaufbau · IV Ergebnisse ·
+V Diskussion · VI Fazit) + Abstract vorhanden; Struktur deckt sich mit „Aufbau
+der Arbeit". **Alle Daten real** (determ-Messläufe): Tab. I/II + Abb. 2 ziehen
+echte CSVs. Literatur: `paper/references.bib` (12 Quellen mit DOIs, PDFs in
+`paper/sources/`); jede zitierte Aussage aus der gelesenen Quelle belegt.
+
+**Verbleibender Feinschliff (kein Blocker):**
+- Gesamt-Korrekturlesen (Rechtschreibung/Zeichen), einmal ganz durch.
+- Abb. 2: `nodes near coords`-Labels bei QEMU/Speicher leicht entzerren (optional).
+- `HWQuellen/` (falscher Alt-Ordner) lokal löschen.
+- 6-Seiten-Limit im Auge behalten, falls noch etwas dazukommt.
+
+---
+
+## Aktueller Stand (2026-07-09, historisch)
 
 - **Baut grün:** `make paper` → 3 Seiten, 0 undefined refs/citations.
   - **Voraussetzung:** `texlive-publishers` muss installiert sein (liefert
